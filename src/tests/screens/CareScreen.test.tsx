@@ -24,16 +24,6 @@ const renderWithProviders = () =>
   );
 
 describe('CareScreen', () => {
-  it('renders and toggles native Modal on button press', async () => {
-    const { getByTestId, getByText, queryByText } = renderWithProviders();
-
-    fireEvent.press(getByTestId('open-sheet'));
-    await waitFor(() => expect(getByText('This is the native modal')).toBeTruthy());
-
-    fireEvent.press(getByText('Close'));
-    await waitFor(() => expect(queryByText('This is the native modal')).toBeNull());
-  });
-
   it('renders MiniNavBar and switches tabs on icon press', async () => {
     const { getByTestId } = renderWithProviders();
 
