@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import TrackerIcon from '../../assets/icons/carescreen/TrackerIcon';
 import GraphIcon from '../../assets/icons/carescreen/GraphIcon';
 import CardsIcon from '../../assets/icons/carescreen/CardsIcon';
@@ -12,18 +12,40 @@ interface Props {
 
 const MiniNavBar = ({ onNavigate }: Props) => {
   return (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-      <TouchableOpacity testID="tracker-icon" onPress={() => onNavigate?.('tracker')}>
-        <TrackerIcon />
-        </TouchableOpacity>
-        <TouchableOpacity testID="graph-icon" onPress={() => onNavigate?.('graph')}>
-        <GraphIcon />
-        </TouchableOpacity>
-        <TouchableOpacity testID="cards-icon" onPress={() => onNavigate?.('cards')}>
+    <View style={styles.container}>
+      <TouchableOpacity 
+        testID="cards-icon" 
+        onPress={() => onNavigate?.('cards')}
+        style={styles.iconContainer}
+      >
         <CardsIcon />
-        </TouchableOpacity>
+      </TouchableOpacity>
+      <TouchableOpacity 
+        testID="tracker-icon" 
+        onPress={() => onNavigate?.('tracker')}
+        style={styles.iconContainer}
+      >
+        <TrackerIcon />
+      </TouchableOpacity>
+      <TouchableOpacity 
+        testID="graph-icon" 
+        onPress={() => onNavigate?.('graph')}
+        style={styles.iconContainer}
+      >
+        <GraphIcon />
+      </TouchableOpacity>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  iconContainer: {
+    marginHorizontal: 10,
+  },
+});
 
 export default MiniNavBar;
