@@ -1,9 +1,12 @@
 // src/screens/CareScreen.tsx
 import React, { useState } from 'react';
-import { Text, Button, Modal, View, StyleSheet, Platform } from 'react-native';
+import { Text, Button, Modal, View, StyleSheet } from 'react-native';
+import MiniNavBar from '../components/carescreen/MiniNavBar';
 
 const CareScreen = () => {
   const [visible, setVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState<'tracker' | 'graph' | 'cards'>('tracker');
+
 
   const openModal = () => {
     console.log('[DEBUG] Opening native modal...');
@@ -17,15 +20,23 @@ const CareScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text testID='care-placeholder'>CareScreen Placeholder</Text>
-      <Button title="Open Sheet" testID='open-sheet' onPress={openModal} />
+        <Text testID='care-placeholder'>CareScreen Placeholder</Text>
+        
+        <MiniNavBar
+        onNavigate={(tab) => setActiveTab(tab.toLowerCase() as 'tracker' | 'graph' | 'cards')}
+        />
+        
+        <Text testID="active-tab-indicator">Active Tab: {activeTab}</Text>
 
-      <Modal
+        <Button title="Open Sheet" testID='open-sheet' onPress={openModal} />
+        
+        <Modal
         animationType="slide"
         visible={visible}
         transparent={true}
         onRequestClose={closeModal}
-      >
+        >
+
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalText}>This is the native modal</Text>
