@@ -9,7 +9,8 @@ const mockOnClose = jest.fn();
 
 describe('QuickLogMenu', () => {
   it('renders all six logging buttons with icons', () => {
-    const { getByTestId } = render(<QuickLogMenu onClose={mockOnClose} visible={true} />);
+    const { getByTestId } = render(<QuickLogMenu onClose={mockOnClose} />);
+
 
     expect(getByTestId('log-sleep')).toBeTruthy();
     expect(getByTestId('log-awake')).toBeTruthy();
@@ -20,7 +21,8 @@ describe('QuickLogMenu', () => {
   });
 
   it('calls onClose when handlebar is pressed', () => {
-    const { getByTestId } = render(<QuickLogMenu onClose={mockOnClose} visible={true} />);
+    const { getByTestId } = render(<QuickLogMenu onClose={mockOnClose} />);
+
 
     fireEvent.press(getByTestId('menu-handle'));
     expect(mockOnClose).toHaveBeenCalled();

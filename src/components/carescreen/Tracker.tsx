@@ -1,5 +1,5 @@
 // src/components/carescreen/Tracker.tsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import PlusIcon from '../../assets/icons/carescreen/mini-navbar/PlusIcon';
 import AwakeArc from '../../assets/carescreen/tracker-rings/AwakeArc';
@@ -11,7 +11,16 @@ import SleepArc from '../../assets/carescreen/tracker-rings/SleepArc';
 const { width } = Dimensions.get('window');
 const TRACKER_SIZE = width * 0.8;
 
-const Tracker = ({ onPlusPress }: { onPlusPress: () => void }) => {
+interface Props {
+  onPlusPress: () => void;
+  activeTab?: 'tracker' | 'graph' | 'cards'; // Optional for now
+}
+
+const Tracker: React.FC<Props> = ({ onPlusPress, activeTab }) => {
+  useEffect(() => {
+    console.log('[DEBUG] Tracker activeTab:', activeTab);
+  }, [activeTab]);
+  
   return (
     <View style={[styles.container, { width: TRACKER_SIZE, height: TRACKER_SIZE }]}>
       <View style={styles.arcContainer}><SleepArc /></View>

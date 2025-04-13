@@ -7,49 +7,59 @@ import AwakeIcon from '../../assets/icons/carescreen/quick-log-menu/AwakeIcon';
 import FeedIcon from '../../assets/icons/carescreen/quick-log-menu/FeedIcon';
 import DiaperIcon from '../../assets/icons/carescreen/quick-log-menu/DiaperIcon';
 import MoodIcon from '../../assets/icons/carescreen/quick-log-menu/MoodIcon';
-import CardsIcon from '../../assets/icons/carescreen/quick-log-menu/CardsIcon';
+import VoiceIcon from '../../assets/icons/carescreen/quick-log-menu/VoiceIcon';
 
 interface Props {
-  visible: boolean;
   onClose: () => void;
 }
 
-const QuickLogMenu: React.FC<Props> = ({ visible, onClose }) => {
+const IconWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <View style={{ width: 50, height: 50, justifyContent: 'center', alignItems: 'center' }}>
+    {children}
+  </View>
+);
+
+const QuickLogMenu: React.FC<Props> = ({ onClose }) => {
   return (
-    <Modal
-      animationType="slide"
-      visible={visible}
-      transparent={true}
-      onRequestClose={onClose}
-    >
-      <View style={styles.overlay}>
-        <View style={styles.sheet}>
-          <TouchableOpacity testID="menu-handle" onPress={onClose}>
-            <MenuHandleBar />
-          </TouchableOpacity>
-          <View style={styles.buttonGrid}>
-            <TouchableOpacity testID="log-sleep">
-              <SleepIcon />
-            </TouchableOpacity>
-            <TouchableOpacity testID="log-awake">
-              <AwakeIcon />
-            </TouchableOpacity>
-            <TouchableOpacity testID="log-feed">
-              <FeedIcon />
-            </TouchableOpacity>
-            <TouchableOpacity testID="log-diaper">
-              <DiaperIcon />
-            </TouchableOpacity>
-            <TouchableOpacity testID="log-mood">
-              <MoodIcon />
-            </TouchableOpacity>
-            <TouchableOpacity testID="log-voice">
-              <CardsIcon />
-            </TouchableOpacity>
-          </View>
-        </View>
+    <View testID="quick-log-menu" style={styles.overlay}>
+    <View style={styles.sheet}>
+      <TouchableOpacity testID="menu-handle" onPress={onClose}>
+        <MenuHandleBar />
+      </TouchableOpacity>
+      <View style={styles.buttonGrid}>
+        <TouchableOpacity testID="log-sleep">
+          <IconWrapper>
+           <SleepIcon />
+          </IconWrapper>
+        </TouchableOpacity>
+        <TouchableOpacity testID="log-awake">
+          <IconWrapper>
+           <AwakeIcon />
+          </IconWrapper>
+        </TouchableOpacity>
+        <TouchableOpacity testID="log-feed">
+          <IconWrapper>
+            <FeedIcon />
+          </IconWrapper>
+        </TouchableOpacity>
+        <TouchableOpacity testID="log-diaper">
+        <IconWrapper>
+          <DiaperIcon />
+        </IconWrapper>
+        </TouchableOpacity>
+        <TouchableOpacity testID="log-voice">
+         <IconWrapper>
+            <VoiceIcon />
+          </IconWrapper>
+        </TouchableOpacity>
+        <TouchableOpacity testID="log-mood">
+         <IconWrapper>
+          <MoodIcon />
+          </IconWrapper>
+        </TouchableOpacity>
       </View>
-    </Modal>
+    </View>
+  </View>
   );
 };
 
@@ -57,10 +67,10 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0, 0, 0, 0.4)'
+    backgroundColor: '#453F4E'
   },
   sheet: {
-    backgroundColor: '#000',
+    backgroundColor: '#E6E1F4',
     paddingVertical: 32,
     paddingHorizontal: 20,
     borderTopLeftRadius: 30,
@@ -73,7 +83,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'center',
     alignContent: 'flex-end',
-    gap: 25 // Use margin if gap isn't supported yet
+    gap: 50 
   }
 });
 
