@@ -16,12 +16,12 @@ describe('MiniNavBar', () => {
     const { getByTestId } = render(<MiniNavBar onNavigate={onNavigate} />);
 
     fireEvent.press(getByTestId('graph-icon'));
-    expect(onNavigate).toHaveBeenCalledWith('Graph');
+    expect(onNavigate).toHaveBeenCalledWith('graph');
 
     fireEvent.press(getByTestId('tracker-icon'));
-    expect(onNavigate).toHaveBeenCalledWith('Tracker');
+    expect(onNavigate).toHaveBeenCalledWith('tracker');
 
     fireEvent.press(getByTestId('cards-icon'));
-    expect(onNavigate).toHaveBeenCalledWith('Cards');
+    expect(onNavigate).toHaveBeenCalledWith('cards');
   });
 });
