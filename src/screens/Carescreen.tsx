@@ -1,12 +1,19 @@
 // src/screens/CareScreen.tsx
 import React, { useState } from 'react';
 import { Text, Button, Modal, View, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from 'styled-components/native';
+import TopNav from '../components/common/TopNav';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../navigation/AppNavigator';
 import MiniNavBar from '../components/carescreen/MiniNavBar';
 
 const CareScreen = () => {
-  const [visible, setVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState<'tracker' | 'graph' | 'cards'>('tracker');
-
+    const theme = useTheme();
+    const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+    const [visible, setVisible] = useState(false);
+    const [activeTab, setActiveTab] = useState<'tracker' | 'graph' | 'cards'>('tracker');
 
   const openModal = () => {
     console.log('[DEBUG] Opening native modal...');
@@ -19,24 +26,26 @@ const CareScreen = () => {
   };
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
     <View style={styles.container}>
-        <Text testID='care-placeholder'>CareScreen Placeholder</Text>
-        
-        <MiniNavBar
-        onNavigate={(tab) => setActiveTab(tab.toLowerCase() as 'tracker' | 'graph' | 'cards')}
-        />
-        
-        <Text testID="active-tab-indicator">Active Tab: {activeTab}</Text>
+      <TopNav navigation={navigation} />
 
-        <Button title="Open Sheet" testID='open-sheet' onPress={openModal} />
-        
-        <Modal
+      <View style={styles.miniNavWrapper}>
+        <MiniNavBar onNavigate={(tab) => setActiveTab(tab.toLowerCase() as 'tracker' | 'graph' | 'cards')} />
+      </View>
+
+      <Text testID="active-tab-indicator" style={styles.tabIndicator}>
+        Active Tab: {activeTab}
+      </Text>
+
+      <Button title="Open Sheet" testID="open-sheet" onPress={openModal} />
+
+      <Modal
         animationType="slide"
         visible={visible}
         transparent={true}
         onRequestClose={closeModal}
-        >
-
+      >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalText}>This is the native modal</Text>
@@ -45,31 +54,45 @@ const CareScreen = () => {
         </View>
       </Modal>
     </View>
+    </SafeAreaView>
   );
 };
 
 export default CareScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.4)',
-  },
-  modalContent: {
-    backgroundColor: '#000',
-    padding: 24,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  modalText: {
-    color: '#fff',
-    fontSize: 18,
-    marginBottom: 12,
-  },
-});
+    container: {
+      flex: 1,
+      paddingTop: 20, // Y=20
+      paddingHorizontal: 20, // X=20
+      backgroundColor: '#fff',
+    },
+    miniNavWrapper: {
+      marginTop: 30, // TopNav height is 50 + margin = ~Y=100
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      alignItems: 'flex-start',
+      gap: 25, // future RN support; we’ll fallback to manual spacing for now
+    },
+    tabIndicator: {
+      marginTop: 20,
+      fontSize: 16,
+      textAlign: 'center',
+    },
+    modalOverlay: {
+      flex: 1,
+      justifyContent: 'flex-end',
+      backgroundColor: 'rgba(0,0,0,0.4)',
+    },
+    modalContent: {
+      backgroundColor: '#000',
+      padding: 24,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+    },
+    modalText: {
+      color: '#fff',
+      fontSize: 18,
+      marginBottom: 12,
+    },
+  });  
