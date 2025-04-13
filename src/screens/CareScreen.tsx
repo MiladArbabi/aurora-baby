@@ -9,6 +9,8 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import MiniNavBar from '../components/carescreen/MiniNavBar';
 import Tracker from '../components/carescreen/Tracker';
+import QuickLogMenu from '../components/carescreen/QuickLogMenu'; 
+
 
 const CareScreen = () => {
     const theme = useTheme();
@@ -28,33 +30,28 @@ const CareScreen = () => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
-    <View style={styles.container}>
-      <TopNav navigation={navigation} />
+      <View style={styles.container}>
+        <TopNav navigation={navigation} />
 
-      <View style={styles.miniNavWrapper}>
-        <MiniNavBar onNavigate={(tab) => 
-            setActiveTab(tab.toLowerCase() as 'tracker' | 'graph' | 'cards')} />
-      </View>
-            <Text testID="active-tab-indicator" style={styles.tabIndicator}>
-            Active Tab: {activeTab}
-            </Text>
-
-      <Tracker onPlusPress={openModal} />
-
-      <Modal
-        animationType="slide"
-        visible={visible}
-        transparent={true}
-        onRequestClose={closeModal}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalText}>This is the native modal</Text>
-            <Button title="Close" onPress={closeModal} />
-          </View>
+        <View style={styles.miniNavWrapper}>
+          <MiniNavBar onNavigate={(tab) => setActiveTab(tab.toLowerCase() as 'tracker' | 'graph' | 'cards')} />
         </View>
-      </Modal>
-    </View>
+        <Text testID="active-tab-indicator" style={styles.tabIndicator}>
+          Active Tab: {activeTab}
+          </Text>
+
+        <Tracker onPlusPress={openModal} activeTab={activeTab} />
+
+        {/* Replace Modal with QuickLogMenu */}
+        <Modal
+          animationType="slide"
+          visible={visible}
+          transparent={true}
+          onRequestClose={closeModal}
+        >
+          <QuickLogMenu onClose={closeModal} />
+        </Modal>
+      </View>
     </SafeAreaView>
   );
 };

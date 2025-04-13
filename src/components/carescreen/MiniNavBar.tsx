@@ -2,7 +2,7 @@ import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import TrackerIcon from '../../assets/icons/carescreen/mini-navbar/TrackerIcon';
 import GraphIcon from '../../assets/icons/carescreen/mini-navbar/GraphIcon';
-import CardsIcon from '../../assets/icons/carescreen/quick-log-menu/CardsIcon';
+import CardsIcon from '../../assets/icons/carescreen/mini-navbar/CardsIcon';
 
 export type MiniTab = 'tracker' | 'graph' | 'cards';
 
