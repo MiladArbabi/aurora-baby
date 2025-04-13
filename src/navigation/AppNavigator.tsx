@@ -6,14 +6,12 @@ import { User } from 'firebase/auth';
 import HomeScreen from '../screens/HomeScreen';
 import HarmonyHomeScreen from '../screens/HarmonyHomeScreen';
 import StoryPlayer from '../screens/StoryPlayer';
-import CareScreen from '../screens/Carescreen';
+import CareScreen from '../screens/CareScreen';
 import WonderScreen from '../screens/WonderScreen';
 import AuthScreen from '../screens/AuthScreen';
 import ProfileSettingScreen from '../screens/ProfileSettingScreen';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { PortalHost } from '@gorhom/portal';
-
-
 
 export type RootStackParamList = {
   Auth: undefined;
@@ -49,9 +47,8 @@ const AppNavigator = () => {
 
   return (
     <NavigationContainer>
-      <PortalHost name="root" />
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          {user ? (
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {user ? (
           <>
             <Stack.Screen name="Home" component={HomeScreen} />
             <Stack.Screen name="Harmony" component={HarmonyHomeScreen} />

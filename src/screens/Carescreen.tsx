@@ -1,54 +1,64 @@
-import React, { useRef, useMemo } from 'react';
-import { Text, Button, Platform } from 'react-native';
-import styled from 'styled-components/native';
-import BottomSheet from '@gorhom/bottom-sheet';
-import { Portal } from '@gorhom/portal';
-
-const Container = styled.View`
-  flex: 1;
-  background-color: #fff;
-`;
+// src/screens/CareScreen.tsx
+import React, { useState } from 'react';
+import { Text, Button, Modal, View, StyleSheet, Platform } from 'react-native';
 
 const CareScreen = () => {
-  const sheetRef = useRef<BottomSheet>(null);
+  const [visible, setVisible] = useState(false);
 
-  const snapPoints = useMemo(() => [200, 400], []);
+  const openModal = () => {
+    console.log('[DEBUG] Opening native modal...');
+    setVisible(true);
+  };
 
-  const openSheet = () => {
-    console.log('[DEBUG] Opening sheet...');
-    if (Platform.OS !== 'web') {
-      sheetRef.current?.snapToIndex(1); // Always safe if index={-1} initially
-    }
+  const closeModal = () => {
+    console.log('[DEBUG] Closing native modal...');
+    setVisible(false);
   };
 
   return (
-    <Container>
-      <Text testID="care-placeholder">CareScreen Placeholder</Text>
-      <Button title="Open Sheet" testID="open-sheet" onPress={openSheet} />
+    <View style={styles.container}>
+      <Text testID='care-placeholder'>CareScreen Placeholder</Text>
+      <Button title="Open Sheet" testID='open-sheet' onPress={openModal} />
 
-      <Portal>
-        <BottomSheet
-          ref={sheetRef}
-          index={-1} // Sheet starts hidden
-          snapPoints={snapPoints}
-          enablePanDownToClose
-          onChange={(index) => console.log('[DEBUG] BottomSheet index changed:', index)}
-        >
-          <Text
-            testID="bottom-sheet-content"
-            style={{
-              color: 'black',
-              backgroundColor: 'white',
-              padding: 20,
-              textAlign: 'center',
-            }}
-          >
-            Sheet Content
-          </Text>
-        </BottomSheet>
-      </Portal>
-    </Container>
+      <Modal
+        animationType="slide"
+        visible={visible}
+        transparent={true}
+        onRequestClose={closeModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalText}>This is the native modal</Text>
+            <Button title="Close" onPress={closeModal} />
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 };
 
 export default CareScreen;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  modalContent: {
+    backgroundColor: '#000',
+    padding: 24,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  modalText: {
+    color: '#fff',
+    fontSize: 18,
+    marginBottom: 12,
+  },
+});

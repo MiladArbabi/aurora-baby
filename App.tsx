@@ -1,3 +1,4 @@
+// App.tsx
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider } from '@rneui/themed';
@@ -7,16 +8,13 @@ import AppNavigator from './src/navigation/AppNavigator';
 import { rneThemeBase, theme } from './src/styles/theme';
 import LoadingSpinner from './src/components/common/LoadingSpinner';
 import { LogBox } from 'react-native';
-import { PortalProvider } from '@gorhom/portal';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-
-
 LogBox.ignoreLogs([
-  'Warning: findDOMNode is deprecated',
+  'Text strings must be rendered within a <Text> component',
 ]);
 
-export default function App() {
+const App = () => {
   const [fontsLoaded] = useFonts({
     'Edrosa': require('./src/assets/fonts/Edrosa.otf'),
   });
@@ -29,12 +27,12 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider theme={rneThemeBase as any}>
         <StyledThemeProvider theme={theme}>
-          <PortalProvider>
-            <AppNavigator />
-            <StatusBar style="auto" />
-          </PortalProvider>
+          <AppNavigator />
+          <StatusBar style="auto" />
         </StyledThemeProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
   );
-}
+};
+
+export default App;
