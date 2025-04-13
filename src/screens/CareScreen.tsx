@@ -3,11 +3,12 @@ import React, { useState } from 'react';
 import { Text, Button, Modal, View, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from 'styled-components/native';
-import TopNav from '../components/common/TopNav';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import TopNav from '../components/common/TopNav';
 import MiniNavBar from '../components/carescreen/MiniNavBar';
+import BottomNav from '../components/common/BottomNav';
 import Tracker from '../components/carescreen/Tracker';
 import QuickLogMenu from '../components/carescreen/QuickLogMenu'; 
 
@@ -52,6 +53,7 @@ const CareScreen = () => {
           <QuickLogMenu onClose={closeModal} />
         </Modal>
       </View>
+      <BottomNav navigation={navigation} activeScreen="Care" />
     </SafeAreaView>
   );
 };
