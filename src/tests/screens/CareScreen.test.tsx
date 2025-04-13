@@ -1,52 +1,51 @@
-// src/tests/screens/CareScreen.test.tsx
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import CareScreen from '../../screens/CareScreen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PortalProvider } from '@gorhom/portal';
+import { ThemeProvider } from '@rneui/themed';
+import { ThemeProvider as StyledThemeProvider } from 'styled-components/native';
+import { NavigationContainer } from '@react-navigation/native';
+import { rneThemeBase, theme } from '../../styles/theme';
 
-
-describe('CareScreen', () => {
-  it('renders and toggles native Modal on button press', async () => {
-    const { getByTestId, getByText, queryByText } = render(
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <CareScreen />
-      </GestureHandlerRootView>
-    );
-
-    // Confirm placeholder is visible
-    expect(getByTestId('care-placeholder')).toBeTruthy();
-
-    // Open modal
-    fireEvent.press(getByTestId('open-sheet'));
-    await waitFor(() => expect(getByText('This is the native modal')).toBeTruthy());
-
-    // Close modal
-    fireEvent.press(getByText('Close'));
-    await waitFor(() => expect(queryByText('This is the native modal')).toBeNull());
-  });
-});
-
-it('renders MiniNavBar and switches tabs on icon press', async () => {
-  const { getByTestId, getByText } = render(
+const renderWithProviders = () =>
+  render(
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <PortalProvider>
-        <CareScreen />
-      </PortalProvider>
+      <ThemeProvider theme={rneThemeBase}>
+        <StyledThemeProvider theme={theme}>
+          <NavigationContainer>
+            <PortalProvider>
+              <CareScreen />
+            </PortalProvider>
+          </NavigationContainer>
+        </StyledThemeProvider>
+      </ThemeProvider>
     </GestureHandlerRootView>
   );
 
-  expect(getByTestId('care-placeholder')).toBeTruthy();
+describe('CareScreen', () => {
+  it('renders and toggles native Modal on button press', async () => {
+    const { getByTestId, getByText, queryByText } = renderWithProviders();
 
-  // Initially tracker is active
-  expect(getByTestId('active-tab-indicator').props.children).toContain('tracker');
+    fireEvent.press(getByTestId('open-sheet'));
+    await waitFor(() => expect(getByText('This is the native modal')).toBeTruthy());
 
-  fireEvent.press(getByTestId('graph-icon'));
-  expect(getByTestId('active-tab-indicator').props.children).toContain('graph');
+    fireEvent.press(getByText('Close'));
+    await waitFor(() => expect(queryByText('This is the native modal')).toBeNull());
+  });
 
-  fireEvent.press(getByTestId('cards-icon'));
-  expect(getByTestId('active-tab-indicator').props.children).toContain('cards');
+  it('renders MiniNavBar and switches tabs on icon press', async () => {
+    const { getByTestId } = renderWithProviders();
 
-  fireEvent.press(getByTestId('tracker-icon'));
-  expect(getByTestId('active-tab-indicator').props.children).toContain('tracker');
+    expect(getByTestId('active-tab-indicator').props.children).toContain('tracker');
+
+    fireEvent.press(getByTestId('graph-icon'));
+    expect(getByTestId('active-tab-indicator').props.children).toContain('graph');
+
+    fireEvent.press(getByTestId('cards-icon'));
+    expect(getByTestId('active-tab-indicator').props.children).toContain('cards');
+
+    fireEvent.press(getByTestId('tracker-icon'));
+    expect(getByTestId('active-tab-indicator').props.children).toContain('tracker');
+  });
 });

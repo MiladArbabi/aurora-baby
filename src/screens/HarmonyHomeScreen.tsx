@@ -1,6 +1,7 @@
 import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styled, { useTheme } from 'styled-components/native';
+import { StyleSheet } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { DefaultTheme } from 'styled-components/native';
@@ -78,3 +79,13 @@ const HarmonyHomeScreen: React.FC<HarmonyHomeScreenProps> = ({ navigation }) => 
 };
 
 export default HarmonyHomeScreen;
+
+const styles = StyleSheet.create({
+    miniNavWrapper: {
+      marginTop: 30, // TopNav height is 50 + margin = ~Y=100
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      alignItems: 'flex-start',
+      gap: 25, // future RN support; we’ll fallback to manual spacing for now
+    },
+  });  
