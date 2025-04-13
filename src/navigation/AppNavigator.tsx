@@ -11,7 +11,6 @@ import WonderScreen from '../screens/WonderScreen';
 import AuthScreen from '../screens/AuthScreen';
 import ProfileSettingScreen from '../screens/ProfileSettingScreen';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import { PortalHost } from '@gorhom/portal';
 
 export type RootStackParamList = {
   Auth: undefined;
