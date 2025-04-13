@@ -8,6 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import MiniNavBar from '../components/carescreen/MiniNavBar';
+import Tracker from '../components/carescreen/Tracker';
 
 const CareScreen = () => {
     const theme = useTheme();
@@ -31,14 +32,14 @@ const CareScreen = () => {
       <TopNav navigation={navigation} />
 
       <View style={styles.miniNavWrapper}>
-        <MiniNavBar onNavigate={(tab) => setActiveTab(tab.toLowerCase() as 'tracker' | 'graph' | 'cards')} />
+        <MiniNavBar onNavigate={(tab) => 
+            setActiveTab(tab.toLowerCase() as 'tracker' | 'graph' | 'cards')} />
       </View>
+            <Text testID="active-tab-indicator" style={styles.tabIndicator}>
+            Active Tab: {activeTab}
+            </Text>
 
-      <Text testID="active-tab-indicator" style={styles.tabIndicator}>
-        Active Tab: {activeTab}
-      </Text>
-
-      <Button title="Open Sheet" testID="open-sheet" onPress={openModal} />
+      <Tracker onPlusPress={openModal} />
 
       <Modal
         animationType="slide"
@@ -77,7 +78,7 @@ const styles = StyleSheet.create({
     tabIndicator: {
       marginTop: 20,
       fontSize: 16,
-      textAlign: 'center',
+      textAlign: 'right',
     },
     modalOverlay: {
       flex: 1,
