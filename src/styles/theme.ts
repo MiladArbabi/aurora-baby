@@ -5,7 +5,7 @@ export const colors = {
   primary: '#B3A5C4', // Lavender
   background: '#E6E1F4', // Light Lavender
   secondaryBackground: '#453F4E', // Dark Lavender
-  accent: '#008080', // Teal
+  accent: '#A3FFF6', // Teal
   secondaryAccent: '#E6E1F4', // Light Lavender
   tertiaryAccent: '#A4B9CC', // Dusty Blue
   text: '#453F4E', // Dark Lavender for light mode text

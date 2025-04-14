@@ -120,10 +120,10 @@ describe('AuthScreen', () => {
       const emailInput = getByPlaceholderText('Email');
       const passwordInput = getByPlaceholderText('Password');
       expect(emailInput.props.style).toMatchObject({
-        color: theme.colors.contrastText,
+        color: theme.colors.secondaryBackground,
       });
       expect(passwordInput.props.style).toMatchObject({
-        color: theme.colors.contrastText,
+        color: theme.colors.secondaryBackground,
       });
     }, { timeout: 2000 });
   });
@@ -208,7 +208,7 @@ describe('AuthScreen', () => {
       expect(appleButton.props.style).toMatchObject(googleButton.props.style);
       expect(otherOptions.props.style).toMatchObject({
         fontSize: 16,
-        color: theme.colors.primary,
+        color: theme.colors.secondaryBackground,
         fontFamily: theme.fonts.regular,
       });
       expect(footer.props.style).toMatchObject({

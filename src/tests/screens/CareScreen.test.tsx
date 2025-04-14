@@ -59,4 +59,10 @@ describe('CareScreen', () => {
       expect(queryByTestId('quick-log-menu')).toBeNull();
     });
   });
+
+  it('renders a linear gradient background for CareScreen', () => {
+    const { getByTestId } = render(<CareScreen />);
+    const background = getByTestId('carescreen-gradient');
+    expect(background).toBeTruthy();
+  });  
 });

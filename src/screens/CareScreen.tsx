@@ -30,7 +30,8 @@ const CareScreen = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
+  <View style={styles.rootWrapper}>
+    <SafeAreaView testID="carescreen-gradient" style={{ flex: 1, backgroundColor: '#A3FFF6' }}>
       <View style={styles.container}>
         <TopNav navigation={navigation} />
 
@@ -55,6 +56,7 @@ const CareScreen = () => {
       </View>
       <BottomNav navigation={navigation} activeScreen="Care" />
     </SafeAreaView>
+  </View>
   );
 };
 
@@ -65,7 +67,10 @@ const styles = StyleSheet.create({
       flex: 1,
       paddingTop: 20, // Y=20
       paddingHorizontal: 20, // X=20
-      backgroundColor: '#fff',
+    },
+    rootWrapper: {
+      flex: 1,
+      backgroundColor: '#A3FFF6', 
     },
     miniNavWrapper: {
       marginTop: 30, // TopNav height is 50 + margin = ~Y=100
@@ -94,5 +99,8 @@ const styles = StyleSheet.create({
       color: '#fff',
       fontSize: 18,
       marginBottom: 12,
+    },
+    safeArea: {
+      flex: 1,
     },
   });  
