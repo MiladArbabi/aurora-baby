@@ -76,12 +76,12 @@ const Input = styled.TextInput`
   margin: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.small}px 0;
   border: 1px solid ${({ theme }: { theme: DefaultTheme }) => theme.colors.border};
   border-radius: 5px;
-  color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.contrastText};
+  color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.secondaryBackground};
 `;
 
 const OtherOptionsText = styled.Text`
   font-size: 16px;
-  color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.primary};
+  color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.text};
   font-family: ${({ theme }: { theme: DefaultTheme }) => theme.fonts.regular};
   text-decoration-line: underline;
 `;
