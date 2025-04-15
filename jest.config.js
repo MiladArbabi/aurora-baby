@@ -21,7 +21,5 @@ module.exports = {
     '^react-native-reanimated$': '<rootDir>/src/__mocks__/react-native-reanimated.ts',
     '^firebase(/.*)?$': '<rootDir>/src/__mocks__/firebase.ts',
     '^expo-constants$': '<rootDir>/src/__mocks__/expo-constants.ts',
-    '^@gorhom/bottom-sheet$': '<rootDir>/src/__mocks__/@gorhom/bottom-sheet.tsx',
-    '^@/assets/icons/(.*)$': '<rootDir>/__mocks__/svgMock.tsx',
-  }
+    }
 };
