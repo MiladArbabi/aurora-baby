@@ -1,6 +1,8 @@
 // src/components/carescreen/QuickLogMenu.tsx
 import React from 'react';
 import { View, Modal, TouchableOpacity, StyleSheet } from 'react-native';
+import { v4 as uuidv4 } from 'uuid';
+import { saveQuickLogEntry } from '../../storage/QuickLogStorage';
 import MenuHandleBar from '../common/MenuHandleBar';
 import SleepIcon from '../../assets/icons/carescreen/quick-log-menu/SleepIcon';
 import AwakeIcon from '../../assets/icons/carescreen/quick-log-menu/AwakeIcon';
