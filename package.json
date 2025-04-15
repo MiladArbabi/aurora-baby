@@ -44,7 +44,9 @@
     "react-native-svg": "^15.11.2",
     "react-native-web": "^0.19.13",
     "styled-components": "^6.1.16",
-    "styleq": "^0.1.2"
+    "styleq": "^0.1.2",
+    "uuid": "^11.1.0",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

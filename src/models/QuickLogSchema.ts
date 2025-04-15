@@ -1,4 +1,5 @@
 // src/models/QuickLogSchema.ts
+import { z } from 'zod';
 
 export type QuickLogType =
   | 'sleep'
@@ -84,3 +85,21 @@ export type QuickLogEntry =
   | MoodLog
   | HealthLog
   | NoteLog;
+
+  export const SleepLogSchema = z.object({
+    id: z.string(),
+    babyId: z.string(),
+    timestamp: z.string(),
+    type: z.literal('sleep'),
+    version: z.number(),
+    data: z.object({
+      start: z.string(),
+      end: z.string(),
+      duration: z.number(),
+    }),
+  });
+  
+  export const QuickLogEntrySchema = z.discriminatedUnion('type', [
+    SleepLogSchema,
+    // TODO: Add schemas for other types
+  ]);
