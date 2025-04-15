@@ -61,8 +61,8 @@ describe('CareScreen', () => {
   });
 
   it('renders a linear gradient background for CareScreen', () => {
-    const { getByTestId } = render(<CareScreen />);
+    const { getByTestId } = renderWithProviders();
     const background = getByTestId('carescreen-gradient');
     expect(background).toBeTruthy();
-  });  
+  });
 });
