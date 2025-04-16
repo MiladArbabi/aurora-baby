@@ -6,11 +6,9 @@ import QuickLogMenu from '../../../components/carescreen/QuickLogMenu';
 // Mocked props to test interaction
 const mockOnClose = jest.fn();
 
-
 describe('QuickLogMenu', () => {
   it('renders all six logging buttons with icons', () => {
     const { getByTestId } = render(<QuickLogMenu onClose={mockOnClose} />);
-
 
     expect(getByTestId('log-sleep')).toBeTruthy();
     expect(getByTestId('log-awake')).toBeTruthy();

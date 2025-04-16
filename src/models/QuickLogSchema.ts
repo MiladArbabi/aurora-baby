@@ -98,8 +98,73 @@ export type QuickLogEntry =
       duration: z.number(),
     }),
   });
+
+  export const AwakeLogSchema = z.object({
+    id: z.string(),
+    babyId: z.string(),
+    timestamp: z.string(),
+    type: z.literal('awake'),
+    version: z.number(),
+    data: z.object({
+      start: z.string(),
+      end: z.string(),
+      duration: z.number(),
+    }),
+  });
+  
+  export const FeedingLogSchema = z.object({
+    id: z.string(),
+    babyId: z.string(),
+    timestamp: z.string(),
+    type: z.literal('feeding'),
+    version: z.number(),
+    data: z.object({
+      method: z.enum(['bottle', 'breast', 'solid']),
+      quantity: z.number().optional(),
+      notes: z.string().optional(),
+    }),
+  });
+  
+  export const DiaperLogSchema = z.object({
+    id: z.string(),
+    babyId: z.string(),
+    timestamp: z.string(),
+    type: z.literal('diaper'),
+    version: z.number(),
+    data: z.object({
+      status: z.enum(['wet', 'dirty', 'both']),
+      notes: z.string().optional(),
+    }),
+  });
+  
+  export const MoodLogSchema = z.object({
+    id: z.string(),
+    babyId: z.string(),
+    timestamp: z.string(),
+    type: z.literal('mood'),
+    version: z.number(),
+    data: z.object({
+      emoji: z.string(),
+      tags: z.array(z.string()).optional(),
+    }),
+  });
+  
+  export const NoteLogSchema = z.object({
+    id: z.string(),
+    babyId: z.string(),
+    timestamp: z.string(),
+    type: z.literal('note'),
+    version: z.number(),
+    data: z.object({
+      text: z.string(),
+    }),
+  });  
   
   export const QuickLogEntrySchema = z.discriminatedUnion('type', [
     SleepLogSchema,
-    // TODO: Add schemas for other types
+    AwakeLogSchema,
+    FeedingLogSchema,
+    DiaperLogSchema,
+    MoodLogSchema,
+    NoteLogSchema,
   ]);
