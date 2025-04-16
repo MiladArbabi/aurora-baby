@@ -1,11 +1,12 @@
 // src/screens/CareScreen.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Text, Button, Modal, View, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from 'styled-components/native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import { getLogsGroupedByDate } from '../services/QuickLogAccess';
 import TopNav from '../components/common/TopNav';
 import MiniNavBar from '../components/carescreen/MiniNavBar';
 import BottomNav from '../components/common/BottomNav';
@@ -18,6 +19,14 @@ const CareScreen = () => {
     const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
     const [visible, setVisible] = useState(false);
     const [activeTab, setActiveTab] = useState<'tracker' | 'graph' | 'cards'>('tracker');
+
+    useEffect(() => {
+      const load = async () => {
+        const logs = await getLogsGroupedByDate();
+        console.log('[DEBUG] Grouped Logs:', logs);
+      };
+      load();
+    }, []);
 
   const openModal = () => {
     console.log('[DEBUG] Opening native modal...');
