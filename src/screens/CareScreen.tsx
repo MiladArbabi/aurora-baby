@@ -7,6 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { getLogsGroupedByDate } from '../services/QuickLogAccess';
+import { saveLastScreen } from '../services/LastScreenTracker';
 import TopNav from '../components/common/TopNav';
 import MiniNavBar from '../components/carescreen/MiniNavBar';
 import BottomNav from '../components/common/BottomNav';
@@ -19,6 +20,10 @@ const CareScreen = () => {
     const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
     const [visible, setVisible] = useState(false);
     const [activeTab, setActiveTab] = useState<'tracker' | 'graph' | 'cards'>('tracker');
+
+    useEffect(() => {
+      saveLastScreen('Home');
+    }, []);
 
     useEffect(() => {
       const load = async () => {

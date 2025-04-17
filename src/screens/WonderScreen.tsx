@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styled, { useTheme } from 'styled-components/native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import { saveLastScreen } from '../services/LastScreenTracker';
 import { DefaultTheme } from 'styled-components/native';
 import BottomNav from '../components/common/BottomNav';
 import TopNav from '../components/common/TopNav';
@@ -16,6 +17,10 @@ type WonderScreenProps = StackScreenProps<RootStackParamList, 'Wonder'>;
 
 const WonderScreen: React.FC<WonderScreenProps> = ({ navigation }) => {
   const theme = useTheme();
+
+  useEffect(() => {
+    saveLastScreen('Home');
+  }, []);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>

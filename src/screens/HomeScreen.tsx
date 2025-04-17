@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styled, { useTheme } from 'styled-components/native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { DefaultTheme } from 'styled-components/native';
+import { saveLastScreen } from '../services/LastScreenTracker';
 import BottomNav from '../components/common/BottomNav';
 import Card from '../components/common/Card';
 import TopNav from '../components/common/TopNav';
@@ -25,6 +26,10 @@ type HomeScreenProps = StackScreenProps<RootStackParamList, 'Home'>;
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const theme = useTheme();
+  
+  useEffect(() => {
+    saveLastScreen('Home');
+  }, []);
 
   const cardData = [
     {
