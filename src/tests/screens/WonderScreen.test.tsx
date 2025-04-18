@@ -9,6 +9,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { DefaultTheme } from 'styled-components/native';
+import type { ReactTestInstance } from 'react-test-renderer';
 
 describe('WonderScreen', () => {
   const mockNavigation: StackNavigationProp<RootStackParamList, 'Wonder'> = {
@@ -65,10 +66,16 @@ describe('WonderScreen', () => {
   it('highlights Wonder icon as active', async () => {
     const { getByTestId } = renderWithNavigation();
     await waitFor(() => {
-      const wonderIcon = getByTestId('bottom-nav-wonder').children[0];
-      expect(wonderIcon.props.style).toMatchObject({ tintColor: theme.colors.secondaryBackground }); // #453F4E
-      const homeIcon = getByTestId('bottom-nav-home').children[0];
-      expect(homeIcon.props.style).toMatchObject({ tintColor: theme.colors.background }); // #E6E1F4
+      // cast to ReactTestInstance so .props is recognized
+      const wonderIcon = getByTestId('bottom-nav-wonder').children[0] as ReactTestInstance;
+      expect(wonderIcon.props.style).toMatchObject({
+        tintColor: theme.colors.secondaryBackground,
+      }); // #453F4E
+
+      const homeIcon = getByTestId('bottom-nav-home').children[0] as ReactTestInstance;
+      expect(homeIcon.props.style).toMatchObject({
+        tintColor: theme.colors.background,
+      }); // #E6E1F4
     });
   });
 
