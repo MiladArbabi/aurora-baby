@@ -54,4 +54,9 @@ describe('Tracker Arcs', () => {
     expect(ratio).toBeGreaterThan(0.1)
     expect(ratio).toBeLessThan(0.55)
    })
+
+   it('renders outer and inner rims', () => {
+    expect(getByTestId('outter-rim')).toBeTruthy()
+    expect(getByTestId('inner-rim')).toBeTruthy()
+  })
 })
