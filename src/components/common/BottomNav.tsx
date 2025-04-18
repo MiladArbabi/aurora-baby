@@ -1,96 +1,71 @@
+//src/components/common/BottomNav.tsx
 import React from 'react';
-import { Image, TouchableOpacity } from 'react-native';
+import { Dimensions } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { DefaultTheme } from 'styled-components/native';
+import HomeIcon from '../../assets/bottomnavicons/HomeIcon';
+import HarmonyIcon from '../../assets/bottomnavicons/HarmonyIcon';
+import CareIcon from '../../assets/bottomnavicons/CareIcon';
+import WonderIcon from '../../assets/bottomnavicons/WonderIcon';
 
-const BottomNavWrapper = styled.View`
-  position: absolute;
-  bottom: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.xlarge}px; /* ~32px */
-  width: 100%;
-  align-items: center;
+const Wrapper = styled.View`
+ position: absolute;
+ bottom: 0;
+ width: 100%;
+ align-items: center;
 `;
 
-const BottomNavContainer = styled.View`
-  height: 50px;
+const NAV_W = 373;
+const NAV_H = 98;
+
+const Container = styled.View`
+  width: ${NAV_W}px;
+  height: ${NAV_H}px;
+  background-color: ${(props: { theme: DefaultTheme }) => props.theme.colors.primary};
+  border-top-left-radius: 50px;
+  border-top-right-radius: 50px;
+  border-top-wodth: 1px;
+  border-top-color: ${(props: { theme: DefaultTheme }) => props.theme.colors.border};
+  align-items: center;
+  justify-content: space-around;
   flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  padding: 10px 15px;
-  gap: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.xlarge}px; /* ~32px */
-  border-radius: 50px;
-  background-color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.primary};
 `;
 
-const NavIcon = styled.TouchableOpacity``;
+const NavButton = styled.TouchableOpacity`
+  width: 53px;
+  height: 72px;
+  align-items: center;
+  justify-content: center;
+`;
 
 type BottomNavProps = {
-  navigation: StackNavigationProp<RootStackParamList>;
-  activeScreen: keyof RootStackParamList;
+  navigation: any;
+  activeScreen: 'Home' | 'Harmony' | 'Care' | 'Wonder';
 };
 
-const BottomNav: React.FC<BottomNavProps> = ({ navigation, activeScreen }) => {
-  const theme = useTheme();
-  const iconSize = 48; // Standard touch target size
+const BottomNav: React.FC<BottomNavProps> = ({ navigation, activeScreen }) => {  const theme = useTheme();
+  const activeColor = theme.colors.secondaryBackground;
+  const inactiveColor = theme.colors.background;
 
   return (
-    <BottomNavWrapper>
-      <BottomNavContainer>
-        <NavIcon
-          testID="bottom-nav-home"
-          onPress={() => navigation.navigate('Home')}
-        >
-          <Image
-            source={require('../../assets/png/bottomnav/homeicon.png')}
-            style={{
-              width: iconSize,
-              height: iconSize,
-              tintColor: activeScreen === 'Home' ? theme.colors.secondaryBackground : theme.colors.background,
-            }}
-          />
-        </NavIcon>
-        <NavIcon
-          testID="bottom-nav-harmony"
-          onPress={() => navigation.navigate('Harmony')}
-        >
-          <Image
-            source={require('../../assets/png/bottomnav/harmonyicon.png')}
-            style={{
-              width: iconSize,
-              height: iconSize,
-              tintColor: activeScreen === 'Harmony' ? theme.colors.secondaryBackground : theme.colors.background,
-            }}
-          />
-        </NavIcon>
-        <NavIcon
-          testID="bottom-nav-care"
-          onPress={() => navigation.navigate('Care')}
-        >
-          <Image
-            source={require('../../assets/png/bottomnav/careicon.png')}
-            style={{
-              width: iconSize,
-              height: iconSize,
-              tintColor: activeScreen === 'Care' ? theme.colors.secondaryBackground : theme.colors.background,
-            }}
-          />
-        </NavIcon>
-        <NavIcon
-          testID="bottom-nav-wonder"
-          onPress={() => navigation.navigate('Wonder')}
-        >
-          <Image
-            source={require('../../assets/png/bottomnav/wondericon.png')}
-            style={{
-              width: iconSize,
-              height: iconSize,
-              tintColor: activeScreen === 'Wonder' ? theme.colors.secondaryBackground : theme.colors.background,
-            }}
-          />
-        </NavIcon>
-      </BottomNavContainer>
-    </BottomNavWrapper>
+    <Wrapper>
+      <Container>
+        <NavButton testID="bottom-nav-home" onPress={() => navigation.navigate('Home')}>
+          <HomeIcon fill={activeScreen === 'Home' ? activeColor : inactiveColor} />
+        </NavButton>
+        <NavButton testID="bottom-nav-harmony" onPress={() => navigation.navigate('Harmony')}>
+          <HarmonyIcon fill={activeScreen === 'Harmony' ? activeColor : inactiveColor} />
+        </NavButton>
+        <NavButton testID="bottom-nav-care" onPress={() => navigation.navigate('Care')}>
+          <CareIcon fill={activeScreen === 'Care' ? activeColor : inactiveColor} />
+        </NavButton>
+        <NavButton testID="bottom-nav-wonder" onPress={() => navigation.navigate('Wonder')}>
+          <WonderIcon fill={activeScreen === 'Wonder' ? activeColor : inactiveColor} />
+        </NavButton>
+      </Container>
+    </Wrapper>
   );
 };
 

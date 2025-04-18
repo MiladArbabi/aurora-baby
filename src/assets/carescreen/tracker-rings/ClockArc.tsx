@@ -37,7 +37,7 @@ const ClockArc: React.FC<ClockArcProps> = ({
         strokeLinecap="round"
         strokeDasharray={`${visible},${gap}`}
         strokeDashoffset={dashOffset}
-        rotation={0} 
+        rotation={180} 
         origin={`${cx}, ${cy}`}
       />
     </Svg>

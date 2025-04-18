@@ -13,8 +13,8 @@ const MainArc: React.FC<ArcProps> = ({ size, strokeWidth, color }) => {
   const cx = size / 2
   const cy = size / 2
   const circumference = 2 * Math.PI * radius
-  const gap = circumference * 0.01      // 1% gap
-  const visible = circumference * 0.99  // 99% stroke
+  const gap = circumference * 0.1     // 10% gap
+  const visible = circumference * 0.9  // 99% stroke
 
   return (
     <Svg width={size} height={size}>
@@ -29,7 +29,7 @@ const MainArc: React.FC<ArcProps> = ({ size, strokeWidth, color }) => {
         strokeLinecap="round"              // make ends round
         strokeDasharray={`${visible}, ${gap}`}
         strokeDashoffset={gap / 2}         // center the gap at the top
-        rotation={-90}
+        rotation={180}
         origin={`${cx}, ${cy}`}
       />
     </Svg>
