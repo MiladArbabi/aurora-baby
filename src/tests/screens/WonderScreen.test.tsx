@@ -1,7 +1,8 @@
+//src/tests/screens/WonderScreen.test.tsx
 import React from 'react';
 import { render, waitFor, fireEvent } from '@testing-library/react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { ThemeProvider } from '@rneui/themed';
+import { ThemeProvider as RNEProvider } from '@rneui/themed';
 import { ThemeProvider as StyledThemeProvider } from 'styled-components/native';
 import WonderScreen from '../../screens/WonderScreen';
 import { rneThemeBase, theme } from '../../styles/theme';
@@ -9,7 +10,10 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { DefaultTheme } from 'styled-components/native';
-import type { ReactTestInstance } from 'react-test-renderer';
+import HomeIcon from '../../assets/bottomnavicons/HomeIcon';
+import HarmonyIcon from '../../assets/bottomnavicons/HarmonyIcon';
+import CareIcon from '../../assets/bottomnavicons/CareIcon';
+import WonderIcon from '../../assets/bottomnavicons/WonderIcon';
 
 describe('WonderScreen', () => {
   const mockNavigation: StackNavigationProp<RootStackParamList, 'Wonder'> = {
@@ -44,13 +48,13 @@ describe('WonderScreen', () => {
 
   const renderWithNavigation = () =>
     render(
-      <ThemeProvider theme={rneThemeBase}>
-        <StyledThemeProvider theme={theme as DefaultTheme}>
+      <RNEProvider theme={rneThemeBase}>
+        <StyledThemeProvider theme={theme}>
           <NavigationContainer>
             <WonderScreen navigation={mockNavigation} route={mockRoute} />
           </NavigationContainer>
         </StyledThemeProvider>
-      </ThemeProvider>
+      </RNEProvider>
     );
 
   it('renders BottomNav with all icons', async () => {
@@ -65,19 +69,16 @@ describe('WonderScreen', () => {
 
   it('highlights Wonder icon as active', async () => {
     const { getByTestId } = renderWithNavigation();
-    await waitFor(() => {
-      // cast to ReactTestInstance so .props is recognized
-      const wonderIcon = getByTestId('bottom-nav-wonder').children[0] as ReactTestInstance;
-      expect(wonderIcon.props.style).toMatchObject({
-        tintColor: theme.colors.secondaryBackground,
-      }); // #453F4E
+        const wonderIconInstance = await getByTestId('bottom-nav-wonder')
+      .findByType(WonderIcon);
+    expect(wonderIconInstance.props.fill)
+      .toBe(theme.colors.secondaryBackground);
 
-      const homeIcon = getByTestId('bottom-nav-home').children[0] as ReactTestInstance;
-      expect(homeIcon.props.style).toMatchObject({
-        tintColor: theme.colors.background,
-      }); // #E6E1F4
+    const homeIconInstance = await getByTestId('bottom-nav-home')
+      .findByType(HomeIcon);
+    expect(homeIconInstance.props.fill)
+      .toBe(theme.colors.background);
     });
-  });
 
   it('navigates to Home when Home icon is pressed', async () => {
     const { getByTestId } = renderWithNavigation();
