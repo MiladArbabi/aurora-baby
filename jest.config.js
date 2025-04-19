@@ -21,5 +21,6 @@ module.exports = {
     '^react-native-reanimated$': '<rootDir>/src/__mocks__/react-native-reanimated.ts',
     '^firebase(/.*)?$': '<rootDir>/src/__mocks__/firebase.ts',
     '^expo-constants$': '<rootDir>/src/__mocks__/expo-constants.ts',
+    '^@react-native-voice/voice$': '<rootDir>/src/__mocks__/@react-native-voice/voice.js',
     }
 };

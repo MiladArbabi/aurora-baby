@@ -18,12 +18,6 @@ export const categorizeLogToSPECT = (log: QuickLogEntry): SpectCategory | null =
         return { category: 'Sleep', subcategory: 'nap3' };
       }
   
-      case 'awake': {
-        return time < 10
-          ? { category: 'Sleep', subcategory: 'wake_morning' }
-          : { category: 'Sleep', subcategory: 'wake_other' };
-      }
-  
       case 'feeding': {
         const method = log.data?.method;
         if (method === 'bottle') return { category: 'Eat', subcategory: 'bottle' };
