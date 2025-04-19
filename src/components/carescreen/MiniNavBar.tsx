@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
-import TrackerIcon from '../../assets/icons/carescreen/mini-navbar/TrackerIcon';
-import GraphIcon from '../../assets/icons/carescreen/mini-navbar/GraphIcon';
-import CardsIcon from '../../assets/icons/carescreen/mini-navbar/CardsIcon';
+import TrackerIcon from '../../assets/carescreen/mini-navbar/TrackerIcon';
+import GraphIcon from '../../assets/carescreen/mini-navbar/GraphIcon';
+import CardsIcon from '../../assets/carescreen/mini-navbar/CardsIcon';
 
 export type MiniTab = 'tracker' | 'graph' | 'cards';
 

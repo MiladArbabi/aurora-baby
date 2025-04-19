@@ -3,7 +3,6 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import QuickLogMenu from '../../../components/carescreen/QuickLogMenu';
 
-// Mocked props to test interaction
 const mockOnClose = jest.fn();
 
 describe('QuickLogMenu', () => {
@@ -11,17 +10,15 @@ describe('QuickLogMenu', () => {
     const { getByTestId } = render(<QuickLogMenu onClose={mockOnClose} />);
 
     expect(getByTestId('log-sleep')).toBeTruthy();
-    expect(getByTestId('log-awake')).toBeTruthy();
+    expect(getByTestId('log-note')).toBeTruthy();
     expect(getByTestId('log-feed')).toBeTruthy();
     expect(getByTestId('log-diaper')).toBeTruthy();
     expect(getByTestId('log-mood')).toBeTruthy();
-    expect(getByTestId('log-voice')).toBeTruthy();
+    expect(getByTestId('log-health')).toBeTruthy();
   });
 
   it('calls onClose when handlebar is pressed', () => {
     const { getByTestId } = render(<QuickLogMenu onClose={mockOnClose} />);
-
-
     fireEvent.press(getByTestId('menu-handle'));
     expect(mockOnClose).toHaveBeenCalled();
   });

@@ -30,14 +30,6 @@ describe('SpectMapper', () => {
     expect(categorizeLogToSPECT(nap3)).toEqual({ category: 'Sleep', subcategory: 'nap3' });
   });
 
-  it('maps awake logs to SLEEP with subcategory wake_morning or wake_other', () => {
-    const morning = sample('awake', '2025-04-15T07:00:00Z');
-    const later = sample('awake', '2025-04-15T11:00:00Z');
-
-    expect(categorizeLogToSPECT(morning)).toEqual({ category: 'Sleep', subcategory: 'wake_morning' });
-    expect(categorizeLogToSPECT(later)).toEqual({ category: 'Sleep', subcategory: 'wake_other' });
-  });
-
   it('maps feeding logs to EAT with method-based subcategorycategory', () => {
     const bottle = sample('feeding', '2025-04-15T08:00:00Z', { method: 'bottle' });
     const solid = sample('feeding', '2025-04-15T09:00:00Z', { method: 'solid' });

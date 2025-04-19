@@ -1,3 +1,4 @@
+//src/tests/screens/CareScreen.test.tsx
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import CareScreen from '../../screens/CareScreen';

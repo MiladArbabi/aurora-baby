@@ -1,3 +1,4 @@
+//src/storage/QuickLogStorage.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { z } from 'zod';
 import { QuickLogEntrySchema, QuickLogEntry } from '../models/QuickLogSchema';

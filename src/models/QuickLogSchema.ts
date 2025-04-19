@@ -3,7 +3,6 @@ import { z } from 'zod';
 
 export type QuickLogType =
   | 'sleep'
-  | 'awake'
   | 'feeding'
   | 'diaper'
   | 'mood'
@@ -24,15 +23,6 @@ export interface SleepLog extends QuickLogBase {
     start: string;
     end: string;
     duration: number; // in minutes
-  };
-}
-
-export interface AwakeLog extends QuickLogBase {
-  type: 'awake';
-  data: {
-    start: string;
-    end: string;
-    duration: number;
   };
 }
 
@@ -79,7 +69,6 @@ export interface NoteLog extends QuickLogBase {
 
 export type QuickLogEntry =
   | SleepLog
-  | AwakeLog
   | FeedingLog
   | DiaperLog
   | MoodLog
@@ -98,20 +87,20 @@ export type QuickLogEntry =
       duration: z.number(),
     }),
   });
-
-  export const AwakeLogSchema = z.object({
-    id: z.string(),
-    babyId: z.string(),
-    timestamp: z.string(),
-    type: z.literal('awake'),
-    version: z.number(),
-    data: z.object({
-      start: z.string(),
-      end: z.string(),
-      duration: z.number(),
-    }),
-  });
   
+  export const HealthLogSchema = z.object({
+      id: z.string(),
+      babyId: z.string(),
+      timestamp: z.string(),
+      type: z.literal('health'),
+      version: z.number(),
+      data: z.object({
+        temperature: z.number().optional(),
+        symptoms: z.array(z.string()).optional(),
+        notes: z.string().optional(),
+      }),
+    });
+
   export const FeedingLogSchema = z.object({
     id: z.string(),
     babyId: z.string(),
@@ -162,7 +151,7 @@ export type QuickLogEntry =
   
   export const QuickLogEntrySchema = z.discriminatedUnion('type', [
     SleepLogSchema,
-    AwakeLogSchema,
+    HealthLogSchema,
     FeedingLogSchema,
     DiaperLogSchema,
     MoodLogSchema,

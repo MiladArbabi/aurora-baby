@@ -1,7 +1,7 @@
 // src/components/carescreen/Tracker.tsx
 import React, { useEffect, useState } from 'react'
 import { View, StyleSheet, Dimensions, TouchableOpacity } from 'react-native'
-import PlusIcon from '../../assets/icons/carescreen/mini-navbar/PlusIcon'
+import PlusIcon from '../../assets/carescreen/mini-navbar/PlusIcon'
 import MainArc from '../../assets/carescreen/tracker-rings/MainArc'
 import ClockArc from '../../assets/carescreen/tracker-rings/ClockArc'
 import OutterRim from '../../assets/carescreen/tracker-rings/OutterRim'

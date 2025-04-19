@@ -1,31 +1,29 @@
+// src/components/carescreen/QuickLogMenu.tsx
 import React from 'react';
-import { View, Modal, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { v4 as uuidv4 } from 'uuid';
 import { saveQuickLogEntry } from '../../storage/QuickLogStorage';
 import { QuickLogEntry } from '../../models/QuickLogSchema';
 import MenuHandleBar from '../common/MenuHandleBar';
-import SleepIcon from '../../assets/icons/carescreen/quick-log-menu/SleepIcon';
-import AwakeIcon from '../../assets/icons/carescreen/quick-log-menu/AwakeIcon';
-import FeedIcon from '../../assets/icons/carescreen/quick-log-menu/FeedIcon';
-import DiaperIcon from '../../assets/icons/carescreen/quick-log-menu/DiaperIcon';
-import MoodIcon from '../../assets/icons/carescreen/quick-log-menu/MoodIcon';
-import VoiceIcon from '../../assets/icons/carescreen/quick-log-menu/VoiceIcon';
+
+import SleepButton from '../../assets/carescreen/QuickLogMenu/AsleepButton';
+import NotesButton from '../../assets/carescreen/QuickLogMenu/NotesButton';
+import FeedButton from '../../assets/carescreen/QuickLogMenu/FeedingButton';
+import DiaperButton from '../../assets/carescreen/QuickLogMenu/DiaperButton';
+import MoodButton from '../../assets/carescreen/QuickLogMenu/MoodButton';
+import HealthButton from '../../assets/carescreen/QuickLogMenu/HealthButton';
 
 interface Props {
   onClose: () => void;
 }
 
-const IconWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <View style={{ width: 50, height: 50, justifyContent: 'center', alignItems: 'center' }}>
-    {children}
-  </View>
-);
+type LogType = 'sleep' | 'feeding' | 'diaper' | 'mood' | 'health' | 'note';
 
 const QuickLogMenu: React.FC<Props> = ({ onClose }) => {
-  const handleQuickLog = async (type: 'sleep' | 'feeding' | 'diaper' | 'mood' | 'note') => {
+  const handleQuickLog = async (type: LogType) => {
     const entry: QuickLogEntry = {
       id: uuidv4(),
-      babyId: 'baby-001', // TODO: Replace with actual baby ID from context/store
+      babyId: 'baby-001',
       timestamp: new Date().toISOString(),
       type,
       version: 1,
@@ -36,7 +34,7 @@ const QuickLogMenu: React.FC<Props> = ({ onClose }) => {
       case 'sleep':
         entry.data = {
           start: new Date().toISOString(),
-          end: new Date(new Date().getTime() + 60 * 60 * 1000).toISOString(),
+          end: new Date(Date.now() + 60*60*1000).toISOString(),
           duration: 60,
         };
         break;
@@ -57,6 +55,14 @@ const QuickLogMenu: React.FC<Props> = ({ onClose }) => {
         entry.data = {
           emoji: '🙂',
           tags: ['calm'],
+        };
+        break;
+      case 'health':
+        entry.data = {
+          // you can choose sensible defaults or leave blank
+          temperature: undefined,
+          symptoms: [],
+          notes: 'Quick health check',
         };
         break;
       case 'note':
@@ -82,41 +88,12 @@ const QuickLogMenu: React.FC<Props> = ({ onClose }) => {
         </TouchableOpacity>
 
         <View style={styles.buttonGrid}>
-          <TouchableOpacity testID="log-sleep" onPress={() => handleQuickLog('sleep')}>
-            <IconWrapper>
-              <SleepIcon />
-            </IconWrapper>
-          </TouchableOpacity>
-
-          <TouchableOpacity testID="log-awake" onPress={() => handleQuickLog('note')}>
-            <IconWrapper>
-              <AwakeIcon />
-            </IconWrapper>
-          </TouchableOpacity>
-
-          <TouchableOpacity testID="log-feed" onPress={() => handleQuickLog('feeding')}>
-            <IconWrapper>
-              <FeedIcon />
-            </IconWrapper>
-          </TouchableOpacity>
-
-          <TouchableOpacity testID="log-diaper" onPress={() => handleQuickLog('diaper')}>
-            <IconWrapper>
-              <DiaperIcon />
-            </IconWrapper>
-          </TouchableOpacity>
-
-          <TouchableOpacity testID="log-voice" onPress={() => handleQuickLog('note')}>
-            <IconWrapper>
-              <VoiceIcon />
-            </IconWrapper>
-          </TouchableOpacity>
-
-          <TouchableOpacity testID="log-mood" onPress={() => handleQuickLog('mood')}>
-            <IconWrapper>
-              <MoodIcon />
-            </IconWrapper>
-          </TouchableOpacity>
+          <FeedButton    testID="log-feed"   onPress={() => handleQuickLog('feeding')} />
+          <SleepButton   testID="log-sleep"  onPress={() => handleQuickLog('sleep')}  />
+          <MoodButton    testID="log-mood"   onPress={() => handleQuickLog('mood')}   />
+          <DiaperButton  testID="log-diaper" onPress={() => handleQuickLog('diaper')} />
+          <NotesButton   testID="log-note"   onPress={() => handleQuickLog('note')}   />
+          <HealthButton  testID="log-health" onPress={() => handleQuickLog('health')} />
         </View>
       </View>
     </View>
@@ -127,15 +104,15 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: '#453F4E'
+    backgroundColor: '#453F4E',
   },
   sheet: {
-    backgroundColor: '#E6E1F4',
+    backgroundColor: '#453F4E',
     paddingVertical: 32,
     paddingHorizontal: 20,
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
-    alignItems: 'center'
+    alignItems: 'center',
   },
   buttonGrid: {
     width: 310,
@@ -143,8 +120,8 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'center',
     alignContent: 'flex-end',
-    gap: 50 
-  }
+    gap: 50,
+  },
 });
 
 export default QuickLogMenu;

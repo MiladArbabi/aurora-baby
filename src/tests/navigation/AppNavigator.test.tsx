@@ -1,3 +1,4 @@
+//src/tests/navigation/AppNavigator.test.tsx
 import { render, waitFor } from '@testing-library/react-native';
 import { ThemeProvider } from '@rneui/themed';
 import { ThemeProvider as StyledThemeProvider } from 'styled-components/native';
@@ -5,7 +6,6 @@ import AppNavigator from '../../navigation/AppNavigator';
 import { rneThemeBase, theme } from '../../styles/theme';
 import { DefaultTheme } from 'styled-components/native';
 import { PortalProvider } from '@gorhom/portal';
-
 
 // Mock Firebase
 jest.mock('../../services/firebase', () => ({
