@@ -14,7 +14,6 @@ import BottomNav from '../components/common/BottomNav';
 import Tracker from '../components/carescreen/Tracker';
 import QuickLogMenu from '../components/carescreen/QuickLogMenu'; 
 
-
 const CareScreen = () => {
     const theme = useTheme();
     const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
