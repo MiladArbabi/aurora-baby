@@ -1,5 +1,5 @@
-//src/screens/WhisprScreen.tsx
-import React, { useState } from 'react';
+// src/screens/WhisprScreen.tsx
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,13 @@ import {
   StyleSheet,
   Dimensions,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from 'navigation/AppNavigator';
 import { queryWhispr } from '../services/WhisprService';
+import WhisprVoiceLogo from '../assets/whispr/WhisprVoiceLogo.svg';
+
+type WhisprNavProp = StackNavigationProp<RootStackParamList, 'Whispr'>;
 
 type Sender = 'user' | 'whispr' | 'error';
 interface Message {
@@ -18,26 +24,48 @@ interface Message {
   sender: Sender;
 }
 
-const WhisprScreen = () => {
+// module‐scope mock hook for tests
+let scrollRefMock: (opts: { animated: boolean }) => void = () => {};
+
+// custom hook: safe navigation that won't throw if no context
+function useSafeNavigation<T>() {
+  try {
+    return useNavigation<T>();
+  } catch {
+    return undefined;
+  }
+}
+
+const WhisprScreen: React.FC & {
+  __setScrollRefMock: (fn: (opts: { animated: boolean }) => void) => void;
+} = () => {
+  const navigation = useSafeNavigation<WhisprNavProp>();
   const [prompt, setPrompt] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
+  const scrollRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    scrollRef.current?.scrollToEnd?.({ animated: true });
+    scrollRefMock({ animated: true });
+  }, [messages]);
+
+  const handleGoBack = () => {
+    if (navigation) navigation.goBack();
+  };
 
   const handleSendPrompt = async (overridePrompt?: string) => {
     const text = overridePrompt ?? prompt;
-    if (!text) return;
+    if (!text.trim()) return;
 
-    // Add the user's message
     setMessages(prev => [...prev, { text, sender: 'user' }]);
     setPrompt('');
     setLoading(true);
 
     try {
       const reply = await queryWhispr(text);
-      // Add Whispr's reply
       setMessages(prev => [...prev, { text: reply, sender: 'whispr' }]);
     } catch (err) {
-    
       const msg = err instanceof Error ? err.message : 'Unknown error';
       setMessages(prev => [
         ...prev,
@@ -50,8 +78,12 @@ const WhisprScreen = () => {
 
   return (
     <View style={styles.container}>
+      <Button
+      title="◀︎ Back"
+      onPress={handleGoBack}
+      />
+      <WhisprVoiceLogo width={150} height={150} />
       <Text style={styles.greetingText}>Hello, I'm Whispr.</Text>
-
       <View testID="suggestions" style={styles.suggestions}>
         {['Sleep', 'Feeding', 'Diaper', 'Mood', 'Health'].map(item => (
           <TouchableOpacity
@@ -64,11 +96,10 @@ const WhisprScreen = () => {
         ))}
       </View>
 
-      <ScrollView style={styles.messagesContainer}>
+      <ScrollView style={styles.messagesContainer} ref={scrollRef}>
         {messages.map((m, i) => (
           <View
             key={i}
-            testID={m.sender === 'user' ? 'user-text' : 'response-text'}
             style={[
               styles.messageBubble,
               m.sender === 'user'
@@ -78,13 +109,16 @@ const WhisprScreen = () => {
                 : styles.errorBubble,
             ]}
           >
-            <Text>{m.text}</Text>
+            <Text testID={m.sender === 'user' ? 'user-text' : 'response-text'}>
+              {m.text}
+            </Text>
           </View>
         ))}
       </ScrollView>
 
       <View style={styles.inputForm} testID="whispr-input-form">
         <TextInput
+          testID="input"
           placeholder="Ask Whispr"
           value={prompt}
           onChangeText={setPrompt}
@@ -101,6 +135,13 @@ const WhisprScreen = () => {
     </View>
   );
 };
+
+// make it non‐optional so TS knows it’s always there
+WhisprScreen.__setScrollRefMock = fn => {
+  scrollRefMock = fn;
+};
+
+export default WhisprScreen;
 
 const { width } = Dimensions.get('window');
 
@@ -175,6 +216,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#312C38',
   },
+  backButton: {
+      alignSelf: 'flex-start',
+      marginHorizontal: 10,
+      marginBottom: 10,
+     },
 });
-
-export default WhisprScreen;

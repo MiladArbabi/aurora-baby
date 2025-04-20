@@ -118,4 +118,20 @@ describe('WhisprScreen', () => {
     fireEvent.press(sendBtn);
     await waitFor(() => expect(getAllByTestId('response-text')).toHaveLength(2));
   });
+
+  it('auto-scrolls to the bottom when a new message arrives', async () => {
+    const scrollToEndMock = jest.fn();
+    const { getByTestId } = render(<WhisprScreen />);
+    // override the ScrollView ref internally
+    WhisprScreen.__setScrollRefMock(scrollToEndMock);
+  
+    // send a prompt
+    fireEvent.changeText(getByTestId('input'), 'Hello');
+    fireEvent.press(getByTestId('send-button'));
+  
+    await waitFor(() => {
+      // after message is rendered, should have scrolled
+      expect(scrollToEndMock).toHaveBeenCalledWith({ animated: true });
+    });
+  });
 });

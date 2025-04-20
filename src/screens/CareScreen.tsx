@@ -14,15 +14,18 @@ import TopNav from '../components/common/TopNav';
 import MiniNavBar from '../components/carescreen/MiniNavBar';
 import BottomNav from '../components/common/BottomNav';
 import Tracker from '../components/carescreen/Tracker';
-import QuickLogMenu from '../components/carescreen/QuickLogMenu'; 
+import QuickLogMenu from '../components/carescreen/QuickLogMenu';
 import QuickLogButton from '../components/common/QuickLogButton';
-import MicIcon from '../components/common/MicIcon';
+import MicIcon from '../components/common/MicButton';
+import WhisprVoiceButton from '../components/common/WhisprVoiceButton';
+
+type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>;
 
 const NAV_HEIGHT = 110;
 
 const CareScreen: React.FC = () => {
   const theme = useTheme();
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<CareNavProp>();
   const [visible, setVisible] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<'tracker' | 'graph' | 'cards'>('tracker');
@@ -88,11 +91,18 @@ const CareScreen: React.FC = () => {
         </SafeAreaView>
       </View>
       <View style={styles.quickLogContainer}>
-        <TouchableOpacity onPress={handleOpenMenu} style={styles.controlButton} testID="quick-log-open-button">
+        <TouchableOpacity onPress={handleOpenMenu} testID="quick-log-open-button">
           <QuickLogButton width={50} height={50} />
         </TouchableOpacity>
         <View style={{ height: 20 }} />
-        <TouchableOpacity onPress={handleVoiceCommand} style={styles.controlButton} testID="tracker-mic-button">
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Whispr')}
+          testID="whispr-voice-button"
+        >
+          <WhisprVoiceButton />
+        </TouchableOpacity>
+        <View style={{ height: 20 }} />
+        <TouchableOpacity onPress={handleVoiceCommand} testID="tracker-mic-button">
           <MicIcon width={50} height={50} />
         </TouchableOpacity>
       </View>
@@ -114,16 +124,5 @@ const styles = StyleSheet.create({
     right: 20,
     bottom: NAV_HEIGHT + 20,
     alignItems: 'center',
-  },
-  controlButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#B3A5C4',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
   },
 });
