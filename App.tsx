@@ -9,6 +9,7 @@ import { rneThemeBase, theme } from './src/styles/theme';
 import LoadingSpinner from './src/components/common/LoadingSpinner';
 import { LogBox } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import WhisprScreen from 'screens/WhisperScreen';
 
 LogBox.ignoreLogs([
   'Text strings must be rendered within a <Text> component',
@@ -27,7 +28,7 @@ const App = () => {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider theme={rneThemeBase as any}>
         <StyledThemeProvider theme={theme}>
-          <AppNavigator />
+          <WhisprScreen />
           <StatusBar style="auto" />
         </StyledThemeProvider>
       </ThemeProvider>
