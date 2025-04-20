@@ -18,6 +18,10 @@ import WhisprVoiceLogo from '../assets/whispr/WhisprVoiceLogo.svg';
 
 type WhisprNavProp = StackNavigationProp<RootStackParamList, 'Whispr'>;
 
+const Logo = typeof WhisprVoiceLogo === 'function'
+  ? WhisprVoiceLogo
+  : () => <View style={{ width: 150, height: 150 }} />;
+
 type Sender = 'user' | 'whispr' | 'error';
 interface Message {
   text: string;
@@ -82,7 +86,7 @@ const WhisprScreen: React.FC & {
       title="◀︎ Back"
       onPress={handleGoBack}
       />
-      <WhisprVoiceLogo width={150} height={150} />
+      <Logo width={150} height={150} />
       <Text style={styles.greetingText}>Hello, I'm Whispr.</Text>
       <View testID="suggestions" style={styles.suggestions}>
         {['Sleep', 'Feeding', 'Diaper', 'Mood', 'Health'].map(item => (
