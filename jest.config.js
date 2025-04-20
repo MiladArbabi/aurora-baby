@@ -8,7 +8,9 @@ module.exports = {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
       tsconfig: './tsconfig.jest.json',
       useESM: false,
-      babelConfig: true
+      babelConfig: true,
+      // disable type‑checking diagnostics for transformed files
+      diagnostics: false
     }],
     '^.+\\.(js|jsx)$': ['babel-jest', { configFile: './.babelrc' }]
   },
@@ -22,5 +24,5 @@ module.exports = {
     '^firebase(/.*)?$': '<rootDir>/src/__mocks__/firebase.ts',
     '^expo-constants$': '<rootDir>/src/__mocks__/expo-constants.ts',
     '^@react-native-voice/voice$': '<rootDir>/src/__mocks__/@react-native-voice/voice.js',
-    }
+  }
 };

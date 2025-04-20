@@ -21,6 +21,9 @@ module.exports = () => {
       googleWebClientId: '450824864919-2f0636shfkbv7ivr4nhjloiljs5r6tc9.apps.googleusercontent.com',
       isDev: isDev
     },
-    newArchEnabled: true 
+    newArchEnabled: true,
+    apiHost: isDev  
+        ? 'http://10.0.2.2:4000'     // Android emulator
+        : 'https://your.production.api'
+    }
   };
-};
