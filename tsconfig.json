@@ -14,6 +14,9 @@
       "*": ["src/*"]
     }
   },
-  "include": ["src/**/*", "**/*.ts", "**/*.tsx", "declarations.d.ts", "jest/setup.js"],
+  "include": [
+    "src/**/*",
+    "jest/**/*.js"
+  ],
   "exclude": ["node_modules", "**/node_modules/*"]
 }
