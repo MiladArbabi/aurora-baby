@@ -11,6 +11,8 @@ import WonderScreen from '../screens/WonderScreen';
 import AuthScreen from '../screens/AuthScreen';
 import ProfileSettingScreen from '../screens/ProfileSettingScreen';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import WhisprScreen from '../screens/WhisprScreen';
+
 
 export type RootStackParamList = {
   Auth: undefined;
@@ -22,6 +24,7 @@ export type RootStackParamList = {
   Wonder: undefined;
   ProfileSettings: undefined;
   ForestMap: undefined;
+  Whispr: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -55,6 +58,7 @@ const AppNavigator = () => {
             <Stack.Screen name="Care" component={CareScreen} />
             <Stack.Screen name="Wonder" component={WonderScreen} />
             <Stack.Screen name="ProfileSettings" component={ProfileSettingScreen} />
+            <Stack.Screen name="Whispr" component={WhisprScreen} />
           </>
         ) : (
           <Stack.Screen name="Auth" component={AuthScreen} />

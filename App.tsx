@@ -28,7 +28,7 @@ const App = () => {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider theme={rneThemeBase as any}>
         <StyledThemeProvider theme={theme}>
-          <WhisprScreen />
+          <AppNavigator />
           <StatusBar style="auto" />
         </StyledThemeProvider>
       </ThemeProvider>
