@@ -9,29 +9,52 @@ import { saveLastScreen } from '../services/LastScreenTracker';
 import { DefaultTheme } from 'styled-components/native';
 import BottomNav from '../components/common/BottomNav';
 import TopNav from '../components/common/TopNav';
+import { useActionMenuLogic } from '../hooks/useActionMenuLogic';
+import ActionMenu from '../components/common/ActionMenu';
+import QuickLogModal from '../components/common/QuickLogModal';
+import QuickLogMenu from '../components/carescreen/QuickLogMenu';
 
-const Container = styled.View`
-  flex: 1;
-  background-color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.darkAccent};
-`;
+const NAV_HEIGHT = 110;
 
 type WonderScreenProps = StackScreenProps<RootStackParamList, 'Wonder'>;
 
 const WonderScreen: React.FC<WonderScreenProps> = ({ navigation }) => {
   const theme = useTheme();
+  const {
+      quickLogMenuVisible,
+      openQuickLog,
+      closeQuickLog,
+      handleVoiceCommand,
+      } = useActionMenuLogic();
 
-  useEffect(() => {
-    saveLastScreen('Home');
-  }, []);
 
   return (
+    <View style={styles.screen}>
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.darkAccent }} >
-        <Container>
           <TopNav navigation={navigation} />
           <BottomNav navigation={navigation} activeScreen="Wonder" />
-        </Container>
       </SafeAreaView>
+      <ActionMenu
+        style={styles.quickLogContainer}
+        onQuickLogPress={openQuickLog}
+        onWhisprPress={() => navigation.navigate('Whispr')}
+        onMicPress={handleVoiceCommand}
+      />
+      <QuickLogModal visible={quickLogMenuVisible} onClose={closeQuickLog} />
+    </View>
   );
 };
 
 export default WonderScreen;
+
+const styles = StyleSheet.create({
+  screen: {
+     flex: 1,
+     },
+  quickLogContainer: {
+      position: 'absolute',
+      right: 20,
+      bottom: NAV_HEIGHT + 20,
+      alignItems: 'center',
+    }
+  });
