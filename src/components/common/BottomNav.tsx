@@ -1,6 +1,6 @@
 //src/components/common/BottomNav.tsx
 import React from 'react';
-import { Dimensions } from 'react-native';
+import { Dimensions, useWindowDimensions } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
@@ -46,12 +46,16 @@ type BottomNavProps = {
 };
 
 const BottomNav: React.FC<BottomNavProps> = ({ navigation, activeScreen }) => {  const theme = useTheme();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const navHeight = screenHeight * 0.10;     // e.g. 10% of device height
+  const buttonWidth = screenWidth * 0.20;
+
   const activeColor = theme.colors.secondaryBackground;
   const inactiveColor = theme.colors.background;
 
   return (
     <Wrapper>
-      <Container>
+      <Container style={{ width: screenWidth, height: navHeight }}>
         <NavButton testID="bottom-nav-home" onPress={() => navigation.navigate('Home')}>
           <HomeIcon fill={activeScreen === 'Home' ? activeColor : inactiveColor} />
         </NavButton>
