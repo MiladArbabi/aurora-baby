@@ -1,10 +1,10 @@
-// src/hooks/useCareScreenLogic.ts
+// src/hooks/useActionMenuLogic.ts
 import { useEffect, useState, useCallback } from 'react';
 import { getLogsGroupedByDate } from '../services/QuickLogAccess';
 import { saveLastScreen } from '../services/LastScreenTracker';
 import { useVoiceRecorder } from './useVoiceRecorder';
 
-export function useCareScreenLogic() {
+export function useActionMenuLogic() {
   const [modalVisible, setModalVisible] = useState(false);
   const [quickLogMenuVisible, setQuickLogMenuVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<'tracker'|'graph'|'cards'>('tracker');

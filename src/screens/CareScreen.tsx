@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import { useCareScreenLogic } from '../hooks/useCareScreenLogic';
+import { useActionMenuLogic } from '../hooks/useActionMenuLogic';
 import TopNav from '../components/common/TopNav';
 import MiniNavBar from '../components/carescreen/MiniNavBar';
 import BottomNav from '../components/common/BottomNav';
@@ -23,7 +23,7 @@ const CareScreen: React.FC = () => {
   const {
     modalVisible, quickLogMenuVisible, activeTab, setActiveTab,
     openModal, closeModal, openQuickLog, closeQuickLog, handleVoiceCommand,
-  } = useCareScreenLogic();
+  } = useActionMenuLogic();
   const navigation = useNavigation<CareNavProp>();
 
   const onNavigate = useCallback((screen: MiniTab) => {
