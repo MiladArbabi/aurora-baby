@@ -1,4 +1,4 @@
-//src/tests/screens/CareScreen.test.tsx
+// src/tests/screens/CareScreen.test.tsx
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import CareScreen from '../../screens/CareScreen';
@@ -8,6 +8,29 @@ import { ThemeProvider } from '@rneui/themed';
 import { ThemeProvider as StyledThemeProvider } from 'styled-components/native';
 import { NavigationContainer } from '@react-navigation/native';
 import { rneThemeBase, theme } from '../../styles/theme';
+
+// --- NAV MOCK ---
+const mockNavigate = jest.fn();
+jest.mock('@react-navigation/native', () => {
+  const actual = jest.requireActual('@react-navigation/native');
+  return {
+    ...actual,
+    useNavigation: () => ({ navigate: mockNavigate }),
+  };
+});
+
+// --- VOICE RECORDER MOCK ---
+const mockStart = jest.fn().mockResolvedValue(undefined);
+const mockStop = jest.fn().mockResolvedValue(undefined);
+jest.mock('../../hooks/useVoiceRecorder', () => ({
+  useVoiceRecorder: () => ({
+    transcript: 'hello world',
+    isListening: false,
+    error: null,
+    start: mockStart,
+    stop: mockStop,
+  }),
+}));
 
 const renderWithProviders = () =>
   render(
@@ -25,7 +48,13 @@ const renderWithProviders = () =>
   );
 
 describe('CareScreen', () => {
-  it('renders MiniNavBar and switches tabs on icon press', async () => {
+  beforeEach(() => {
+    mockNavigate.mockClear();
+    mockStart.mockClear();
+    mockStop.mockClear();
+  });
+
+  it('renders MiniNavBar and switches tabs on icon press', () => {
     const { getByTestId } = renderWithProviders();
 
     expect(getByTestId('active-tab-indicator').props.children).toContain('tracker');
@@ -40,30 +69,40 @@ describe('CareScreen', () => {
     expect(getByTestId('active-tab-indicator').props.children).toContain('tracker');
   });
 
-  it('opens and closes QuickLogMenu when plus icon is pressed', async () => {
+  it('renders a linear gradient background', () => {
+    const { getByTestId } = renderWithProviders();
+    expect(getByTestId('carescreen-gradient')).toBeTruthy();
+  });
+
+  it('opens and closes QuickLogMenu via the plus button', async () => {
     const { getByTestId, queryByTestId } = renderWithProviders();
 
-    // Initially not visible
     expect(queryByTestId('quick-log-menu')).toBeNull();
 
-    // Open modal via plus icon
-    fireEvent.press(getByTestId('tracker-plus-button'));
-
+    fireEvent.press(getByTestId('quick-log-open-button'));
     await waitFor(() => {
       expect(getByTestId('quick-log-menu')).toBeTruthy();
     });
 
-    // Close modal using handlebar
     fireEvent.press(getByTestId('menu-handle'));
-
     await waitFor(() => {
       expect(queryByTestId('quick-log-menu')).toBeNull();
     });
   });
 
-  it('renders a linear gradient background for CareScreen', () => {
+  it('navigates to Whispr when the whispr button is pressed', () => {
     const { getByTestId } = renderWithProviders();
-    const background = getByTestId('carescreen-gradient');
-    expect(background).toBeTruthy();
+    fireEvent.press(getByTestId('whispr-voice-button'));
+    expect(mockNavigate).toHaveBeenCalledWith('Whispr');
+  });
+
+  it('calls start and stop on the recorder when mic button is pressed', async () => {
+    const { getByTestId } = renderWithProviders();
+
+    fireEvent.press(getByTestId('tracker-mic-button'));
+    await waitFor(() => {
+      expect(mockStart).toHaveBeenCalled();
+      expect(mockStop).toHaveBeenCalled();
+    });
   });
 });
