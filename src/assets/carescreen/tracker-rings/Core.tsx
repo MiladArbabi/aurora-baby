@@ -4,9 +4,10 @@ import Svg, { Circle } from 'react-native-svg'
 interface CoreProps {
   size: number
   color: string
+  testId: string
 }
 
-const Core: React.FC<CoreProps> = ({ size, color }) => {
+const Core: React.FC<CoreProps> = ({ size, color, testId }) => {
   const radius = size / 2
   const cx = size / 2
   const cy = size / 2
@@ -14,7 +15,7 @@ const Core: React.FC<CoreProps> = ({ size, color }) => {
   return (
     <Svg width={size} height={size}>
       <Circle
-        testID="core"
+        testID={testId}
         cx={cx}
         cy={cy}
         r={radius}

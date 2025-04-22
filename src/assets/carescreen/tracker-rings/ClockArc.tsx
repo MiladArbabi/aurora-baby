@@ -6,6 +6,7 @@ interface ClockArcProps {
   size: number
   strokeWidth: number
   color: string
+  testID: string
   progress: number  // 0–1 fraction of the day
 }
 
@@ -13,6 +14,7 @@ const ClockArc: React.FC<ClockArcProps> = ({
   size,
   strokeWidth,
   color,
+  testID,
   progress,
 }) => {
   const radius = (size - strokeWidth) / 2
@@ -27,7 +29,7 @@ const ClockArc: React.FC<ClockArcProps> = ({
   return (
     <Svg width={size} height={size}>
       <Circle
-        testID="clock-arc"
+        testID={testID}
         cx={cx}
         cy={cy}
         r={radius}

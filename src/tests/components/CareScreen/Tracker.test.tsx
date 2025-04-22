@@ -1,7 +1,14 @@
 // src/tests/components/CareScreen/Tracker.test.tsx
 import React from 'react'
-import { render } from '@testing-library/react-native'
+import { render, fireEvent, act } from '@testing-library/react-native'
 import Tracker from '../../../components/carescreen/Tracker'
+
+jest.mock('../../../hooks/useTrackerData', () => ({
+    useTrackerData: () => ({
+      sleepSegments: [{ id: '1', startFraction: 0.2, endFraction: 0.3, color: '#00F' }],
+      eventMarkers: []
+    }),
+  }))
 
 describe('Tracker Arcs', () => {
   beforeAll(() => {
@@ -59,4 +66,13 @@ describe('Tracker Arcs', () => {
     expect(getByTestId('outter-rim')).toBeTruthy()
     expect(getByTestId('inner-rim')).toBeTruthy()
   })
+
+  it('invokes onSegmentPress when a sleep segment is tapped', () => {
+        const onPressSegment = jest.fn()
+        const { getByTestId } = render(
+          <Tracker onPlusPress={() => {}} onSegmentPress={onPressSegment} />
+        )
+        fireEvent.press(getByTestId('sleep-seg-1'))
+        expect(onPressSegment).toHaveBeenCalledWith('1')
+      })
 })

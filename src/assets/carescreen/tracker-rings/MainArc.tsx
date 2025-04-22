@@ -1,14 +1,15 @@
 // src/assets/carescreen/tracker-rings/MainArc.tsx
 import React from 'react'
-import Svg, { Circle } from 'react-native-svg'
+import { Svg, Circle } from 'react-native-svg'
 
 interface ArcProps {
   size: number
   strokeWidth: number
   color: string
+  testID: string
 }
 
-const MainArc: React.FC<ArcProps> = ({ size, strokeWidth, color }) => {
+const MainArc: React.FC<ArcProps> = ({ size, strokeWidth, color, testID }) => {
   const radius = (size - strokeWidth) / 2
   const cx = size / 2
   const cy = size / 2
@@ -19,7 +20,7 @@ const MainArc: React.FC<ArcProps> = ({ size, strokeWidth, color }) => {
   return (
     <Svg width={size} height={size}>
       <Circle
-        testID="main-arc"
+        testID={testID}
         cx={cx}
         cy={cy}
         r={radius}
