@@ -8,6 +8,9 @@ export const colors = {
   accent: '#A3FFF6', // Teal
   secondaryAccent: '#E6E1F4', // Light Lavender
   tertiaryAccent: '#A4B9CC', // Dusty Blue
+  warning: '#FFB400',    // ⚠️ for diaper/mood “warnings”
+  error:   '#F44336',    // 🛑 for health errors
+  info:    '#2196F3',    // ℹ️ for notes/info
   text: '#453F4E', // Dark Lavender for light mode text
   contrastText: '#E6E1F4', // Light Lavender for Dark Mode text
   border: '#D3C8E5', // Softer Lavender
