@@ -1,29 +1,41 @@
-// src/assets/carescreen/tracker-rings/OutterRim.tsx
 import React from 'react'
 import Svg, { Circle } from 'react-native-svg'
 
 interface RimProps {
-    size: number
-    strokeWidth: number
-    color: string
-  }
+  size: number
+  strokeWidth: number
+  color: string
+  testID: string
+  progress?: number
+}
 
-const OutterRim: React.FC<RimProps> = ({ size, strokeWidth, color }) => {
-  const radius = size / 2
+const OutterRim: React.FC<RimProps> = ({
+  size,
+  strokeWidth,
+  color,
+  testID,
+  progress = 1,
+}) => {
+  const radius = size / 2 - strokeWidth / 2
   const cx = size / 2
   const cy = size / 2
+  const circumference = 2 * Math.PI * radius
+  const dashArray = `${circumference},${circumference}`
+  const dashOffset = circumference * (1 - progress)
 
   return (
     <Svg width={size} height={size}>
       <Circle
-        testID="outter-rim"
+        testID={testID}
         cx={cx}
         cy={cy}
-        r={radius - strokeWidth/2}
+        r={radius}
         fill="none"
         stroke={color}
         strokeWidth={strokeWidth}
-        strokeLinecap="round"    
+        strokeLinecap="round"
+        strokeDasharray={dashArray}
+        strokeDashoffset={dashOffset}
         rotation={-90}
         origin={`${cx}, ${cy}`}
       />

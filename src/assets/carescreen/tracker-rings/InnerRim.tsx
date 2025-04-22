@@ -6,9 +6,10 @@ interface RimProps {
   size: number
   strokeWidth: number
   color: string
+  testID: string
 }
 
-const InnerRim: React.FC<RimProps> = ({ size, strokeWidth, color }) => {
+const InnerRim: React.FC<RimProps> = ({ size, strokeWidth, color, testID }) => {
   const radius = size / 2
   const cx = size / 2
   const cy = size / 2
@@ -16,7 +17,7 @@ const InnerRim: React.FC<RimProps> = ({ size, strokeWidth, color }) => {
   return (
     <Svg width={size} height={size}>
       <Circle
-        testID="inner-rim"
+        testID={testID}
         cx={cx}
         cy={cy}
         r={radius - strokeWidth/2}
