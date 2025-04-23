@@ -1,17 +1,17 @@
-import React from 'react';
-import { StyleSheet } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
+//src/components/carescreen/SegmentArc.tsx
+import React from 'react'
+import Svg, { Path } from 'react-native-svg'
 
-interface Props {
-  size: number;
-  strokeWidth: number;
-  startFraction: number; // 0–1 around the circle
-  endFraction: number;   // 0–1 around the circle
-  color: string;
-  testID?: string;
+interface SegmentArcProps {
+  size: number
+  strokeWidth: number
+  startFraction: number
+  endFraction: number
+  color: string
+  testID?: string
 }
 
-const SegmentArc: React.FC<Props> = ({
+const SegmentArc: React.FC<SegmentArcProps> = ({
   size,
   strokeWidth,
   startFraction,
@@ -19,42 +19,43 @@ const SegmentArc: React.FC<Props> = ({
   color,
   testID,
 }) => {
-  const r = size / 2 - strokeWidth / 2;
-  const circumference = 2 * Math.PI * r;
-  const arcLen = (endFraction - startFraction) * circumference;
-  const gapLen = circumference - arcLen;
-  // offset so that fraction=0 starts at top (–90°)
-  const offset = circumference * (1 / 4 + startFraction);
+  const fraction = endFraction - startFraction
+  if (fraction <= 0) {
+    return null
+  }
+
+  const radius = size / 2 - strokeWidth / 2
+  const cx = size / 2
+  const cy = size / 2
+  const circumference = 2 * Math.PI * radius
+
+  const visible = circumference * fraction
+  // pass as number[] for a true numeric dash array
+  const dashArray = [visible, circumference]
+
+  const rotation = startFraction * 360 - 90
+
+  const d = `
+    M ${cx} ${cy - radius}
+    A ${radius} ${radius} 0 1 1 ${cx} ${cy + radius}
+    A ${radius} ${radius} 0 1 1 ${cx} ${cy - radius}
+  `
 
   return (
-    <Svg
-      width={size}
-      height={size}
-      style={styles.svg}
-      testID={testID}
-    >
-      <Circle
-        cx={size / 2}
-        cy={size / 2}
-        r={r}
+    <Svg width={size} height={size}>
+      <Path
+        testID={testID}
+        d={d}
         stroke={color}
         strokeWidth={strokeWidth}
         fill="none"
-        strokeDasharray={`${arcLen},${gapLen}`}
-        strokeDashoffset={offset}
         strokeLinecap="round"
+        strokeDasharray={dashArray}
+        rotation={rotation}
+        origin={`${cx}, ${cy}`}
       />
     </Svg>
-  );
-};
+  )
+}
 
-const styles = StyleSheet.create({
-  svg: {
-    transform: [{ rotate: '-90deg' }],
-    position: 'absolute',
-    top: 0,
-    left: 0,
-  },
-});
-
-export default SegmentArc;
+export default SegmentArc

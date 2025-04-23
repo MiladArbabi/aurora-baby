@@ -1,88 +1,93 @@
-// src/screens/CareScreen.tsx
-import React, { useCallback } from 'react';
-import { Text, Modal, View, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import { useActionMenuLogic } from '../hooks/useActionMenuLogic';
-import TopNav from '../components/common/TopNav';
-import MiniNavBar from '../components/carescreen/MiniNavBar';
-import BottomNav from '../components/common/BottomNav';
-import Tracker from '../components/carescreen/Tracker';
-import QuickLogMenu from '../components/carescreen/QuickLogMenu';
-import ActionMenu from '../components/common/ActionMenu';
-import QuickLogModal from "../components/common/QuickLogModal";
-import type { MiniTab } from '../components/carescreen/MiniNavBar';
+import React, { useCallback, useState } from 'react'
+import { View, StyleSheet, Text } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { useNavigation } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
+import { RootStackParamList } from '../navigation/AppNavigator'
 
-type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>;
+import TopNav from '../components/common/TopNav'
+import MiniNavBar, { MiniTab } from '../components/carescreen/MiniNavBar'
+import BottomNav from '../components/common/BottomNav'
+import Tracker, { QuickMarker } from '../components/carescreen/Tracker'
+import QuickLogMenu from '../components/carescreen/QuickLogMenu'
+import ActionMenu from '../components/common/ActionMenu'
 
-const NAV_HEIGHT = 110;
+import { QuickLogEntry } from '../models/QuickLogSchema'
+import { useActionMenuLogic } from '../hooks/useActionMenuLogic'
+
+type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>
+
+const NAV_HEIGHT = 110
 
 const CareScreen: React.FC = () => {
+  const navigation = useNavigation<CareNavProp>()
   const {
-    modalVisible, quickLogMenuVisible, activeTab, setActiveTab,
-    openModal, closeModal, openQuickLog, closeQuickLog, handleVoiceCommand,
-  } = useActionMenuLogic();
-  const navigation = useNavigation<CareNavProp>();
+    quickLogMenuVisible,
+    openQuickLog,
+    closeQuickLog,
+    handleVoiceCommand,
+    activeTab,
+    setActiveTab,
+  } = useActionMenuLogic()
 
-  const onNavigate = useCallback((screen: MiniTab) => {
-    setActiveTab(screen);
-  }, [setActiveTab]);
+  const [quickLogMarkers, setQuickLogMarkers] = useState<QuickMarker[]>([])
+
+  const handleLogged = useCallback((entry: QuickLogEntry) => {
+    const t = new Date(entry.timestamp)
+    const frac =
+      (t.getHours() * 60 + t.getMinutes() + t.getSeconds() / 60) / 1440
+
+    setQuickLogMarkers(existing => {
+      // ⬅️ avoid duplicate keys
+      if (existing.some(m => m.id === entry.id)) return existing
+      return [...existing, { id: entry.id, fraction: frac, color: '#000000' }]
+    })
+  }, [])
+
+  const handleNavigate = useCallback(
+    (tab: MiniTab) => setActiveTab(tab),
+    [setActiveTab]
+  )
+  const handleSegmentPress = useCallback((id: string) => {}, [])
 
   return (
     <View style={styles.screen}>
-      <View style={styles.rootWrapper}>
-        <SafeAreaView testID="carescreen-gradient" style={styles.safeArea}>
-          <View style={styles.container}>
-            <TopNav navigation={navigation} />
-            <View style={styles.miniNavWrapper}>
-            <MiniNavBar onNavigate={onNavigate} />
-            </View>
-            <Text testID="active-tab-indicator" style={styles.tabIndicator}>
-              Active Tab: {activeTab}
-            </Text>
-            <Tracker onPlusPress={openModal} activeTab={activeTab} />
-            <QuickLogModal visible={modalVisible} onClose={closeModal} />
-          </View>
-          <BottomNav navigation={navigation} activeScreen="Care" />
-        </SafeAreaView>
-      </View>
-       <ActionMenu
+      <SafeAreaView testID="carescreen-gradient" style={styles.screen}>
+        <TopNav navigation={navigation} />
+        <MiniNavBar onNavigate={handleNavigate} />
+
+        <Text testID="active-tab-indicator" style={styles.tabIndicator}>
+          Active Tab: {activeTab}
+        </Text>
+
+        <Tracker
+          onPlusPress={openQuickLog}
+          onSegmentPress={handleSegmentPress}
+          quickMarkers={quickLogMarkers}
+        />
+
+        <BottomNav navigation={navigation} activeScreen="Care" />
+
+        {quickLogMenuVisible && (
+          <QuickLogMenu onClose={closeQuickLog} onLogged={handleLogged} />
+        )}
+      </SafeAreaView>
+
+      <ActionMenu
         style={styles.quickLogContainer}
         onQuickLogPress={openQuickLog}
         onWhisprPress={() => navigation.navigate('Whispr')}
         onMicPress={handleVoiceCommand}
       />
-      {quickLogMenuVisible && <QuickLogMenu onClose={closeQuickLog} />}
-      </View>
-  );
-};
+    </View>
+  )
+}
 
-export default CareScreen;
+export default CareScreen
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-  },
-  rootWrapper: {
-    flex: 1,
-    backgroundColor: '#A3FFF6',
-  },
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#A3FFF6',
-  },
-  container: {
-    flex: 1,
-    paddingTop: 20,
-    paddingHorizontal: 20,
-  },
-  miniNavWrapper: {
-    marginTop: 30,
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'flex-start',
   },
   tabIndicator: {
     marginTop: 20,
@@ -95,4 +100,4 @@ const styles = StyleSheet.create({
     bottom: NAV_HEIGHT + 20,
     alignItems: 'center',
   },
-});
+})

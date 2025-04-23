@@ -1,11 +1,11 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import React from 'react'
+import { View, StyleSheet } from 'react-native'
 
 interface Props {
-  size: number;         // Tracker diameter
-  fraction: number;     // 0–1
-  color: string;
-  testID?: string;
+  size: number
+  fraction: number
+  color: string
+  testID?: string
 }
 
 const EventMarker: React.FC<Props> = ({
@@ -14,11 +14,11 @@ const EventMarker: React.FC<Props> = ({
   color,
   testID,
 }) => {
-  const radius = size / 2;
-  const angle = fraction * 2 * Math.PI - Math.PI / 2;
-  const x = radius + radius * Math.cos(angle);
-  const y = radius + radius * Math.sin(angle);
-  const markerSize = 12;
+  const radius = size / 2
+  const angle = fraction * 2 * Math.PI - Math.PI / 2
+  const x = radius + radius * Math.cos(angle)
+  const y = radius + radius * Math.sin(angle)
+  const markerSize = 12
 
   return (
     <View
@@ -35,14 +35,15 @@ const EventMarker: React.FC<Props> = ({
         },
       ]}
     />
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   marker: {
     position: 'absolute',
-    zIndex: 5,
+    zIndex: 100,
+    elevation: 100,
   },
-});
+})
 
-export default EventMarker;
+export default EventMarker

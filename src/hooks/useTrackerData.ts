@@ -1,7 +1,10 @@
+//src/hooks/useTrackerData.ts
 import { useState, useEffect } from 'react';
 import { QuickLogEntry, SleepLog } from '../models/QuickLogSchema';
 import { getLogsBetween } from '../services/QuickLogAccess';
 import { theme } from '../styles/theme';
+import { quickLogEmitter } from '../storage/QuickLogEvents';
+
 
 export interface SleepSegment {
   id: string;
@@ -21,6 +24,7 @@ export function useTrackerData() {
   const [eventMarkers, setEventMarkers] = useState<EventMarker[]>([]);
 
   useEffect(() => {
+    let isMounted = true;
     const load = async () => {
       const now = new Date();
       const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -31,6 +35,8 @@ export function useTrackerData() {
         dayStart.toISOString(),
         dayEnd.toISOString()
       );
+
+      if (!isMounted) return;
 
       // 1. Sleep segments
       const sleeps = logs.filter((l) => l.type === 'sleep') as SleepLog[];
@@ -73,6 +79,11 @@ export function useTrackerData() {
     };
 
     load();
+    quickLogEmitter.addListener('saved', load);
+    return () => {
+      isMounted = false;
+      quickLogEmitter.removeListener('saved', load);
+    };
   }, []);
 
   return { sleepSegments, eventMarkers };

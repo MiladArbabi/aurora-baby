@@ -14,8 +14,8 @@ const MainArc: React.FC<ArcProps> = ({ size, strokeWidth, color, testID }) => {
   const cx = size / 2
   const cy = size / 2
   const circumference = 2 * Math.PI * radius
-  const gap = circumference * 0.1     // 10% gap
-  const visible = circumference * 0.9  // 99% stroke
+  const gap = circumference * 0.0     // 10% gap
+  const visible = circumference * 1  // Full
 
   return (
     <Svg width={size} height={size}>
