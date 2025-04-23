@@ -10,14 +10,23 @@ import MiniNavBar, { MiniTab } from '../components/carescreen/MiniNavBar'
 import BottomNav from '../components/common/BottomNav'
 import Tracker, { QuickMarker } from '../components/carescreen/Tracker'
 import QuickLogMenu from '../components/carescreen/QuickLogMenu'
-import ActionMenu from '../components/common/ActionMenu'
+import ActionMenu   from '../components/common/ActionMenu'
 
-import { QuickLogEntry } from '../models/QuickLogSchema'
+import { QuickLogEntry, QuickLogType } from '../models/QuickLogSchema'
 import { useActionMenuLogic } from '../hooks/useActionMenuLogic'
 
 type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>
 
 const NAV_HEIGHT = 110
+
+const colorMap: Record<QuickLogEntry['type'], string> = {
+  sleep:   '#4A90E2',
+  feeding: '#50E3C2',
+  diaper:  '#F5A623',
+  mood:    '#F8E71C',
+  health:  '#D0021B',
+  note:    '#9013FE',
+}
 
 const CareScreen: React.FC = () => {
   const navigation = useNavigation<CareNavProp>()
@@ -33,22 +42,41 @@ const CareScreen: React.FC = () => {
   const [quickLogMarkers, setQuickLogMarkers] = useState<QuickMarker[]>([])
 
   const handleLogged = useCallback((entry: QuickLogEntry) => {
-    const t = new Date(entry.timestamp)
-    const frac =
-      (t.getHours() * 60 + t.getMinutes() + t.getSeconds() / 60) / 1440
+    const t = new Date(entry.timestamp);
+    const fraction =
+      (t.getHours() * 60 + t.getMinutes() + t.getSeconds() / 60) / 1440;
+    const color = colorMap[entry.type];
 
-    setQuickLogMarkers(existing => {
-      // ⬅️ avoid duplicate keys
-      if (existing.some(m => m.id === entry.id)) return existing
-      return [...existing, { id: entry.id, fraction: frac, color: '#000000' }]
-    })
-  }, [])
+    setQuickLogMarkers((existing) =>
+      existing.some((m) => m.id === entry.id)
+        ? existing
+        : [
+            ...existing,
+            {
+              id: entry.id,
+              fraction,
+              color,
+              type: entry.type,
+            },
+          ]
+    );
+  }, []);
+
+  // only the markers are clickable
+  const handleMarkerPress = useCallback(
+    (id: string, type: QuickLogType) => {
+      navigation.navigate('LogDetail', { id, type });
+    },
+    [navigation]
+  );
 
   const handleNavigate = useCallback(
     (tab: MiniTab) => setActiveTab(tab),
     [setActiveTab]
   )
-  const handleSegmentPress = useCallback((id: string) => {}, [])
+  const handleSegmentPress = useCallback((id: string) => {
+    /* no-op for now */
+  }, [])
 
   return (
     <View style={styles.screen}>
@@ -63,6 +91,7 @@ const CareScreen: React.FC = () => {
         <Tracker
           onPlusPress={openQuickLog}
           onSegmentPress={handleSegmentPress}
+          onMarkerPress={handleMarkerPress}
           quickMarkers={quickLogMarkers}
         />
 

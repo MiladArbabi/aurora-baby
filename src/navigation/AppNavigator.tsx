@@ -1,8 +1,10 @@
+//src/navigation/AppNavigator.tsx
 import React, { useState, useEffect } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
 import { onAuthStateChanged, auth, checkAuthState } from '../services/firebase';
 import { User } from 'firebase/auth';
+
 import HomeScreen from '../screens/HomeScreen';
 import HarmonyHomeScreen from '../screens/HarmonyHomeScreen';
 import StoryPlayer from '../screens/StoryPlayer';
@@ -12,7 +14,9 @@ import AuthScreen from '../screens/AuthScreen';
 import ProfileSettingScreen from '../screens/ProfileSettingScreen';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import WhisprScreen from '../screens/WhisprScreen';
+import LogDetailScreen from '../screens/LogDetailScreen'
 
+import { QuickLogType } from '../models/QuickLogSchema';
 
 export type RootStackParamList = {
   Auth: undefined;
@@ -25,11 +29,12 @@ export type RootStackParamList = {
   ProfileSettings: undefined;
   ForestMap: undefined;
   Whispr: undefined;
+  LogDetail:   { id: string; type: 'sleep' | 'feeding' | 'diaper' | 'mood' | 'health' | 'note' }
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
 
-const AppNavigator = () => {
+export default function AppNavigator() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -59,6 +64,11 @@ const AppNavigator = () => {
             <Stack.Screen name="Wonder" component={WonderScreen} />
             <Stack.Screen name="ProfileSettings" component={ProfileSettingScreen} />
             <Stack.Screen name="Whispr" component={WhisprScreen} />
+            <Stack.Screen
+              name="LogDetail"
+              component={LogDetailScreen}
+              options={{ title: 'Log Details' }}
+             />
           </>
         ) : (
           <Stack.Screen name="Auth" component={AuthScreen} />
@@ -67,5 +77,3 @@ const AppNavigator = () => {
     </NavigationContainer>
   );
 };
-
-export default AppNavigator;
