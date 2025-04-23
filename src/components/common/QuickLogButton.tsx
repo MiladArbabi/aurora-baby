@@ -1,6 +1,6 @@
 //src/assets/icons/common/QuickLogButton.tsx
 import React from "react";
-import Svg, { Path, Circle, SvgProps } from "react-native-svg";
+import Svg, { Path, SvgProps } from "react-native-svg";
 
 const QuickLogButton = (props: SvgProps) => (
   <Svg width="45" height="46" viewBox="0 0 45 46" {...props}>

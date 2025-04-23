@@ -2,6 +2,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { z } from 'zod';
 import { QuickLogEntrySchema, QuickLogEntry } from '../models/QuickLogSchema';
+import { quickLogEmitter } from './QuickLogEvents';
 
 const STORAGE_KEY = '@quicklog_entries';
 const OFFLINE_QUEUE_KEY = '@quicklog_offline_queue';
@@ -12,11 +13,12 @@ const OFFLINE_QUEUE_KEY = '@quicklog_offline_queue';
 export const saveQuickLogEntry = async (entry: QuickLogEntry): Promise<void> => {
   // Validate entry
   QuickLogEntrySchema.parse(entry);
-
   const existing = await getAllQuickLogEntries();
   const updated = [...existing, entry];
-
   await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  
+  // **after** persisting:
+  quickLogEmitter.emit('saved', entry);
 };
 
 /**

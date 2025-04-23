@@ -1,3 +1,4 @@
+//src/components/common/ActionMenu.tsx
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet, ViewStyle, StyleProp } from 'react-native';
 import QuickLogButton from './QuickLogButton';

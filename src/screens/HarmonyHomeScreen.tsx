@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, SafeAreaView as RNSafeAreaView } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -9,13 +9,12 @@ import Card from '../components/common/Card';
 import TopNav from '../components/common/TopNav';
 import { prebuiltStories } from '../data/stories';
 import ActionMenu from '../components/common/ActionMenu';
-import QuickLogModal from '../components/common/QuickLogModal';
 import QuickLogMenu from '../components/carescreen/QuickLogMenu';
 import { useActionMenuLogic } from '../hooks/useActionMenuLogic';
 
 const Container = styled.View`
   flex: 1;
-  background-color: ${({ theme }: { theme: DefaultTheme }) =>
+  background-color: ${({ theme }: { theme: DefaultTheme }) => 
     theme.colors.background};
 `;
 
@@ -23,28 +22,24 @@ const CardsContainer = styled.View`
   flex: 1;
   align-items: center;
   justify-content: center;
-  padding-top: ${({ theme }: { theme: DefaultTheme }) =>
+  padding-top: ${({ theme }: { theme: DefaultTheme }) =>  
     theme.spacing.large}px;
-  padding-bottom: ${({ theme }: { theme: DefaultTheme }) =>
+  padding-bottom: ${({ theme }: { theme: DefaultTheme }) => 
     theme.sizes.bottomNavHeight + theme.spacing.xlarge}px;
 `;
 
-type HarmonyHomeScreenProps = StackScreenProps<
-  RootStackParamList,
-  'Harmony'
->;
+type Props = StackScreenProps<RootStackParamList, 'Harmony'>;
+
 const NAV_HEIGHT = 110;
 
-const HarmonyHomeScreen: React.FC<HarmonyHomeScreenProps> = ({
-  navigation,
-}) => {
+const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
   const theme = useTheme();
-  const {
-    quickLogMenuVisible,
-    openQuickLog,
-    closeQuickLog,
-    handleVoiceCommand,
-  } = useActionMenuLogic();
+  const { handleVoiceCommand } = useActionMenuLogic();
+
+  // local quick-log state
+  const [quickLogVisible, setQuickLogVisible] = useState(false);
+  const openQuickLog = useCallback(() => setQuickLogVisible(true), []);
+  const closeQuickLog = useCallback(() => setQuickLogVisible(false), []);
 
   const cardData = [
     {
@@ -52,14 +47,9 @@ const HarmonyHomeScreen: React.FC<HarmonyHomeScreenProps> = ({
       backgroundImage: require('../assets/png/characters/birkandfreya.png'),
       title: 'Play a Story',
       subtext: prebuiltStories[0].title,
-      badges: [
-        prebuiltStories[0].stemFocus,
-        prebuiltStories[0].traitFocus,
-      ],
+      badges: [prebuiltStories[0].stemFocus, prebuiltStories[0].traitFocus],
       onPress: () =>
-        navigation.navigate('StoryPlayer', {
-          storyId: prebuiltStories[0].id,
-        }),
+        navigation.navigate('StoryPlayer', { storyId: prebuiltStories[0].id }),
     },
     {
       testID: 'harmony-card-create',
@@ -67,9 +57,7 @@ const HarmonyHomeScreen: React.FC<HarmonyHomeScreenProps> = ({
       title: 'Create Your Own Story',
       icon: require('../assets/png/icons/generative-ai.png'),
       onPress: () =>
-        navigation.navigate('StoryPlayer', {
-          storyId: 'mock-custom-story',
-        }),
+        navigation.navigate('StoryPlayer', { storyId: 'mock-custom-story' }),
     },
     {
       testID: 'harmony-card-explore',
@@ -113,7 +101,9 @@ const HarmonyHomeScreen: React.FC<HarmonyHomeScreenProps> = ({
         onMicPress={handleVoiceCommand}
       />
 
-      <QuickLogModal visible={quickLogMenuVisible} onClose={closeQuickLog} />
+      {quickLogVisible && (
+        <QuickLogMenu onClose={closeQuickLog} />
+      )}
     </View>
   );
 };
@@ -121,9 +111,7 @@ const HarmonyHomeScreen: React.FC<HarmonyHomeScreenProps> = ({
 export default HarmonyHomeScreen;
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
+  screen: { flex: 1 },
   quickLogContainer: {
     position: 'absolute',
     right: 20,
