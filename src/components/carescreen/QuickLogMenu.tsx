@@ -105,7 +105,11 @@ const QuickLogMenu: React.FC<Props> = ({ onClose, onLogged }) => {
   return (
     <View testID="quick-log-menu" style={styles.overlay}>
       <View style={styles.sheet}>
-        <TouchableOpacity testID="menu-handle" onPress={onClose}>
+        <TouchableOpacity
+        testID="menu-handle"
+        onPress={onClose}
+        style={styles.handleContainer}
+        >
           <HandleBar />
         </TouchableOpacity>
 
@@ -142,6 +146,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
+  },
+  handleContainer: {
+    alignSelf: 'center',
+    marginBottom: 16,  
   },
   row: {
     flexDirection: 'row',
