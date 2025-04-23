@@ -1,90 +1,104 @@
-//src/hooks/useTrackerData.ts
-import { useState, useEffect } from 'react';
-import { QuickLogEntry, SleepLog } from '../models/QuickLogSchema';
-import { getLogsBetween } from '../services/QuickLogAccess';
-import { theme } from '../styles/theme';
-import { quickLogEmitter } from '../storage/QuickLogEvents';
-
+// src/hooks/useTrackerData.ts
+import { useEffect, useState } from 'react'
+import { getLogsBetween } from '../services/QuickLogAccess'
+import { QuickLogEntry } from '../models/QuickLogSchema'
 
 export interface SleepSegment {
-  id: string;
-  startFraction: number;
-  endFraction: number;
-  color: string;
+  id: string
+  startFraction: number
+  endFraction: number
+  color: string
 }
+
 export interface EventMarker {
-  id: string;
-  fraction: number;
-  color: string;
-  type: string;
+  id: string
+  fraction: number
+  color: string
+  type: QuickLogEntry['type']
+}
+
+const colorMap: Record<QuickLogEntry['type'], string> = {
+  sleep:   '#4A90E2',
+  feeding: '#50E3C2',
+  diaper:  '#F5A623',
+  mood:    '#F8E71C',
+  health:  '#D0021B',
+  note:    '#9013FE',
 }
 
 export function useTrackerData() {
-  const [sleepSegments, setSleepSegments] = useState<SleepSegment[]>([]);
-  const [eventMarkers, setEventMarkers] = useState<EventMarker[]>([]);
+  const [sleepSegments, setSleepSegments] = useState<SleepSegment[]>([])
+  const [eventMarkers, setEventMarkers] = useState<EventMarker[]>([])
 
   useEffect(() => {
-    let isMounted = true;
-    const load = async () => {
-      const now = new Date();
-      const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const dayEnd = new Date(dayStart);
-      dayEnd.setDate(dayEnd.getDate() + 1);
+    let alive = true
 
-      const logs: QuickLogEntry[] = await getLogsBetween(
-        dayStart.toISOString(),
-        dayEnd.toISOString()
-      );
+    async function load() {
+      // ── only fetch *today’s* logs ────────────────────────────────
+      const now = new Date()
+      const yyyy = now.getUTCFullYear()
+      const mm   = String(now.getUTCMonth() + 1).padStart(2, '0')
+      const dd   = String(now.getUTCDate()).padStart(2, '0')
+      const startISO = `${yyyy}-${mm}-${dd}T00:00:00.000Z`
+      const endISO   = `${yyyy}-${mm}-${dd}T23:59:59.999Z`
 
-      if (!isMounted) return;
+      // ① call the aliased function your test mocks
+      const entries: QuickLogEntry[] = await getLogsBetween(startISO, endISO)
 
-      // 1. Sleep segments
-      const sleeps = logs.filter((l) => l.type === 'sleep') as SleepLog[];
-      const toFrac = (d: Date) =>
-        (d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60) / 1440;
-      const segments: SleepSegment[] = sleeps.map((s) => {
-        const start = new Date(s.data.start);
-        const end = new Date(s.data.end);
-        return {
-          id: s.id,
-          startFraction: toFrac(start),
-          endFraction: toFrac(end),
-          color: theme.colors.primary,
-        };
-      });
-
-      // 2. Other events as markers
-      const colorMap: Record<string, string> = {
-        feeding: theme.colors.accent,
-        diaper: theme.colors.warning,
-        mood: theme.colors.secondaryAccent,
-        health: theme.colors.error,
-        note: theme.colors.info,
-      };
-      const markers = logs
-        .filter((l) => l.type !== 'sleep')
-        .map((l) => {
-          const t = new Date(l.timestamp);
-          const frac = toFrac(t);
+      // ② map sleep entries into arcs (we narrow the type so TS knows about .data.start/.data.end)
+      const sleepSegs = entries
+        .filter(
+          (e): e is QuickLogEntry & {
+            data: { start: string; end: string; duration: number }
+          } => e.type === 'sleep'
+        )
+        .map((e) => {
+          const startDate = new Date(e.data.start)
+          const endDate   = new Date(e.data.end)
+          const startFraction =
+            (startDate.getHours() * 60 +
+              startDate.getMinutes() +
+              startDate.getSeconds() / 60) /
+            1440
+          const endFraction =
+            (endDate.getHours() * 60 +
+              endDate.getMinutes() +
+              endDate.getSeconds() / 60) /
+            1440
           return {
-            id: l.id,
-            type: l.type,
-            fraction: frac,
-            color: colorMap[l.type] ?? theme.colors.background,
-          };
-        });
+            id: e.id,
+            startFraction,
+            endFraction,
+            color: '#E9DAFA',
+          }
+        })
 
-      setSleepSegments(segments);
-      setEventMarkers(markers);
-    };
+      // ③ non-sleep entries become point markers
+      const markers = entries
+        .filter((e) => e.type !== 'sleep')
+        .map((e) => {
+          const t = new Date(e.timestamp)
+          const fraction =
+            (t.getHours() * 60 + t.getMinutes() + t.getSeconds() / 60) /
+            1440
+          return {
+            id: e.id,
+            fraction,
+            color: colorMap[e.type],
+            type: e.type,
+          }
+        })
 
-    load();
-    quickLogEmitter.addListener('saved', load);
+      if (!alive) return
+      setSleepSegments(sleepSegs)
+      setEventMarkers(markers)
+    }
+
+    load()
     return () => {
-      isMounted = false;
-      quickLogEmitter.removeListener('saved', load);
-    };
-  }, []);
+      alive = false
+    }
+  }, [])
 
-  return { sleepSegments, eventMarkers };
+  return { sleepSegments, eventMarkers }
 }
