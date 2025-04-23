@@ -1,4 +1,5 @@
-import React, { useCallback, useState } from 'react'
+//src/screens/CareScreen.tsx
+import React, { useCallback, useState, useEffect } from 'react'
 import { View, StyleSheet, Text } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
@@ -11,8 +12,10 @@ import BottomNav from '../components/common/BottomNav'
 import Tracker, { QuickMarker } from '../components/carescreen/Tracker'
 import QuickLogMenu from '../components/carescreen/QuickLogMenu'
 import ActionMenu   from '../components/common/ActionMenu'
+import LogDetailModal from '../components/carescreen/LogDetailModal'
+import { getLogsBetween } from '../services/QuickLogAccess'
 
-import { QuickLogEntry, QuickLogType } from '../models/QuickLogSchema'
+import { QuickLogEntry } from '../models/QuickLogSchema'
 import { useActionMenuLogic } from '../hooks/useActionMenuLogic'
 
 type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>
@@ -40,6 +43,16 @@ const CareScreen: React.FC = () => {
   } = useActionMenuLogic()
 
   const [quickLogMarkers, setQuickLogMarkers] = useState<QuickMarker[]>([])
+  const [quickLogEntries, setQuickLogEntries] = useState<QuickLogEntry[]>([])
+  const [selectedLog, setSelectedLog] = useState<QuickLogEntry | null>(null)
+
+  useEffect(() => {
+    // build ISO strings for midnight–11:59:59 today
+    const today = new Date().toISOString().slice(0, 10)
+    getLogsBetween(`${today}T00:00:00Z`, `${today}T23:59:59Z`)
+    .then(setQuickLogEntries)
+    .catch(console.error)
+  }, [])
 
   const handleLogged = useCallback((entry: QuickLogEntry) => {
     const t = new Date(entry.timestamp);
@@ -63,12 +76,14 @@ const CareScreen: React.FC = () => {
   }, []);
 
   // only the markers are clickable
-  const handleMarkerPress = useCallback(
-    (id: string, type: QuickLogType) => {
-      navigation.navigate('LogDetail', { id, type });
+  const handleMarkerPress = useCallback((id: string) => {
+    const entry = quickLogEntries.find(e => e.id === id)
+    if (entry) setSelectedLog(entry)
     },
-    [navigation]
+    [quickLogEntries]
   );
+
+  const closeDetail = () => setSelectedLog(null)
 
   const handleNavigate = useCallback(
     (tab: MiniTab) => setActiveTab(tab),
@@ -94,6 +109,12 @@ const CareScreen: React.FC = () => {
           onMarkerPress={handleMarkerPress}
           quickMarkers={quickLogMarkers}
         />
+
+        <LogDetailModal
+          visible={!!selectedLog}
+          entry={selectedLog!}
+          onClose={closeDetail}
+        /> 
 
         <BottomNav navigation={navigation} activeScreen="Care" />
 
