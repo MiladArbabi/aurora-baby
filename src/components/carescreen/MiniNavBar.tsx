@@ -1,3 +1,4 @@
+// src/components/carescreen/MiniNavBar.tsx
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import TrackerIcon from '../../assets/carescreen/mini-navbar/TrackerIcon';
@@ -12,7 +13,7 @@ interface Props {
 
 const MiniNavBar = ({ onNavigate }: Props) => {
   return (
-    <View style={styles.container}>
+    <View testID="mini-navbar-container" style={styles.container}>
       <TouchableOpacity 
         testID="cards-icon" 
         onPress={() => onNavigate?.('cards')}
@@ -41,10 +42,11 @@ const MiniNavBar = ({ onNavigate }: Props) => {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'flex-end',   // right-align all icons
+    paddingHorizontal: 16,
   },
   iconContainer: {
-    marginHorizontal: 10,
+    marginLeft: 16,               // space out icons to the left
   },
 });
 

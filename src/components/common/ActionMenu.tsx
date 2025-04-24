@@ -10,6 +10,7 @@ type ActionMenuProps = {
   onWhisprPress: () => void;
   onMicPress: () => void;
   style?: StyleProp<ViewStyle>;
+  testID?: string
 };
 
 const ActionMenu: React.FC<ActionMenuProps> = ({
@@ -17,8 +18,10 @@ const ActionMenu: React.FC<ActionMenuProps> = ({
   onWhisprPress,
   onMicPress,
   style,
+  testID,
 }) => (
   <View style={[styles.container, style]}>
+    <View testID={testID} style={[styles.container, style]}>
     <TouchableOpacity onPress={onQuickLogPress} testID="quick-log-open-button">
       <QuickLogButton width={50} height={50} />
     </TouchableOpacity>
@@ -30,10 +33,11 @@ const ActionMenu: React.FC<ActionMenuProps> = ({
     </TouchableOpacity>
 
     <View style={styles.spacer} />
-
+    
     <TouchableOpacity onPress={onMicPress} testID="tracker-mic-button">
       <MicIcon width={50} height={50} />
     </TouchableOpacity>
+    </View>
   </View>
 );
 

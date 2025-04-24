@@ -1,3 +1,4 @@
+//src/components/carescreen/Tracker.tsx
 import React from 'react'
 import {
   View,
@@ -28,11 +29,12 @@ export interface QuickMarker {
   type: QuickLogEntry['type']
 }
 
-interface Props {
+export interface Props {
   onPlusPress: () => void
   onSegmentPress?: (id: string) => void
   onMarkerPress?: (id: string, type: QuickLogEntry['type']) => void
   quickMarkers?: QuickMarker[]
+  showLast24h?: boolean
 }
 
 const Tracker: React.FC<Props> = ({
@@ -40,9 +42,9 @@ const Tracker: React.FC<Props> = ({
   onSegmentPress,
   onMarkerPress,
   quickMarkers = [],
+  showLast24h = false,
 }) => {
-  const { sleepSegments, eventMarkers } = useTrackerData()
-
+  const { sleepSegments, eventMarkers } = useTrackerData(showLast24h)
   const handleSeg = React.useCallback(
     (id: string) => onSegmentPress?.(id),
     [onSegmentPress],
@@ -116,7 +118,7 @@ const Tracker: React.FC<Props> = ({
         {/* quick‐logged dots */}
         {quickMarkers.map(m => (
           <EventMarker
-            key={m.id}
+            key={`quick-${m.id}`}
             testID={`quicklog-marker-${m.id}`}
             size={BASE_SIZE}
             fraction={m.fraction}

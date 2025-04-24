@@ -1,3 +1,4 @@
+// src/tests/components/CareScreen/MiniNavBar.test.tsx
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import MiniNavBar from '../../../components/carescreen/MiniNavBar';
@@ -23,5 +24,16 @@ describe('MiniNavBar', () => {
 
     fireEvent.press(getByTestId('cards-icon'));
     expect(onNavigate).toHaveBeenCalledWith('cards');
+  });
+
+  it('right-aligns contents in a container', () => {
+    const { getByTestId } = render(<MiniNavBar />);
+    const container = getByTestId('mini-navbar-container');
+
+    // Container style should include flexDirection row and justifyContent flex-end
+    expect(container.props.style).toMatchObject({
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+    });
   });
 });

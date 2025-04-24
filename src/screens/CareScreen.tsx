@@ -1,6 +1,6 @@
 //src/screens/CareScreen.tsx
 import React, { useCallback, useState, useEffect } from 'react'
-import { View, StyleSheet, Text } from 'react-native'
+import { View, StyleSheet, Text, TouchableOpacity } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -17,6 +17,7 @@ import { getLogsBetween } from '../services/QuickLogAccess'
 
 import { QuickLogEntry } from '../models/QuickLogSchema'
 import { useActionMenuLogic } from '../hooks/useActionMenuLogic'
+import { useTrackerData } from 'hooks/useTrackerData'
 
 type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>
 
@@ -45,6 +46,9 @@ const CareScreen: React.FC = () => {
   const [quickLogMarkers, setQuickLogMarkers] = useState<QuickMarker[]>([])
   const [quickLogEntries, setQuickLogEntries] = useState<QuickLogEntry[]>([])
   const [selectedLog, setSelectedLog] = useState<QuickLogEntry | null>(null)
+  const [showLast24h, setShowLast24h] = useState(false)
+  const { sleepSegments, eventMarkers } = useTrackerData(showLast24h)
+
 
   useEffect(() => {
     // build ISO strings for midnight–11:59:59 today
@@ -103,11 +107,24 @@ const CareScreen: React.FC = () => {
           Active Tab: {activeTab}
         </Text>
 
+        <TouchableOpacity
+          testID="filter-last24h-button"
+          onPress={() => setShowLast24h(prev => !prev)}
+        >
+          <Text style={styles.filterText}>
+            {showLast24h ? 'Today' : 'Last 24 h'}
+          </Text>
+        </TouchableOpacity>
+        <Text testID="tracker-filter-indicator" style={styles.indicator}>
+          {showLast24h ? 'Last 24 h' : 'Today'}
+        </Text>
+
         <Tracker
           onPlusPress={openQuickLog}
           onSegmentPress={handleSegmentPress}
           onMarkerPress={handleMarkerPress}
           quickMarkers={quickLogMarkers}
+          showLast24h={showLast24h} 
         />
 
         <LogDetailModal
@@ -123,12 +140,15 @@ const CareScreen: React.FC = () => {
         )}
       </SafeAreaView>
 
+      {!quickLogMenuVisible && (
       <ActionMenu
+        testID="action-menu"
         style={styles.quickLogContainer}
         onQuickLogPress={openQuickLog}
         onWhisprPress={() => navigation.navigate('Whispr')}
         onMicPress={handleVoiceCommand}
       />
+    )}
     </View>
   )
 }
@@ -150,4 +170,15 @@ const styles = StyleSheet.create({
     bottom: NAV_HEIGHT + 20,
     alignItems: 'center',
   },
+  filterRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    padding: 16 },
+  filterText: { 
+    fontSize: 16 
+  },
+  indicator: { 
+    fontSize: 16, 
+    fontWeight: '600' },
 })

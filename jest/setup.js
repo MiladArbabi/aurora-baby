@@ -20,5 +20,3 @@ jest.mock('@react-native-google-signin/google-signin', () => ({
 jest.mock('expo-font', () => ({
   useFonts: jest.fn(() => [true]),
 }));
-
-
