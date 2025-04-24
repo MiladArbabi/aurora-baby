@@ -62,6 +62,7 @@
     "@babel/plugin-transform-typescript": "^7.26.8",
     "@babel/preset-react": "^7.26.3",
     "@react-native-community/cli": "^18.0.0",
+    "@svgr/cli": "^8.1.0",
     "@testing-library/react-native": "^12.9.0",
     "@types/d3-shape": "^3.1.7",
     "@types/firebase": "^2.4.32",
