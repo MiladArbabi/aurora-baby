@@ -4,6 +4,15 @@ import { render, fireEvent } from '@testing-library/react-native'
 import LogDetailModal from '../../../components/carescreen/LogDetailModal'
 import { QuickLogEntry } from '../../../models/QuickLogSchema'
 
+// stub out all of our SVGR’d icons so they render as simple components
+jest.mock('../../../assets/carescreen/LogDetailModalIcons/Handelbar', () => () => null)
+jest.mock('../../../assets/carescreen/LogDetailModalIcons/Sleep',    () => () => null)
+jest.mock('../../../assets/carescreen/LogDetailModalIcons/Feeding',  () => () => null)
+jest.mock('../../../assets/carescreen/LogDetailModalIcons/Diaper',   () => () => null)
+jest.mock('../../../assets/carescreen/LogDetailModalIcons/Mood',     () => () => null)
+jest.mock('../../../assets/carescreen/LogDetailModalIcons/Note',     () => () => null)
+jest.mock('../../../assets/carescreen/LogDetailModalIcons/Health',   () => () => null)
+
 describe('LogDetailModal', () => {
   const sampleNote: QuickLogEntry = {
     id: 'note1',
