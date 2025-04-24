@@ -1,3 +1,4 @@
+//src/services/QuickLogAccess.ts
 import { QuickLogEntry, QuickLogType } from '../models/QuickLogSchema';
 import { getAllQuickLogEntries } from '../storage/QuickLogStorage';
 

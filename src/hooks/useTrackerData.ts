@@ -26,26 +26,38 @@ const colorMap: Record<QuickLogEntry['type'], string> = {
   note:    '#9013FE',
 }
 
-export function useTrackerData() {
+/**
+ * @param showLast24h  if true, fetch entries from now−24h→now; 
+ *                     otherwise from today’s midnight→now
+ */
+export function useTrackerData(showLast24h: boolean = false) {
   const [sleepSegments, setSleepSegments] = useState<SleepSegment[]>([])
-  const [eventMarkers, setEventMarkers] = useState<EventMarker[]>([])
+  const [eventMarkers, setEventMarkers]   = useState<EventMarker[]>([])
 
   useEffect(() => {
     let alive = true
 
     async function load() {
-      // ── only fetch *today’s* logs ────────────────────────────────
       const now = new Date()
-      const yyyy = now.getUTCFullYear()
-      const mm   = String(now.getUTCMonth() + 1).padStart(2, '0')
-      const dd   = String(now.getUTCDate()).padStart(2, '0')
-      const startISO = `${yyyy}-${mm}-${dd}T00:00:00.000Z`
-      const endISO   = `${yyyy}-${mm}-${dd}T23:59:59.999Z`
+        let start: Date
+          if (showLast24h) {
+            start = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+          } else {
+            // UTC midnight of today
+            start = new Date(Date.UTC(
+            now.getUTCFullYear(),
+            now.getUTCMonth(),
+            now.getUTCDate(),
+            0, 0, 0, 0
+          ))
+        }
+            const startISO = start.toISOString()
+            const endISO   = now.toISOString()
 
-      // ① call the aliased function your test mocks
+      // ① fetch
       const entries: QuickLogEntry[] = await getLogsBetween(startISO, endISO)
 
-      // ② map sleep entries into arcs (we narrow the type so TS knows about .data.start/.data.end)
+      // ② map sleeps to arcs
       const sleepSegs = entries
         .filter(
           (e): e is QuickLogEntry & {
@@ -57,14 +69,12 @@ export function useTrackerData() {
           const endDate   = new Date(e.data.end)
           const startFraction =
             (startDate.getHours() * 60 +
-              startDate.getMinutes() +
-              startDate.getSeconds() / 60) /
-            1440
+             startDate.getMinutes() +
+             startDate.getSeconds() / 60) / 1440
           const endFraction =
             (endDate.getHours() * 60 +
-              endDate.getMinutes() +
-              endDate.getSeconds() / 60) /
-            1440
+             endDate.getMinutes() +
+             endDate.getSeconds() / 60) / 1440
           return {
             id: e.id,
             startFraction,
@@ -73,14 +83,15 @@ export function useTrackerData() {
           }
         })
 
-      // ③ non-sleep entries become point markers
+      // ③ map non‐sleep to point markers
       const markers = entries
         .filter((e) => e.type !== 'sleep')
         .map((e) => {
           const t = new Date(e.timestamp)
           const fraction =
-            (t.getHours() * 60 + t.getMinutes() + t.getSeconds() / 60) /
-            1440
+            (t.getHours() * 60 +
+             t.getMinutes() +
+             t.getSeconds() / 60) / 1440
           return {
             id: e.id,
             fraction,
@@ -98,7 +109,7 @@ export function useTrackerData() {
     return () => {
       alive = false
     }
-  }, [])
+  }, [showLast24h])
 
   return { sleepSegments, eventMarkers }
 }
