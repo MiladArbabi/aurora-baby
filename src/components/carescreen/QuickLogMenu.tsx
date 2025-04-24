@@ -10,7 +10,7 @@ import { QuickLogEntry } from '../../models/QuickLogSchema'
 import HandleBar from '../../assets/carescreen/QuickLogMenu/HandleBar'
 import { generateId } from '../../utils/generateId'      // ← our new util
 
-import SleepButton from '../../assets/carescreen/QuickLogMenu/AsleepButton'
+import SleepButton from '../../assets/carescreen/QuickLogMenu/SleepButton'
 import NotesButton from '../../assets/carescreen/QuickLogMenu/NotesButton'
 import FeedButton from '../../assets/carescreen/QuickLogMenu/FeedingButton'
 import DiaperButton from '../../assets/carescreen/QuickLogMenu/DiaperButton'

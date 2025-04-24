@@ -51,12 +51,26 @@ const CareScreen: React.FC = () => {
 
 
   useEffect(() => {
-    // build ISO strings for midnight–11:59:59 today
-    const today = new Date().toISOString().slice(0, 10)
-    getLogsBetween(`${today}T00:00:00Z`, `${today}T23:59:59Z`)
-    .then(setQuickLogEntries)
-    .catch(console.error)
-  }, [])
+    const now = new Date()
+    let start: Date
+    if (showLast24h) {
+      start = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+    } else {
+      start = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+        0,0,0,0
+      ))
+    }
+    const end = now
+    const startISO = start.toISOString()
+    const endISO   = end.toISOString()
+  
+    getLogsBetween(startISO, endISO)
+      .then(setQuickLogEntries)
+      .catch(console.error)
+  }, [showLast24h])
 
   const handleLogged = useCallback((entry: QuickLogEntry) => {
     const t = new Date(entry.timestamp);
