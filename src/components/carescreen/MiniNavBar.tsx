@@ -8,30 +8,39 @@ import CardsIcon from '../../assets/carescreen/mini-navbar/CardsIcon';
 export type MiniTab = 'tracker' | 'graph' | 'cards';
 
 interface Props {
+  activeTab: MiniTab;
   onNavigate?: (screen: MiniTab) => void;
 }
 
-const MiniNavBar = ({ onNavigate }: Props) => {
-  return (
+const MiniNavBar: React.FC<Props> = ({ activeTab, onNavigate }) => {  return (
     <View testID="mini-navbar-container" style={styles.container}>
       <TouchableOpacity 
         testID="cards-icon" 
         onPress={() => onNavigate?.('cards')}
-        style={styles.iconContainer}
+        style={[
+          styles.iconContainer,
+          activeTab !== 'cards' && styles.inactive,
+        ]}
       >
         <CardsIcon />
       </TouchableOpacity>
       <TouchableOpacity 
         testID="tracker-icon" 
         onPress={() => onNavigate?.('tracker')}
-        style={styles.iconContainer}
+        style={[
+          styles.iconContainer,
+          activeTab !== 'tracker' && styles.inactive,
+        ]}
       >
         <TrackerIcon />
       </TouchableOpacity>
       <TouchableOpacity 
         testID="graph-icon" 
         onPress={() => onNavigate?.('graph')}
-        style={styles.iconContainer}
+        style={[
+          styles.iconContainer,
+          activeTab !== 'graph' && styles.inactive,
+        ]}
       >
         <GraphIcon />
       </TouchableOpacity>
@@ -47,6 +56,9 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     marginLeft: 16,               // space out icons to the left
+  },
+  inactive: {
+    opacity: 0.75,
   },
 });
 
