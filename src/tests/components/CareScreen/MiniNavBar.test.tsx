@@ -1,11 +1,10 @@
-// src/tests/components/CareScreen/MiniNavBar.test.tsx
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import MiniNavBar from '../../../components/carescreen/MiniNavBar';
 
 describe('MiniNavBar', () => {
   it('renders all three navigation icons', () => {
-    const { getByTestId } = render(<MiniNavBar />);
+    const { getByTestId } = render(<MiniNavBar activeTab="tracker" />);
 
     expect(getByTestId('tracker-icon')).toBeTruthy();
     expect(getByTestId('graph-icon')).toBeTruthy();
@@ -14,7 +13,7 @@ describe('MiniNavBar', () => {
 
   it('calls correct callback on icon press', () => {
     const onNavigate = jest.fn();
-    const { getByTestId } = render(<MiniNavBar onNavigate={onNavigate} />);
+    const { getByTestId } = render(<MiniNavBar activeTab="tracker" onNavigate={onNavigate} />);
 
     fireEvent.press(getByTestId('graph-icon'));
     expect(onNavigate).toHaveBeenCalledWith('graph');
@@ -27,7 +26,7 @@ describe('MiniNavBar', () => {
   });
 
   it('right-aligns contents in a container', () => {
-    const { getByTestId } = render(<MiniNavBar />);
+    const { getByTestId } = render(<MiniNavBar activeTab="tracker" />);
     const container = getByTestId('mini-navbar-container');
 
     // Container style should include flexDirection row and justifyContent flex-end

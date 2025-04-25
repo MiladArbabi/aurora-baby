@@ -55,18 +55,17 @@ describe('CareScreen', () => {
   });
 
   it('renders MiniNavBar and switches tabs on icon press', () => {
-    const { getByTestId } = renderWithProviders();
-
-    expect(getByTestId('active-tab-indicator').props.children).toContain('tracker');
+    const { getByTestId, getByText } = renderWithProviders();
+    expect(getByTestId('outter-rim')).toBeTruthy();
 
     fireEvent.press(getByTestId('graph-icon'));
-    expect(getByTestId('active-tab-indicator').props.children).toContain('graph');
+    expect(getByText('AI Suggestions')).toBeTruthy();
 
     fireEvent.press(getByTestId('cards-icon'));
-    expect(getByTestId('active-tab-indicator').props.children).toContain('cards');
+    expect(getByText('Past Logs')).toBeTruthy();
 
     fireEvent.press(getByTestId('tracker-icon'));
-    expect(getByTestId('active-tab-indicator').props.children).toContain('tracker');
+    expect(getByTestId('outter-rim')).toBeTruthy();
   });
 
   it('renders a linear gradient background', () => {
