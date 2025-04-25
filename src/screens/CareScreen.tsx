@@ -13,8 +13,9 @@ import Tracker, { QuickMarker } from '../components/carescreen/Tracker'
 import QuickLogMenu from '../components/carescreen/QuickLogMenu'
 import ActionMenu   from '../components/common/ActionMenu'
 import LogDetailModal from '../components/carescreen/LogDetailModal'
-import { getLogsBetween } from '../services/QuickLogAccess'
+import TrackerFilter from '../components/carescreen/TrackerFilter'
 
+import { getLogsBetween } from '../services/QuickLogAccess'
 import { QuickLogEntry } from '../models/QuickLogSchema'
 import { useActionMenuLogic } from '../hooks/useActionMenuLogic'
 import { useTrackerData } from 'hooks/useTrackerData'
@@ -125,13 +126,10 @@ const CareScreen: React.FC = () => {
           testID="filter-last24h-button"
           onPress={() => setShowLast24h(prev => !prev)}
         >
-          <Text style={styles.filterText}>
-            {showLast24h ? 'Today' : 'Last 24 h'}
-          </Text>
         </TouchableOpacity>
-        <Text testID="tracker-filter-indicator" style={styles.indicator}>
-          {showLast24h ? 'Last 24 h' : 'Today'}
-        </Text>
+        <TrackerFilter
+          showLast24h={showLast24h}
+          onToggle={() => setShowLast24h(prev => !prev)}/>
 
         <Tracker
           onPlusPress={openQuickLog}
@@ -189,10 +187,4 @@ const styles = StyleSheet.create({
     alignItems: 'center', 
     justifyContent: 'space-between', 
     padding: 16 },
-  filterText: { 
-    fontSize: 16 
-  },
-  indicator: { 
-    fontSize: 16, 
-    fontWeight: '600' },
 })
