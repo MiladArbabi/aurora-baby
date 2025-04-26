@@ -1,3 +1,4 @@
+//src/components/carescreen/LogDetailModal.tsx
 import React, { useState } from 'react'
 import {
   Modal,

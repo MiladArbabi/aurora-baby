@@ -13,8 +13,8 @@ import TrackerFilter from '../components/carescreen/TrackerFilter'
 import QuickLogMenu from '../components/carescreen/QuickLogMenu'
 import ActionMenu   from '../components/common/ActionMenu'
 import LogDetailModal from '../components/carescreen/LogDetailModal'
-import PastLogsView   from './PastLogsView'
 import SuggestionsView from './SuggestionsView'
+import CardsView from '../components/carescreen/CardsView'
 
 import { getLogsBetween } from '../services/QuickLogAccess'
 import { QuickLogEntry } from '../models/QuickLogSchema'
@@ -121,7 +121,7 @@ const CareScreen: React.FC = () => {
           </>
         )}
 
-        {activeTab === 'cards' && <PastLogsView />}
+        {activeTab === 'cards' && <CardsView />}
         {activeTab === 'graph' && <SuggestionsView />}
 
         <LogDetailModal
