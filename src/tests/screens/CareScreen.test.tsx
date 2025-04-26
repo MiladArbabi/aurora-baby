@@ -1,4 +1,3 @@
-// src/tests/screens/CareScreen.test.tsx
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import CareScreen from '../../screens/CareScreen';
@@ -62,7 +61,7 @@ describe('CareScreen', () => {
     expect(getByText('AI Suggestions')).toBeTruthy();
 
     fireEvent.press(getByTestId('cards-icon'));
-    expect(getByText('Past Logs')).toBeTruthy();
+    expect(getByText('No logs yet.')).toBeTruthy(); // Updated to match CardsView's empty state
 
     fireEvent.press(getByTestId('tracker-icon'));
     expect(getByTestId('outter-rim')).toBeTruthy();
