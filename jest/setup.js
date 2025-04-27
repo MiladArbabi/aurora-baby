@@ -1,3 +1,4 @@
+//jest/setup.js
 import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/async-storage-mock';
 
 global.setImmediate = setTimeout;
@@ -20,3 +21,7 @@ jest.mock('@react-native-google-signin/google-signin', () => ({
 jest.mock('expo-font', () => ({
   useFonts: jest.fn(() => [true]),
 }));
+
+const { TextEncoder, TextDecoder } = require('util')
+global.TextEncoder = TextEncoder
+global.TextDecoder = TextDecoder

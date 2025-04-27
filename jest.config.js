@@ -24,5 +24,6 @@ module.exports = {
     '^firebase(/.*)?$': '<rootDir>/src/__mocks__/firebase.ts',
     '^expo-constants$': '<rootDir>/src/__mocks__/expo-constants.ts',
     '^@react-native-voice/voice$': '<rootDir>/src/__mocks__/@react-native-voice/voice.js',
+    '^node-llama-cpp$': '<rootDir>/__mocks__/node-llama-cpp.js',
   }
 };

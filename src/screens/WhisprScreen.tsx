@@ -9,10 +9,10 @@ import {
   StyleSheet,
   Dimensions,
 } from 'react-native'
+import { queryWhispr } from '../services/WhisprService'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RootStackParamList } from '../navigation/AppNavigator'
-import { queryWhispr } from '../services/WhisprService'
 import WhisprVoiceLogo from '../assets/whispr/WhisprVoiceLogo.svg'
 import LayerIcon from '../assets/whispr/Layer'
 import Arrow from '../assets/whispr/Arrow'
