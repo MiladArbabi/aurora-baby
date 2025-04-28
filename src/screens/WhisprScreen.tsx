@@ -13,6 +13,8 @@ import { queryWhispr } from '../services/WhisprService'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RootStackParamList } from '../navigation/AppNavigator'
+import { speak } from '../services/TTSService'
+
 import WhisprVoiceLogo from '../assets/whispr/WhisprVoiceLogo.svg'
 import LayerIcon from '../assets/whispr/Layer'
 import Arrow from '../assets/whispr/Arrow'
@@ -81,6 +83,7 @@ const WhisprScreen: React.FC & {
         return [...prev.slice(0, -1), updated]
       })
       setMessages(prev => [...prev, { text: reply, sender: 'whispr' }])
+      speak(reply).catch(console.warn);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error'
       setThreads(prev => {

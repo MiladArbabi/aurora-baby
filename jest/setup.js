@@ -25,3 +25,7 @@ jest.mock('expo-font', () => ({
 const { TextEncoder, TextDecoder } = require('util')
 global.TextEncoder = TextEncoder
 global.TextDecoder = TextDecoder
+
+jest.mock('expo-speech', () => ({
+  speak: jest.fn(),
+}));
