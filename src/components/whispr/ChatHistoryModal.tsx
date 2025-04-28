@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+// src/components/whispr/ChatHistoryModal.tsx
+import React, { useState, useEffect } from 'react'
 import {
   View,
   Text,
@@ -8,25 +9,30 @@ import {
   StyleSheet,
   Dimensions,
   Modal,
-} from 'react-native';
+} from 'react-native'
 
-const { width } = Dimensions.get('window');
-
-type Sender = 'user' | 'whispr' | 'error';
+type Sender = 'user' | 'whispr' | 'error'
 interface Message {
-  text: string;
-  sender: Sender;
+  text: string
+  sender: Sender
+}
+
+interface Thread {
+  id: string
+  messages: Message[]
 }
 
 interface ChatHistoryModalProps {
-  visible: boolean;
-  threads: Message[][];
-  onClose: () => void;
-  onSelectThread: (thread: Message[]) => void;
-  onUpdateThreadName: (index: number, name: string) => void;
-  onDeleteThread: (index: number) => void;
-  onNewChat: () => void;
+  visible: boolean
+  threads: Thread[]
+  onClose: () => void
+  onSelectThread: (thread: Thread) => void
+  onUpdateThreadName: (index: number, name: string) => void
+  onDeleteThread: (index: number) => void
+  onNewChat: () => void
 }
+
+const { width } = Dimensions.get('window')
 
 const ChatHistoryModal: React.FC<ChatHistoryModalProps> = ({
   visible,
@@ -37,27 +43,30 @@ const ChatHistoryModal: React.FC<ChatHistoryModalProps> = ({
   onDeleteThread,
   onNewChat,
 }) => {
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [editName, setEditName] = useState('');
+  const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const [editName, setEditName] = useState('')
+
+  // Reset any in-progress edit when the modal closes
+  useEffect(() => {
+    if (!visible) {
+      setEditingIndex(null)
+      setEditName('')
+    }
+  }, [visible])
 
   const handleEditName = (index: number, currentName: string) => {
-    setEditingIndex(index);
-    setEditName(currentName);
-  };
+    setEditingIndex(index)
+    setEditName(currentName)
+  }
 
   const handleSaveName = (index: number) => {
-    onUpdateThreadName(index, editName);
-    setEditingIndex(null);
-    setEditName('');
-  };
+    onUpdateThreadName(index, editName)
+    setEditingIndex(null)
+    setEditName('')
+  }
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.modalBackdrop}>
         <View style={styles.modalContainer}>
           <TouchableOpacity style={styles.modalCloseButton} onPress={onClose}>
@@ -66,8 +75,8 @@ const ChatHistoryModal: React.FC<ChatHistoryModalProps> = ({
           <TouchableOpacity
             style={styles.newChatButton}
             onPress={() => {
-              onNewChat();
-              onClose();
+              onNewChat()
+              onClose()
             }}
             testID="new-chat-button"
           >
@@ -75,10 +84,11 @@ const ChatHistoryModal: React.FC<ChatHistoryModalProps> = ({
           </TouchableOpacity>
           <ScrollView style={styles.modalContent}>
             {threads.map((thread, index) => {
-              const defaultName = thread.find(m => m.sender === 'user')?.text ?? `Chat ${index + 1}`;
-              const threadName = thread[0]?.text || defaultName;
+              const defaultName =
+                thread.messages.find(m => m.sender === 'user')?.text ?? `Chat ${index + 1}`
+              const threadName = thread.messages[0]?.text || defaultName
               return (
-                <View key={index} style={styles.threadItem}>
+                <View key={thread.id} style={styles.threadItem}>
                   {editingIndex === index ? (
                     <View style={styles.editContainer}>
                       <TextInput
@@ -101,8 +111,8 @@ const ChatHistoryModal: React.FC<ChatHistoryModalProps> = ({
                     <TouchableOpacity
                       style={styles.threadHeader}
                       onPress={() => {
-                        onSelectThread(thread);
-                        onClose();
+                        onSelectThread(thread)
+                        onClose()
                       }}
                       testID={`thread-${index}`}
                     >
@@ -113,7 +123,7 @@ const ChatHistoryModal: React.FC<ChatHistoryModalProps> = ({
                     <TouchableOpacity
                       style={styles.actionButton}
                       onPress={() => handleEditName(index, threadName)}
-                      testID={`edit-thread-${index}` }
+                      testID={`edit-thread-${index}`}
                     >
                       <Text style={styles.actionButtonText}>Edit</Text>
                     </TouchableOpacity>
@@ -126,16 +136,16 @@ const ChatHistoryModal: React.FC<ChatHistoryModalProps> = ({
                     </TouchableOpacity>
                   </View>
                 </View>
-              );
+              )
             })}
           </ScrollView>
         </View>
       </View>
     </Modal>
-  );
-};
+  )
+}
 
-export default ChatHistoryModal;
+export default ChatHistoryModal
 
 const styles = StyleSheet.create({
   modalBackdrop: {
@@ -231,4 +241,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#000',
   },
-});
+})
