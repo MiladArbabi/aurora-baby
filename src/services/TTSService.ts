@@ -1,26 +1,22 @@
 // src/services/TTSService.ts
+import { NativeModules } from 'react-native';
 
 export function speak(text: string): Promise<void> {
-let SpeechModule: typeof import('expo-speech');
-try {
-    // dynamic require so the module‐load is inside a try
-    // jest-expo setup will still mock this fine in tests
-    // (and in prod if expo-speech is linked, this will succeed)
-    // otherwise we catch and no-op
-    // @ts-ignore
-    SpeechModule = require('expo-speech');
-} catch {
+  const { ExpoSpeech } = NativeModules as { ExpoSpeech?: any };
+  if (!ExpoSpeech || typeof ExpoSpeech.speak !== 'function') {
+    // no TTS available → no-op
     return Promise.resolve();
-}
+  }
 
-if (typeof SpeechModule.speak !== 'function') {
-    return Promise.resolve();
-}
-
-return new Promise((resolve, reject) => {
-    SpeechModule.speak(text, {
+  return new Promise((resolve, reject) => {
+    try {
+      ExpoSpeech.speak(text, {
         onDone: () => resolve(),
         onError: (err: any) => reject(err),
-    });
-});
+      });
+    } catch {
+      // if something else goes wrong, swallow it
+      resolve();
+    }
+  });
 }

@@ -12,9 +12,11 @@ import {
 import { queryWhispr } from '../services/WhisprService'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootStackParamList } from '../navigation/AppNavigator'
 import { speak } from '../services/TTSService'
 
+import ChatHistoryModal from '../components/whispr/ChatHistoryModal';
 import WhisprVoiceLogo from '../assets/whispr/WhisprVoiceLogo.svg'
 import LayerIcon from '../assets/whispr/Layer'
 import Arrow from '../assets/whispr/Arrow'
@@ -49,8 +51,35 @@ const WhisprScreen: React.FC & {
   const [messages, setMessages] = useState<Message[]>([])
   const [threads, setThreads]   = useState<Message[][]>([])
   const [loading, setLoading]   = useState(false)
-  const [showLayers, setShowLayers] = useState(false)
+  const [showChatHistory, setShowChatHistory] = useState(false);
   const scrollRef = useRef<ScrollView>(null)
+
+
+  useEffect(() => {
+    const loadThreads = async () => {
+      try {
+        const storedThreads = await AsyncStorage.getItem('whisprThreads');
+        if (storedThreads) {
+          setThreads(JSON.parse(storedThreads));
+        }
+      } catch (err) {
+        console.error('[WhisprScreen] Failed to load threads:', err);
+      }
+    };
+    loadThreads();
+  }, []);
+
+  // Save threads to AsyncStorage whenever they change
+  useEffect(() => {
+    const saveThreads = async () => {
+      try {
+        await AsyncStorage.setItem('whisprThreads', JSON.stringify(threads));
+      } catch (err) {
+        console.error('[WhisprScreen] Failed to save threads:', err);
+      }
+    };
+    saveThreads();
+  }, [threads]);
 
   useEffect(() => {
     scrollRef.current?.scrollToEnd?.({ animated: true })
@@ -97,6 +126,29 @@ const WhisprScreen: React.FC & {
     }
   }
 
+  const handleUpdateThreadName = (index: number, name: string) => {
+    setThreads(prev => {
+      const updated = [...prev];
+      updated[index] = [{ text: name, sender: 'user' }, ...updated[index].slice(1)];
+      return updated;
+    });
+  };
+
+  const handleDeleteThread = (index: number) => {
+    const currentThreads = threads;
+    if (index >= 0 && index < currentThreads.length) {
+      setThreads(prev => prev.filter((_, i) => i !== index));
+      if (currentThreads[index].length > 0 && messages.every(msg => currentThreads[index].includes(msg))) {
+        setMessages([]);
+      }
+    }
+  };
+
+  const handleNewChat = () => {
+    setMessages([]);
+    setThreads(prev => [...prev, []]);
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
@@ -109,7 +161,7 @@ const WhisprScreen: React.FC & {
         </TouchableOpacity>
         <TouchableOpacity
           testID="layer-icon"
-          onPress={() => setShowLayers(v => !v)}
+          onPress={() => setShowChatHistory(true)}
           style={styles.layerButton}
         >
           <LayerIcon width={32} height={32} />
@@ -131,31 +183,18 @@ const WhisprScreen: React.FC & {
         ))}
       </View>
 
-      {showLayers && (
-        <View testID="layers-list" style={styles.layersOverlay}>
-          {threads.map((thread, i) => {
-            const header = thread.find(m => m.sender === 'user')?.text ?? `Chat ${i + 1}`
-            return (
-              <TouchableOpacity
-                key={i}
-                style={styles.layerItem}
-                onPress={() => {
-                  setMessages(thread)
-                  setShowLayers(false)
-                }}
-              >
-                <Text style={styles.layerHeader}>{header}</Text>
-              </TouchableOpacity>
-            )
-          })}
-          <TouchableOpacity
-            style={styles.layerClose}
-            onPress={() => setShowLayers(false)}
-          >
-            <Text>Close</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      <ChatHistoryModal
+        visible={showChatHistory}
+        threads={threads}
+        onClose={() => setShowChatHistory(false)}
+        onSelectThread={(thread) => {
+          setMessages(thread);
+          setShowChatHistory(false);
+        }}
+        onUpdateThreadName={handleUpdateThreadName}
+        onDeleteThread={handleDeleteThread}
+        onNewChat={handleNewChat}
+      />
 
       <ScrollView style={styles.messagesContainer} ref={scrollRef}>
         {messages.map((m, i) => (
