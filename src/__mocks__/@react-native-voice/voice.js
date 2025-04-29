@@ -1,3 +1,4 @@
+//src/__mocks__/@react-native-voice/voice.js
 // a Jest manual mock that exports the same API shape
 export default {
     onSpeechStart: null,
