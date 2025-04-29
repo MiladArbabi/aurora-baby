@@ -1,3 +1,4 @@
 node_modules
 .expo/devices.json
-.expo/devices.json
+/models/*.gguf
+server/.env

@@ -22,6 +22,7 @@ router.post('/', async (req, res) => {
 
   try {
     const replyText = await generateCompletion(prompt);
+    console.log('🦙 Llama replied:', replyText);
     return res.json({ reply: replyText });
   } catch (err) {
     console.error(

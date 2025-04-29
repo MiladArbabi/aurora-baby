@@ -1,23 +1,15 @@
-// server/server.js
-require('dotenv').config();
+require('dotenv').config({ path: require('path').resolve(__dirname, '.env') });
 const express = require('express');
-const cors = require('cors');
+const cors    = require('cors');
 const whisprRoute = require('./routes/whisprRoute');
 
-const app = express()
-
-// Enable CORS + JSON body parsing
+const app = express();
 app.use(cors());
 app.use(express.json());
-
-// Mount our Whispr handler
 app.use('/api/whispr/query', whisprRoute);
 
 const PORT = process.env.PORT || 4000;
 if (require.main === module) {
-    // only start server when run directly
-    app.listen(PORT, () => console.log(`Listening on ${PORT}`))
-  }
-
-  module.exports = app;
-
+  app.listen(PORT, () => console.log(`Listening on ${PORT}`));
+}
+module.exports = app;
