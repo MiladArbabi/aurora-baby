@@ -167,7 +167,7 @@ const QuickLogMenu: React.FC<Props> = ({ onClose, onLogged }) => {
           onPress={onClose}
           style={styles.handleContainer}
         >
-          <HandleBar /> {/* Reverted to direct rendering */}
+          <HandleBar />
         </TouchableOpacity>
 
         <View style={styles.row}>
