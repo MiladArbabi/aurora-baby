@@ -1,4 +1,4 @@
-//src/assets/icons/common/QuickLogButton.tsx
+//src/components/common/WhisprVoiceButton.tsx
 import React from "react";
 import Svg, { Path, Stop, SvgProps, LinearGradient, Defs } from "react-native-svg";
 
