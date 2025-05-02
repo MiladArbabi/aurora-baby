@@ -7,7 +7,6 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import { saveLastScreen } from '../services/LastScreenTracker';
 import BottomNav from '../components/common/BottomNav';
 import TopNav from '../components/common/TopNav';
-import ActionMenu from '../components/common/ActionMenu';
 import QuickLogMenu from '../components/carescreen/QuickLogMenu';
 import { useActionMenuLogic } from '../hooks/useActionMenuLogic';
 
@@ -36,17 +35,6 @@ const WonderScreen: React.FC<Props> = ({ navigation }) => {
         <TopNav navigation={navigation} />
         <BottomNav navigation={navigation} activeScreen="Wonder" />
       </RNSafeAreaView>
-
-      <ActionMenu
-        style={styles.quickLogContainer}
-        onQuickLogPress={openQuickLog}
-        onWhisprPress={() => navigation.navigate('Whispr')}
-        onMicPress={handleVoiceCommand}
-      />
-
-      {quickLogVisible && (
-        <QuickLogMenu onClose={closeQuickLog} />
-      )}
     </View>
   );
 };

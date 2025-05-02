@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet, SafeAreaView as RNSafeAreaView } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -8,10 +8,7 @@ import { saveLastScreen } from '../services/LastScreenTracker';
 import BottomNav from '../components/common/BottomNav';
 import Card from '../components/common/Card';
 import TopNav from '../components/common/TopNav';
-import ActionMenu from '../components/common/ActionMenu';
-import QuickLogMenu from '../components/carescreen/QuickLogMenu';
-import { QuickLogEntry } from '../models/QuickLogSchema';
-import { QuickMarker } from '../components/carescreen/Tracker';
+
 
 const Container = styled.View`
   flex: 1;
@@ -33,22 +30,6 @@ const NAV_HEIGHT = 110;
 
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const theme = useTheme();
-
-  // Quick-log sheet
-  const [quickLogVisible, setQuickLogVisible] = useState(false);
-  const [quickLogMarkers, setQuickLogMarkers] = useState<QuickMarker[]>([]);
-  const openQuickLog = useCallback(() => setQuickLogVisible(true), []);
-  const closeQuickLog = useCallback(() => setQuickLogVisible(false), []);
-
-  // drop a dot on the tracker when log completes
-  const handleLogged = useCallback((entry: QuickLogEntry) => {
-    const t = new Date(entry.timestamp);
-    const frac = (t.getHours() * 60 + t.getMinutes() + t.getSeconds() / 60) / 1440;
-    setQuickLogMarkers((m) => [
-      ...m,
-      { id: entry.id, fraction: frac, color: '#000' },
-    ]);
-  }, []);
 
   useEffect(() => {
     saveLastScreen('Home');
@@ -96,17 +77,6 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           <BottomNav navigation={navigation} activeScreen="Home" />
         </Container>
       </RNSafeAreaView>
-
-      <ActionMenu
-        style={styles.quickLogContainer}
-        onQuickLogPress={openQuickLog}
-        onWhisprPress={() => navigation.navigate('Whispr')}
-        onMicPress={() => {}}
-      />
-
-      {quickLogVisible && (
-        <QuickLogMenu onClose={closeQuickLog} onLogged={handleLogged} />
-      )}
     </View>
   );
 };
@@ -114,11 +84,5 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 export default HomeScreen;
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  quickLogContainer: {
-    position: 'absolute',
-    right: 20,
-    bottom: NAV_HEIGHT + 20,
-    alignItems: 'center',
-  },
+  screen: { flex: 1 }
 });

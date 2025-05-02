@@ -6,6 +6,7 @@ import { theme } from '../../styles/theme';
 import BottomNav from '../../components/common/BottomNav';
 import HomeIcon from '../../assets/bottomnavicons/HomeIcon';
 import HarmonyIcon from '../../assets/bottomnavicons/HarmonyIcon';
+import WhisprButton from '../../assets/whispr/WhisprButton';
 import CareIcon from '../../assets/bottomnavicons/CareIcon';
 import WonderIcon from '../../assets/bottomnavicons/WonderIcon';
 
