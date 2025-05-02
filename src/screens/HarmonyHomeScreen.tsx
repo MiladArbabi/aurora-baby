@@ -8,8 +8,6 @@ import BottomNav from '../components/common/BottomNav';
 import Card from '../components/common/Card';
 import TopNav from '../components/common/TopNav';
 import { prebuiltStories } from '../data/stories';
-import ActionMenu from '../components/common/ActionMenu';
-import QuickLogMenu from '../components/carescreen/QuickLogMenu';
 import { useActionMenuLogic } from '../hooks/useActionMenuLogic';
 
 const Container = styled.View`
@@ -93,17 +91,6 @@ const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
           <BottomNav navigation={navigation} activeScreen="Harmony" />
         </Container>
       </RNSafeAreaView>
-
-      <ActionMenu
-        style={styles.quickLogContainer}
-        onQuickLogPress={openQuickLog}
-        onWhisprPress={() => navigation.navigate('Whispr')}
-        onMicPress={handleVoiceCommand}
-      />
-
-      {quickLogVisible && (
-        <QuickLogMenu onClose={closeQuickLog} />
-      )}
     </View>
   );
 };

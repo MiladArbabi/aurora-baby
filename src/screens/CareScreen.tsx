@@ -11,7 +11,6 @@ import BottomNav from '../components/common/BottomNav'
 import Tracker, { QuickMarker } from '../components/carescreen/Tracker'
 import TrackerFilter from '../components/carescreen/TrackerFilter'
 import QuickLogMenu from '../components/carescreen/QuickLogMenu'
-import ActionMenu   from '../components/common/ActionMenu'
 import LogDetailModal from '../components/carescreen/LogDetailModal'
 import SuggestionsView from './SuggestionsView'
 import CardsView from '../components/carescreen/CardsView'
@@ -20,6 +19,7 @@ import { getLogsBetween } from '../services/QuickLogAccess'
 import { QuickLogEntry } from '../models/QuickLogSchema'
 import { useActionMenuLogic } from '../hooks/useActionMenuLogic'
 import { useTrackerData } from '../hooks/useTrackerData'
+import QuickLogButton from '../components/common/QuickLogButton'
 
 type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>
 
@@ -49,7 +49,6 @@ const CareScreen: React.FC = () => {
   const [quickLogEntries, setQuickLogEntries] = useState<QuickLogEntry[]>([])
   const [selectedLog, setSelectedLog] = useState<QuickLogEntry | null>(null)
   const [showLast24h, setShowLast24h] = useState(false)
-  const { sleepSegments, eventMarkers } = useTrackerData(showLast24h)
 
   // fetch logs whenever the filter changes
   useEffect(() => {
@@ -138,12 +137,9 @@ const CareScreen: React.FC = () => {
       </SafeAreaView>
 
       {!quickLogMenuVisible && (
-        <ActionMenu
+        <QuickLogButton
           testID="action-menu"
           style={styles.quickLogContainer}
-          onQuickLogPress={openQuickLog}
-          onWhisprPress={() => navigation.navigate('Whispr')}
-          onMicPress={handleVoiceCommand}
         />
       )}
     </View>
