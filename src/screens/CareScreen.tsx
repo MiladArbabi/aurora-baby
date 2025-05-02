@@ -1,6 +1,6 @@
 // src/screens/CareScreen.tsx
 import React, { useCallback, useState, useEffect } from 'react'
-import { View, StyleSheet, SafeAreaView } from 'react-native'
+import { View, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RootStackParamList } from '../navigation/AppNavigator'
@@ -137,10 +137,13 @@ const CareScreen: React.FC = () => {
       </SafeAreaView>
 
       {!quickLogMenuVisible && (
-        <QuickLogButton
+        <TouchableOpacity
           testID="action-menu"
           style={styles.quickLogContainer}
-        />
+          onPress={openQuickLog}
+        >
+          <QuickLogButton />
+        </TouchableOpacity>
       )}
     </View>
   )
