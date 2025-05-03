@@ -1,6 +1,6 @@
 // src/screens/CareScreen.tsx
 import React, { useCallback, useState, useEffect } from 'react'
-import { View, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native'
+import { View, StyleSheet, SafeAreaView, TouchableOpacity, Text } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RootStackParamList } from '../navigation/AppNavigator'
@@ -12,7 +12,7 @@ import Tracker, { QuickMarker } from '../components/carescreen/Tracker'
 import TrackerFilter from '../components/carescreen/TrackerFilter'
 import QuickLogMenu from '../components/carescreen/QuickLogMenu'
 import LogDetailModal from '../components/carescreen/LogDetailModal'
-import SuggestionsView from './SuggestionsView'
+import InsightsView from './InsightsView'
 import CardsView from '../components/carescreen/CardsView'
 
 import { getLogsBetween } from '../services/QuickLogAccess'
@@ -121,7 +121,14 @@ const CareScreen: React.FC = () => {
         )}
 
         {activeTab === 'cards' && <CardsView />}
-        {activeTab === 'graph' && <SuggestionsView />}
+        {activeTab === 'graph' && 
+        <>
+        <Text testID="graph-heading" style={styles.graphHeading}>
+          AI Suggestions
+        </Text>
+        <InsightsView showLast24h={showLast24h} />
+        </>
+      }
 
         <LogDetailModal
           visible={!!selectedLog}
@@ -160,5 +167,10 @@ const styles = StyleSheet.create({
     right: 20,
     bottom: NAV_HEIGHT + 20,
     alignItems: 'center',
+  },
+  graphHeading: {
+    fontSize: 18,
+    fontWeight: '600',
+    margin: 16,
   },
 })

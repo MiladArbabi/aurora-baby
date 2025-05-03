@@ -3,7 +3,7 @@ import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import CareScreen from '../../screens/CareScreen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PortalProvider } from '@gorhom/portal';
-import { ThemeProvider } from '@rneui/themed';
+import { ThemeProvider as RneThemeProvider } from '@rneui/themed';
 import { ThemeProvider as StyledThemeProvider } from 'styled-components/native';
 import { NavigationContainer } from '@react-navigation/native';
 import { rneThemeBase, theme } from '../../styles/theme';
@@ -18,23 +18,21 @@ jest.mock('@react-navigation/native', () => {
   };
 });
 
-// --- VOICE RECORDER MOCK ---
-const mockStart = jest.fn().mockResolvedValue(undefined);
-const mockStop = jest.fn().mockResolvedValue(undefined);
+// --- VOICE RECORDER MOCK (not used in CareScreen) ---
 jest.mock('../../hooks/useVoiceRecorder', () => ({
   useVoiceRecorder: () => ({
     transcript: 'hello world',
     isListening: false,
     error: null,
-    start: mockStart,
-    stop: mockStop,
+    start: jest.fn(),
+    stop: jest.fn(),
   }),
 }));
 
 const renderWithProviders = () =>
   render(
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider theme={rneThemeBase}>
+      <RneThemeProvider theme={rneThemeBase}>
         <StyledThemeProvider theme={theme}>
           <NavigationContainer>
             <PortalProvider>
@@ -42,15 +40,13 @@ const renderWithProviders = () =>
             </PortalProvider>
           </NavigationContainer>
         </StyledThemeProvider>
-      </ThemeProvider>
+      </RneThemeProvider>
     </GestureHandlerRootView>
   );
 
 describe('CareScreen', () => {
   beforeEach(() => {
     mockNavigate.mockClear();
-    mockStart.mockClear();
-    mockStop.mockClear();
   });
 
   it('renders MiniNavBar and switches tabs on icon press', () => {
@@ -61,7 +57,7 @@ describe('CareScreen', () => {
     expect(getByText('AI Suggestions')).toBeTruthy();
 
     fireEvent.press(getByTestId('cards-icon'));
-    expect(getByText('No logs yet.')).toBeTruthy(); // Updated to match CardsView's empty state
+    expect(getByText('No logs yet.')).toBeTruthy();
 
     fireEvent.press(getByTestId('tracker-icon'));
     expect(getByTestId('outter-rim')).toBeTruthy();
@@ -77,7 +73,7 @@ describe('CareScreen', () => {
 
     expect(queryByTestId('quick-log-menu')).toBeNull();
 
-    fireEvent.press(getByTestId('quick-log-open-button'));
+    fireEvent.press(getByTestId('action-menu'));
     await waitFor(() => {
       expect(getByTestId('quick-log-menu')).toBeTruthy();
     });
@@ -90,17 +86,7 @@ describe('CareScreen', () => {
 
   it('navigates to Whispr when the whispr button is pressed', () => {
     const { getByTestId } = renderWithProviders();
-    fireEvent.press(getByTestId('whispr-voice-button'));
+    fireEvent.press(getByTestId('bottom-nav-whispr'));
     expect(mockNavigate).toHaveBeenCalledWith('Whispr');
-  });
-
-  it('calls start and stop on the recorder when mic button is pressed', async () => {
-    const { getByTestId } = renderWithProviders();
-
-    fireEvent.press(getByTestId('tracker-mic-button'));
-    await waitFor(() => {
-      expect(mockStart).toHaveBeenCalled();
-      expect(mockStop).toHaveBeenCalled();
-    });
   });
 });
