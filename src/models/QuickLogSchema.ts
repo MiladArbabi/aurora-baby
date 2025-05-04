@@ -1,3 +1,4 @@
+//src/models/QuickLogSchema.ts
 import { z } from 'zod';
 
 export type QuickLogType =
