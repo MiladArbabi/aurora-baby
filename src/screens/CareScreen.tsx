@@ -1,6 +1,5 @@
-// src/screens/CareScreen.tsx
 import React, { useCallback, useState, useEffect } from 'react'
-import { View, StyleSheet, SafeAreaView, TouchableOpacity, Text } from 'react-native'
+import { View, StyleSheet, SafeAreaView, Text } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RootStackParamList } from '../navigation/AppNavigator'
@@ -14,25 +13,14 @@ import QuickLogMenu from '../components/carescreen/QuickLogMenu'
 import LogDetailModal from '../components/carescreen/LogDetailModal'
 import InsightsView from './InsightsView'
 import CardsView from '../components/carescreen/CardsView'
+import ActionButtons from '../components/common/ActionButtons'
 
 import { getLogsBetween } from '../services/QuickLogAccess'
 import { QuickLogEntry } from '../models/QuickLogSchema'
 import { useActionMenuLogic } from '../hooks/useActionMenuLogic'
-import { useTrackerData } from '../hooks/useTrackerData'
-import QuickLogButton from '../components/common/QuickLogButton'
 
 type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>
-
 const NAV_HEIGHT = 110
-
-const colorMap: Record<QuickLogEntry['type'], string> = {
-  sleep:   '#4A90E2',
-  feeding: '#50E3C2',
-  diaper:  '#F5A623',
-  mood:    '#F8E71C',
-  health:  '#D0021B',
-  note:    '#9013FE',
-}
 
 const CareScreen: React.FC = () => {
   const navigation = useNavigation<CareNavProp>()
@@ -40,7 +28,6 @@ const CareScreen: React.FC = () => {
     quickLogMenuVisible,
     openQuickLog,
     closeQuickLog,
-    handleVoiceCommand,
     activeTab,
     setActiveTab,
   } = useActionMenuLogic()
@@ -52,88 +39,85 @@ const CareScreen: React.FC = () => {
 
   // fetch logs whenever the filter changes
   useEffect(() => {
-    const now   = new Date()
+    const now = new Date()
     const start = showLast24h
       ? new Date(now.getTime() - 24 * 60 * 60 * 1000)
       : new Date(Date.UTC(
           now.getUTCFullYear(),
           now.getUTCMonth(),
           now.getUTCDate(),
-          0,0,0,0
+          0, 0, 0, 0
         ))
-    const end      = now
-    const startISO = start.toISOString()
-    const endISO   = end.toISOString()
+    const end = now
 
-    getLogsBetween(startISO, endISO)
+    getLogsBetween(start.toISOString(), end.toISOString())
       .then(setQuickLogEntries)
-      .catch(console.error)
+      .catch(err => console.error('[CareScreen] fetch logs:', err))
   }, [showLast24h])
 
   const handleLogged = useCallback((entry: QuickLogEntry) => {
-    const t = new Date(entry.timestamp)
-    const fraction =
-      (t.getHours() * 60 + t.getMinutes() + t.getSeconds() / 60) / 1440
-    const color = colorMap[entry.type]
-
-    setQuickLogMarkers((existing) =>
-      existing.some((m) => m.id === entry.id)
-        ? existing
-        : [
-            ...existing,
-            { id: entry.id, fraction, color, type: entry.type },
-          ]
-    )
+    try {
+      const t = new Date(entry.timestamp)
+      const fraction = (t.getHours()*60 + t.getMinutes() + t.getSeconds()/60)/1440
+      setQuickLogMarkers(existing =>
+        existing.some(m => m.id === entry.id)
+          ? existing
+          : [...existing, { id: entry.id, fraction, color: entry.type, type: entry.type }]
+      )
+    } catch (err) {
+      console.error('[CareScreen] handleLogged error:', err)
+    }
   }, [])
 
   const handleMarkerPress = useCallback((id: string) => {
-    const entry = quickLogEntries.find((e) => e.id === id)
+    const entry = quickLogEntries.find(e => e.id === id)
     if (entry) setSelectedLog(entry)
   }, [quickLogEntries])
 
-  const closeDetail = () => setSelectedLog(null)
   const handleNavigate = useCallback((tab: MiniTab) => setActiveTab(tab), [setActiveTab])
   const handleSegmentPress = useCallback((id: string) => {}, [])
 
   return (
     <View style={styles.screen}>
-      <SafeAreaView testID="carescreen-gradient" style={styles.screen}>
+      <SafeAreaView style={styles.screen} testID="carescreen-gradient">
         <TopNav navigation={navigation} />
         <MiniNavBar activeTab={activeTab} onNavigate={handleNavigate} />
 
+        {/* -- filter goes right under minimavbar -- */}
         {activeTab === 'tracker' && (
-          <>
-            {/* filter toggle */}
-            <TrackerFilter
-              showLast24h={showLast24h}
-              onToggle={() => setShowLast24h((v) => !v)}
-            />
+          <TrackerFilter
+            showLast24h={showLast24h}
+            onToggle={() => setShowLast24h(v => !v)}
+          />
+        )}
 
-            {/* main clock */}
-            <Tracker
-              onPlusPress={openQuickLog}
-              onSegmentPress={handleSegmentPress}
-              onMarkerPress={handleMarkerPress}
-              quickMarkers={quickLogMarkers}
-              showLast24h={showLast24h}
-            />
-          </>
+        {/* -- main clock, pushed down by 100px -- */}
+        {activeTab === 'tracker' && (
+          <Tracker
+            onPlusPress={openQuickLog}
+            onSegmentPress={handleSegmentPress}
+            onMarkerPress={handleMarkerPress}
+            quickMarkers={quickLogMarkers}
+            showLast24h={showLast24h}
+            style={{ marginTop: 100 }}
+          />
         )}
 
         {activeTab === 'cards' && <CardsView />}
-        {activeTab === 'graph' && 
-        <>
-        <Text testID="graph-heading" style={styles.graphHeading}>
-          AI Suggestions
-        </Text>
-        <InsightsView showLast24h={showLast24h} />
-        </>
-      }
+
+        {activeTab === 'graph' && (
+          <>
+            <Text style={styles.graphHeading} testID="graph-heading">
+              AI Suggestions
+            </Text>
+            <InsightsView showLast24h={showLast24h} />
+          </>
+        )}
 
         <LogDetailModal
           visible={!!selectedLog}
           entry={selectedLog!}
-          onClose={closeDetail}
+          onClose={() => setSelectedLog(null)}
         />
 
         <BottomNav navigation={navigation} activeScreen="Care" />
@@ -144,13 +128,18 @@ const CareScreen: React.FC = () => {
       </SafeAreaView>
 
       {!quickLogMenuVisible && (
-        <TouchableOpacity
-          testID="action-menu"
-          style={styles.quickLogContainer}
-          onPress={openQuickLog}
-        >
-          <QuickLogButton />
-        </TouchableOpacity>
+        <ActionButtons
+          onQuickLogPress={openQuickLog}
+          recentLogs={quickLogEntries}
+          onNewAiLog={raw => {
+            try {
+              const entries = JSON.parse(raw) as QuickLogEntry[]
+              entries.forEach(handleLogged)
+            } catch (err) {
+              console.error('[CareScreen] invalid AI JSON:', err)
+            }
+          }}
+        />
       )}
     </View>
   )
@@ -161,12 +150,6 @@ export default CareScreen
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-  },
-  quickLogContainer: {
-    position: 'absolute',
-    right: 20,
-    bottom: NAV_HEIGHT + 20,
-    alignItems: 'center',
   },
   graphHeading: {
     fontSize: 18,

@@ -1,10 +1,5 @@
 // src/services/LlamaService.ts
-import fs from 'fs'
-import path from 'path'
-// use CJS require to avoid the TS “private constructor” error
-const { Llama } = require('node-llama-cpp')
-
-const MODEL_PATH = path.resolve(__dirname, '../../models/llama-2-7b.gguf')
+const { Llama } = require('node-llama-cpp');
 
 // hold a singleton instance once loaded
 let _llama: any = null
@@ -13,8 +8,13 @@ let _llama: any = null
  * Step 1: verify model file is in place and instantiate the Llama binding once.
  */
 export async function loadModel(): Promise<void> {
+  // now do a dynamic require of fs & path
+  const fs = require('fs');
+  const path = require('path');
+  const MODEL_PATH = path.resolve(__dirname, '../../models/llama-2-7b.gguf');
+
   if (!fs.existsSync(MODEL_PATH)) {
-    throw new Error(`Model file not found at ${MODEL_PATH}`)
+    throw new Error(`Model file not found at ${MODEL_PATH}`);
   }
   _llama = new Llama({
     model: MODEL_PATH,
@@ -28,12 +28,18 @@ export async function loadModel(): Promise<void> {
  * Step 2: generate a completion. Lazy‐load if needed.
  */
 export async function generateCompletion(prompt: string): Promise<string> {
-  // guard against missing model file
+  const fs = require('fs');
+  const path = require('path');
+  const MODEL_PATH = path.resolve(__dirname, '../../models/llama-2-7b.gguf');
+
   if (!fs.existsSync(MODEL_PATH)) {
-    throw new Error('Model file missing')
+    throw new Error('Model file missing');
   }
   if (!_llama) {
-    await loadModel()
+    await loadModel();
+  }
+  if (!_llama) {
+    throw new Error('Llama model not loaded');
   }
   let out: string | undefined = await _llama.generate({
         prompt,
