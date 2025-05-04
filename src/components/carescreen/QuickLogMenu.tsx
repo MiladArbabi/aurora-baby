@@ -190,16 +190,11 @@ const QuickLogMenu: React.FC<Props> = ({ onClose, onLogged }) => {
 
 const styles = StyleSheet.create({
   overlay: {
-    position: 'absolute',
-    top: 350,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    ...StyleSheet.absoluteFillObject,   // top:0,left:0,right:0,bottom:0
     zIndex: 100,
     elevation: 100,
-    flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: '#453F4E',
+    backgroundColor: 'rgba(0,0,0,0.4)',  // dim the background
   },
   sheet: {
     backgroundColor: '#453F4E',
