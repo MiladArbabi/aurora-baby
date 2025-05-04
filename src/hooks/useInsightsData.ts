@@ -14,38 +14,30 @@ export function useInsightsData(showLast24h: boolean) {
       mood: Record<string,number>
     }>()
 
-    // init last 7 days
+    // initialize last 7 days
     for (let i = 6; i >= 0; i--) {
       const d = new Date()
       d.setDate(d.getDate() - i)
-      map.set(
-        d.toISOString().substr(0,10),  // “YYYY-MM-DD”
-        { sleep: 0, feeding: 0, diaper: 0, mood: {} }
-      )
+      const key = d.toISOString().slice(0,10)  // YYYY-MM-DD
+      map.set(key, { sleep: 0, feeding: 0, diaper: 0, mood: {} })
     }
 
-     // accumulate sleep segments
+    // accumulate sleep segments
     sleepSegments.forEach(s => {
-      // figure out which calendar day this segment belongs to
-      const day = new Date(
-        s.startFraction * 24 * 60 * 60 * 1000
-      )
-        .toISOString()
-        .substr(0,10)
-
-      // convert the arc fraction difference to minutes
-      const minutes = (s.endFraction - s.startFraction) * 1440
-      map.get(day)!.sleep += minutes
+      // reconstruct a full Date from fraction today
+      const millis = s.startFraction * 24 * 60 * 60 * 1000
+      const dayKey = new Date(millis).toISOString().slice(0,10)
+      const bucket = map.get(dayKey)
+      if (!bucket) return           // guard!
+      bucket.sleep += (s.endFraction - s.startFraction) * 1440
     })
 
-    // accumulate events
-        eventMarkers.forEach(m => {
-      // convert the event’s fraction-of-day back into a Date-string
-      const day = new Date(m.fraction * 24*60*60*1000)
-                   .toISOString().substr(0,10)
-      const bucket = map.get(day)
-      if (!bucket) return
-
+    // accumulate event markers
+    eventMarkers.forEach(m => {
+      const millis = m.fraction * 24 * 60 * 60 * 1000
+      const dayKey = new Date(millis).toISOString().slice(0,10)
+      const bucket = map.get(dayKey)
+      if (!bucket) return           // guard!
       if (m.type === 'feeding') bucket.feeding++
       if (m.type === 'diaper')  bucket.diaper++
       if (m.type === 'mood') {
