@@ -1,3 +1,4 @@
+// src/tests/components/CareScreen/QuickLogTrackerIntegration.test.tsx
 import React from 'react'
 import { render, fireEvent, waitFor } from '@testing-library/react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
@@ -34,7 +35,7 @@ describe('Quick-log → Tracker integration', () => {
     const { getByTestId, queryByTestId } = render(<App />)
 
     // open menu
-    fireEvent.press(getByTestId('tracker-plus-button'))
+    fireEvent.press(getByTestId('action-menu'))
     await waitFor(() => expect(getByTestId('quick-log-menu')).toBeTruthy())
 
     // tap Sleep
@@ -58,7 +59,7 @@ describe('Quick-log → Tracker integration', () => {
     async (buttonTestID, markerTestID) => {
       const { getByTestId, queryByTestId } = render(<App />)
 
-      fireEvent.press(getByTestId('tracker-plus-button'))
+      fireEvent.press(getByTestId('action-menu'))
       await waitFor(() => getByTestId('quick-log-menu'))
 
       fireEvent.press(getByTestId(buttonTestID))

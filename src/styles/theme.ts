@@ -1,3 +1,4 @@
+//src/styles/theme.ts
 import { Theme } from '@rneui/themed';
 
 export const colors = {

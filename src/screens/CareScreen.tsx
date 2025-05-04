@@ -1,8 +1,15 @@
 // src/screens/CareScreen.tsx
 import React, { useCallback, useState, useEffect } from 'react'
-import { View, StyleSheet, SafeAreaView, Text, LayoutChangeEvent } from 'react-native'
+import {
+  View,
+  StyleSheet,
+  SafeAreaView,
+  Text,
+  LayoutChangeEvent,
+} from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { useTheme } from 'styled-components/native'
 import { RootStackParamList } from '../navigation/AppNavigator'
 
 import TopNav from '../components/common/TopNav'
@@ -24,6 +31,7 @@ type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>
 
 const CareScreen: React.FC = () => {
   const navigation = useNavigation<CareNavProp>()
+  const theme = useTheme()
   const {
     quickLogMenuVisible,
     openQuickLog,
@@ -42,12 +50,17 @@ const CareScreen: React.FC = () => {
     const now = new Date()
     const start = showLast24h
       ? new Date(now.getTime() - 24 * 60 * 60 * 1000)
-      : new Date(Date.UTC(
-          now.getUTCFullYear(),
-          now.getUTCMonth(),
-          now.getUTCDate(),
-          0, 0, 0, 0
-        ))
+      : new Date(
+          Date.UTC(
+            now.getUTCFullYear(),
+            now.getUTCMonth(),
+            now.getUTCDate(),
+            0,
+            0,
+            0,
+            0
+          )
+        )
     getLogsBetween(start.toISOString(), now.toISOString())
       .then(setQuickLogEntries)
       .catch(err => console.error('[CareScreen] fetch logs:', err))
@@ -56,43 +69,62 @@ const CareScreen: React.FC = () => {
   const handleLogged = useCallback((entry: QuickLogEntry) => {
     try {
       const t = new Date(entry.timestamp)
-      const fraction = (t.getHours()*60 + t.getMinutes() + t.getSeconds()/60) / 1440
+      const fraction =
+        (t.getHours() * 60 + t.getMinutes() + t.getSeconds() / 60) / 1440
       setQuickLogMarkers(existing =>
         existing.some(m => m.id === entry.id)
           ? existing
-          : [...existing, { id: entry.id, fraction, color: entry.type, type: entry.type }]
+          : [
+              ...existing,
+              { id: entry.id, fraction, color: entry.type, type: entry.type },
+            ]
       )
     } catch (err) {
       console.error('[CareScreen] handleLogged error:', err)
     }
   }, [])
 
-  const handleMarkerPress = useCallback((id: string) => {
-    const entry = quickLogEntries.find(e => e.id === id)
-    if (entry) setSelectedLog(entry)
-  }, [quickLogEntries])
+  const handleMarkerPress = useCallback(
+    (id: string) => {
+      const entry = quickLogEntries.find(e => e.id === id)
+      if (entry) setSelectedLog(entry)
+    },
+    [quickLogEntries]
+  )
 
-  const handleNavigate = useCallback((tab: MiniTab) => setActiveTab(tab), [setActiveTab])
+  const handleNavigate = useCallback(
+    (tab: MiniTab) => setActiveTab(tab),
+    [setActiveTab]
+  )
   const handleSegmentPress = useCallback((id: string) => {}, [])
-  const handleToggleFilter = useCallback(() => setShowLast24h(v => !v), [])
-  const handleNewAiLog = useCallback((raw: string) => {
-    try {
-      const entries = JSON.parse(raw) as QuickLogEntry[]
-      entries.forEach(handleLogged)
-    } catch (err) {
-      console.error('[CareScreen] invalid AI JSON:', err)
-    }
-  }, [handleLogged])
+  const handleToggleFilter = useCallback(
+    () => setShowLast24h(v => !v),
+    []
+  )
+  const handleNewAiLog = useCallback(
+    (raw: string) => {
+      try {
+        const entries = JSON.parse(raw) as QuickLogEntry[]
+        entries.forEach(handleLogged)
+      } catch (err) {
+        console.error('[CareScreen] invalid AI JSON:', err)
+      }
+    },
+    [handleLogged]
+  )
 
   const logLayout = (name: string) => (e: LayoutChangeEvent) => {
     console.log(`${name} row height:`, e.nativeEvent.layout.height)
   }
 
   return (
-    <SafeAreaView style={styles.screen} testID="carescreen-gradient">
+    <SafeAreaView
+      style={[styles.screen, { backgroundColor: theme.colors.accent }]}
+      testID="carescreen-gradient"
+    >
       {/* Row 1a: TopNav */}
       <View
-        style={[styles.row, { flex: 1, backgroundColor: 'rgba(255,0,0,0.2)' }]}
+        style={[styles.row, { flex: 1 }]}
         onLayout={logLayout('Row1a - TopNav')}
       >
         <TopNav navigation={navigation} />
@@ -100,7 +132,7 @@ const CareScreen: React.FC = () => {
 
       {/* Row 1b: MiniNavBar */}
       <View
-        style={[styles.row, { flex: 1, backgroundColor: 'rgba(255,128,0,0.2)' }]}
+        style={[styles.row, { flex: 1 }]}
         onLayout={logLayout('Row1b - MiniNavBar')}
       >
         <MiniNavBar activeTab={activeTab} onNavigate={handleNavigate} />
@@ -108,17 +140,20 @@ const CareScreen: React.FC = () => {
 
       {/* Row 2: FILTER */}
       <View
-        style={[styles.row, { flex: 1, backgroundColor: 'rgba(0,255,0,0.2)' }]}
+        style={[styles.row, { flex: 1 }]}
         onLayout={logLayout('Row2 - Filter')}
       >
         {activeTab === 'tracker' && (
-          <TrackerFilter showLast24h={showLast24h} onToggle={handleToggleFilter} />
+          <TrackerFilter
+            showLast24h={showLast24h}
+            onToggle={handleToggleFilter}
+          />
         )}
       </View>
 
       {/* Row 3&4: CONTENT (now flex:5) */}
       <View
-        style={[styles.row, { flex: 5, backgroundColor: 'rgba(0,0,255,0.2)' }]}
+        style={[styles.row, { flex: 5 }]}
         onLayout={logLayout('Row3&4 - Content')}
       >
         {activeTab === 'tracker' && (
@@ -142,7 +177,7 @@ const CareScreen: React.FC = () => {
 
       {/* Row 5: ACTION BUTTONS */}
       <View
-        style={[styles.row, { flex: 1, backgroundColor: 'rgba(255,255,0,0.2)' }]}
+        style={[styles.row, { flex: 1 }]}
         onLayout={logLayout('Row5 - ActionButtons')}
       >
         {!quickLogMenuVisible && (
@@ -156,7 +191,7 @@ const CareScreen: React.FC = () => {
 
       {/* Row 6: FOOTER */}
       <View
-        style={[styles.row, { flex: 1, backgroundColor: 'rgba(255,0,255,0.2)' }]}
+        style={[styles.row, { flex: 1 }]}
         onLayout={logLayout('Row6 - Footer')}
       >
         <BottomNav navigation={navigation} activeScreen="Care" />
@@ -191,5 +226,6 @@ const styles = StyleSheet.create({
   graphHeading: {
     fontSize: 18,
     fontWeight: '600',
+    color: '#fff',
   },
 })
