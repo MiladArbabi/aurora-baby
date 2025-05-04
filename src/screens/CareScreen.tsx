@@ -1,6 +1,6 @@
 // src/screens/CareScreen.tsx
 import React, { useCallback, useState, useEffect } from 'react'
-import { View, StyleSheet, SafeAreaView, Text } from 'react-native'
+import { View, StyleSheet, SafeAreaView, Text, LayoutChangeEvent } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RootStackParamList } from '../navigation/AppNavigator'
@@ -72,18 +72,9 @@ const CareScreen: React.FC = () => {
     if (entry) setSelectedLog(entry)
   }, [quickLogEntries])
 
-  const handleNavigate = useCallback((tab: MiniTab) => {
-    setActiveTab(tab)
-  }, [setActiveTab])
-
-  const handleSegmentPress = useCallback((id: string) => {
-    // no-op or can log
-  }, [])
-
-  const handleToggleFilter = useCallback(() => {
-    setShowLast24h(v => !v)
-  }, [])
-
+  const handleNavigate = useCallback((tab: MiniTab) => setActiveTab(tab), [setActiveTab])
+  const handleSegmentPress = useCallback((id: string) => {}, [])
+  const handleToggleFilter = useCallback(() => setShowLast24h(v => !v), [])
   const handleNewAiLog = useCallback((raw: string) => {
     try {
       const entries = JSON.parse(raw) as QuickLogEntry[]
@@ -93,31 +84,42 @@ const CareScreen: React.FC = () => {
     }
   }, [handleLogged])
 
+  const logLayout = (name: string) => (e: LayoutChangeEvent) => {
+    console.log(`${name} row height:`, e.nativeEvent.layout.height)
+  }
+
   return (
     <SafeAreaView style={styles.screen} testID="carescreen-gradient">
-      {/* Row 1: HEADER */}
+      {/* Row 1a: TopNav */}
       <View
-        style={[styles.row, { flex: 1, backgroundColor: 'rgba(255, 0, 0, 0.2)' }]}
+        style={[styles.row, { flex: 1, backgroundColor: 'rgba(255,0,0,0.2)' }]}
+        onLayout={logLayout('Row1a - TopNav')}
       >
         <TopNav navigation={navigation} />
+      </View>
+
+      {/* Row 1b: MiniNavBar */}
+      <View
+        style={[styles.row, { flex: 1, backgroundColor: 'rgba(255,128,0,0.2)' }]}
+        onLayout={logLayout('Row1b - MiniNavBar')}
+      >
         <MiniNavBar activeTab={activeTab} onNavigate={handleNavigate} />
       </View>
 
       {/* Row 2: FILTER */}
       <View
-        style={[styles.row, { flex: 1, backgroundColor: 'rgba(0, 255, 0, 0.2)' }]}
+        style={[styles.row, { flex: 1, backgroundColor: 'rgba(0,255,0,0.2)' }]}
+        onLayout={logLayout('Row2 - Filter')}
       >
         {activeTab === 'tracker' && (
-          <TrackerFilter
-            showLast24h={showLast24h}
-            onToggle={handleToggleFilter}
-          />
+          <TrackerFilter showLast24h={showLast24h} onToggle={handleToggleFilter} />
         )}
       </View>
 
-      {/* Row 3 & 4: CONTENT */}
+      {/* Row 3&4: CONTENT (now flex:5) */}
       <View
-        style={[styles.row, { flex: 2, backgroundColor: 'rgba(0, 0, 255, 0.2)' }]}
+        style={[styles.row, { flex: 5, backgroundColor: 'rgba(0,0,255,0.2)' }]}
+        onLayout={logLayout('Row3&4 - Content')}
       >
         {activeTab === 'tracker' && (
           <Tracker
@@ -140,27 +142,32 @@ const CareScreen: React.FC = () => {
 
       {/* Row 5: ACTION BUTTONS */}
       <View
-        style={[styles.row, { flex: 1, backgroundColor: 'rgba(255, 255, 0, 0.2)' }]}
+        style={[styles.row, { flex: 1, backgroundColor: 'rgba(255,255,0,0.2)' }]}
+        onLayout={logLayout('Row5 - ActionButtons')}
       >
-        <View style={styles.centered}>
-            <ActionButtons
-              onQuickLogPress={openQuickLog}
-              recentLogs={quickLogEntries}
-              onNewAiLog={handleNewAiLog}
-            />
-          </View>
-
-          {/* Row 6: FOOTER */}
-        <View style={[styles.row, { flex: 1, backgroundColor: 'rgba(255, 0, 255, 0.2)' }]} >
-        <BottomNav navigation={navigation} activeScreen="Care" />
-        </View>
-
-        {/* — now render the sheet at the very top level — */}
-        {quickLogMenuVisible && (
-          <QuickLogMenu onClose={closeQuickLog} onLogged={handleLogged} />
+        {!quickLogMenuVisible && (
+          <ActionButtons
+            onQuickLogPress={openQuickLog}
+            recentLogs={quickLogEntries}
+            onNewAiLog={handleNewAiLog}
+          />
         )}
-        </View>
-      {/* Modals */}
+      </View>
+
+      {/* Row 6: FOOTER */}
+      <View
+        style={[styles.row, { flex: 1, backgroundColor: 'rgba(255,0,255,0.2)' }]}
+        onLayout={logLayout('Row6 - Footer')}
+      >
+        <BottomNav navigation={navigation} activeScreen="Care" />
+      </View>
+
+      {/* QuickLogMenu overlay */}
+      {quickLogMenuVisible && (
+        <QuickLogMenu onClose={closeQuickLog} onLogged={handleLogged} />
+      )}
+
+      {/* Log detail modal */}
       <LogDetailModal
         visible={!!selectedLog}
         entry={selectedLog!}
@@ -178,11 +185,8 @@ const styles = StyleSheet.create({
   },
   row: {
     width: '100%',
-    alignItems: 'center',
     justifyContent: 'center',
-  },
-  centered: {
-    flex: 1,
+    alignItems: 'center',
   },
   graphHeading: {
     fontSize: 18,
