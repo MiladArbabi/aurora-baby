@@ -139,6 +139,7 @@ export default Tracker
 
 const styles = StyleSheet.create({
   container: {
+    marginTop: 16,
     position: 'relative',
     alignSelf: 'center',
     justifyContent: 'center',
