@@ -6,21 +6,21 @@ import {
   Dimensions,
   TouchableOpacity,
 } from 'react-native'
-import MainArc   from '../../assets/carescreen/tracker-rings/MainArc'
+import MainArc from '../../assets/carescreen/tracker-rings/MainArc'
+import InnerRim from '../../assets/carescreen/tracker-rings/InnerRim'
+import Core from '../../assets/carescreen/tracker-rings/Core'
 import OutterRim from '../../assets/carescreen/tracker-rings/OutterRim'
-import InnerRim  from '../../assets/carescreen/tracker-rings/InnerRim'
-import Core      from '../../assets/carescreen/tracker-rings/Core'
-import SegmentArc  from './SegmentArc'
+import SegmentArc from './SegmentArc'
 import EventMarker from './EventMarker'
 import { useTrackerData } from '../../hooks/useTrackerData'
 import { QuickLogEntry } from '../../models/QuickLogSchema'
 
 const { width } = Dimensions.get('window')
 const TRACKER_SIZE = width * 0.8
-const BASE_SIZE    = TRACKER_SIZE
-const OUTER_SIZE   = BASE_SIZE * (320 / 300)
-const INNER_SIZE   = BASE_SIZE * (230 / 300)
-const CORE_SIZE    = BASE_SIZE * (220 / 300)
+const BASE_SIZE = TRACKER_SIZE
+const OUTER_SIZE = BASE_SIZE * (320 / 300)
+const INNER_SIZE = BASE_SIZE * (220 / 300)
+const CORE_SIZE = BASE_SIZE * (200 / 300)
 
 export interface QuickMarker {
   id: string
@@ -30,7 +30,6 @@ export interface QuickMarker {
 }
 
 export interface Props {
-  onPlusPress: () => void
   onSegmentPress?: (id: string) => void
   onMarkerPress?: (id: string, type: QuickLogEntry['type']) => void
   quickMarkers?: QuickMarker[]
@@ -38,103 +37,100 @@ export interface Props {
 }
 
 const Tracker: React.FC<Props> = ({
-  onPlusPress,
   onSegmentPress,
   onMarkerPress,
   quickMarkers = [],
   showLast24h = false,
 }) => {
   const { sleepSegments, eventMarkers } = useTrackerData(showLast24h)
-  const handleSeg = React.useCallback(
-    (id: string) => onSegmentPress?.(id),
-    [onSegmentPress],
-  )
 
-  const handleMarker = React.useCallback(
-    (id: string, type: QuickLogEntry['type']) =>
-      onMarkerPress?.(id, type),
-    [onMarkerPress],
-  )
-
-  // current time fraction for the outer rim
+  // current time fraction
   const now = new Date()
   const nowFrac =
-    (now.getHours() * 60 +
-     now.getMinutes() +
-     now.getSeconds() / 60) /
-    1440
+    (now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60) / 1440
 
   return (
-    <View
-      style={[
-        styles.container,
-        { width: TRACKER_SIZE, height: TRACKER_SIZE },
-      ]}
-    >
-      <View style={styles.arcContainer}>
+    <View style={[styles.container, { width: TRACKER_SIZE, height: TRACKER_SIZE }]}>      
+      {/* Main static arc */}
+      <View style={styles.arcAbsolute}>
+        <MainArc
+          size={BASE_SIZE}
+          strokeWidth={40}
+          color="rgba(179, 165, 196, 0.50)"
+          testID="main-arc"
+        />
+      </View>;
 
-        {/* current time indicator */}
-        <View style={styles.arcAbsolute}>
-          <OutterRim
-            size={OUTER_SIZE}
-            strokeWidth={10}
-            color="#FFFFFF"
-            progress={nowFrac}
-            testID="outter-rim"
-          />
-        </View>
-
-        {/* sleep segments */}
-        {sleepSegments.map(s => (
-          <TouchableOpacity
-            key={s.id}
-            testID={`sleep-seg-${s.id}`}
-            onPress={() => handleSeg(s.id)}
-            style={StyleSheet.absoluteFill}
-          >
-            <SegmentArc
-              size={BASE_SIZE}
-              strokeWidth={35}
-              startFraction={s.startFraction}
-              endFraction={s.endFraction}
-              color={s.color}
-              testID={`segment-arc-${s.id}`}
-            />
-          </TouchableOpacity>
-        ))}
-
-        {/* persisted non‐sleep logs */}
-        {eventMarkers.map(m => (
-          <EventMarker
-            key={m.id}
-            testID={`${m.type}-marker-${m.id}`}
+      {/* Sleep segments */}
+      {sleepSegments.map(s => (
+        <TouchableOpacity
+          key={s.id}
+          testID={`sleep-seg-${s.id}`}
+          onPress={() => onSegmentPress?.(s.id)}
+          style={StyleSheet.absoluteFill}
+        >
+          <SegmentArc
             size={BASE_SIZE}
-            fraction={m.fraction}
-            color={m.color}
-            onPress={() => handleMarker(m.id, m.type)}
+            strokeWidth={35}
+            startFraction={s.startFraction}
+            endFraction={s.endFraction}
+            color={s.color}
+            testID={`segment-arc-${s.id}`}
           />
-        ))}
+        </TouchableOpacity>
+      ))}
 
-        {/* quick‐logged dots */}
-        {quickMarkers.map(m => (
-          <EventMarker
-            key={`quick-${m.id}`}
-            testID={`quicklog-marker-${m.id}`}
-            size={BASE_SIZE}
-            fraction={m.fraction}
-            color={m.color}
-            onPress={() => handleMarker(m.id, m.type)}
-          />
-        ))}
+      {/* Persisted non-sleep markers */}
+      {eventMarkers.map(m => (
+        <EventMarker
+          key={m.id}
+          testID={`${m.type}-marker-${m.id}`}
+          size={BASE_SIZE}
+          fraction={m.fraction}
+          color={m.color}
+          ringStrokeWidth={40} 
+          onPress={() => onMarkerPress?.(m.id, m.type)}
+        />
+      ))}
 
+      {/* Quick-log markers */}
+      {quickMarkers.map(m => (
+        <EventMarker
+          key={`quick-${m.id}`}
+          testID={`quicklog-marker-${m.id}`}
+          size={BASE_SIZE}
+          fraction={m.fraction}
+          color={m.color}
+          ringStrokeWidth={40}
+          onPress={() => onMarkerPress?.(m.id, m.type)}
+        />
+      ))}
+
+      {/* Inner rim */}
+      <View style={styles.arcAbsolute}>
+        <InnerRim
+          size={INNER_SIZE}
+          strokeWidth={10}
+          color="#FFFFFF"
+          testID="inner-rim"
+        />
       </View>
 
-      {/* + button */}
-      <TouchableOpacity
-        onPress={onPlusPress}
-        testID="tracker-plus-button"
-        style={styles.plusIconWrapper}
-      />
+      {/* Core circle */}
+      <View style={styles.arcAbsolute}>
+        <Core size={CORE_SIZE} color="#E9DAFA" testId="core-circle" />
+      </View>
+
+      {/* Current time indicator outer rim */}
+      <View style={styles.arcAbsolute}>
+        <OutterRim
+          size={OUTER_SIZE}
+          strokeWidth={10}
+          color="#FFFFFF"
+          progress={nowFrac}
+          testID="outter-rim"
+        />
+      </View>
     </View>
   )
 }
@@ -145,13 +141,6 @@ const styles = StyleSheet.create({
   container: {
     position: 'relative',
     alignSelf: 'center',
-    marginTop: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  arcContainer: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -159,8 +148,5 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  plusIconWrapper: {
-    zIndex: 10,
   },
 })

@@ -1,3 +1,4 @@
+// src/screens/CareScreen.tsx
 import React, { useCallback, useState, useEffect } from 'react'
 import { View, StyleSheet, SafeAreaView, Text } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
@@ -20,7 +21,6 @@ import { QuickLogEntry } from '../models/QuickLogSchema'
 import { useActionMenuLogic } from '../hooks/useActionMenuLogic'
 
 type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>
-const NAV_HEIGHT = 110
 
 const CareScreen: React.FC = () => {
   const navigation = useNavigation<CareNavProp>()
@@ -48,9 +48,7 @@ const CareScreen: React.FC = () => {
           now.getUTCDate(),
           0, 0, 0, 0
         ))
-    const end = now
-
-    getLogsBetween(start.toISOString(), end.toISOString())
+    getLogsBetween(start.toISOString(), now.toISOString())
       .then(setQuickLogEntries)
       .catch(err => console.error('[CareScreen] fetch logs:', err))
   }, [showLast24h])
@@ -58,7 +56,7 @@ const CareScreen: React.FC = () => {
   const handleLogged = useCallback((entry: QuickLogEntry) => {
     try {
       const t = new Date(entry.timestamp)
-      const fraction = (t.getHours()*60 + t.getMinutes() + t.getSeconds()/60)/1440
+      const fraction = (t.getHours()*60 + t.getMinutes() + t.getSeconds()/60) / 1440
       setQuickLogMarkers(existing =>
         existing.some(m => m.id === entry.id)
           ? existing
@@ -74,37 +72,62 @@ const CareScreen: React.FC = () => {
     if (entry) setSelectedLog(entry)
   }, [quickLogEntries])
 
-  const handleNavigate = useCallback((tab: MiniTab) => setActiveTab(tab), [setActiveTab])
-  const handleSegmentPress = useCallback((id: string) => {}, [])
+  const handleNavigate = useCallback((tab: MiniTab) => {
+    setActiveTab(tab)
+  }, [setActiveTab])
+
+  const handleSegmentPress = useCallback((id: string) => {
+    // no-op or can log
+  }, [])
+
+  const handleToggleFilter = useCallback(() => {
+    setShowLast24h(v => !v)
+  }, [])
+
+  const handleNewAiLog = useCallback((raw: string) => {
+    try {
+      const entries = JSON.parse(raw) as QuickLogEntry[]
+      entries.forEach(handleLogged)
+    } catch (err) {
+      console.error('[CareScreen] invalid AI JSON:', err)
+    }
+  }, [handleLogged])
 
   return (
-    <View style={styles.screen}>
-      <SafeAreaView style={styles.screen} testID="carescreen-gradient">
+    <SafeAreaView style={styles.screen} testID="carescreen-gradient">
+      {/* Row 1: HEADER */}
+      <View
+        style={[styles.row, { flex: 1, backgroundColor: 'rgba(255, 0, 0, 0.2)' }]}
+      >
         <TopNav navigation={navigation} />
         <MiniNavBar activeTab={activeTab} onNavigate={handleNavigate} />
+      </View>
 
-        {/* -- filter goes right under minimavbar -- */}
+      {/* Row 2: FILTER */}
+      <View
+        style={[styles.row, { flex: 1, backgroundColor: 'rgba(0, 255, 0, 0.2)' }]}
+      >
         {activeTab === 'tracker' && (
           <TrackerFilter
             showLast24h={showLast24h}
-            onToggle={() => setShowLast24h(v => !v)}
+            onToggle={handleToggleFilter}
           />
         )}
+      </View>
 
-        {/* -- main clock, pushed down by 100px -- */}
+      {/* Row 3 & 4: CONTENT */}
+      <View
+        style={[styles.row, { flex: 2, backgroundColor: 'rgba(0, 0, 255, 0.2)' }]}
+      >
         {activeTab === 'tracker' && (
           <Tracker
-            onPlusPress={openQuickLog}
             onSegmentPress={handleSegmentPress}
             onMarkerPress={handleMarkerPress}
             quickMarkers={quickLogMarkers}
             showLast24h={showLast24h}
-            style={{ marginTop: 100 }}
           />
         )}
-
         {activeTab === 'cards' && <CardsView />}
-
         {activeTab === 'graph' && (
           <>
             <Text style={styles.graphHeading} testID="graph-heading">
@@ -113,35 +136,37 @@ const CareScreen: React.FC = () => {
             <InsightsView showLast24h={showLast24h} />
           </>
         )}
+      </View>
 
-        <LogDetailModal
-          visible={!!selectedLog}
-          entry={selectedLog!}
-          onClose={() => setSelectedLog(null)}
-        />
+      {/* Row 5: ACTION BUTTONS */}
+      <View
+        style={[styles.row, { flex: 1, backgroundColor: 'rgba(255, 255, 0, 0.2)' }]}
+      >
+        <View style={styles.centered}>
+            <ActionButtons
+              onQuickLogPress={openQuickLog}
+              recentLogs={quickLogEntries}
+              onNewAiLog={handleNewAiLog}
+            />
+          </View>
 
+          {/* Row 6: FOOTER */}
+        <View style={[styles.row, { flex: 1, backgroundColor: 'rgba(255, 0, 255, 0.2)' }]} >
         <BottomNav navigation={navigation} activeScreen="Care" />
+        </View>
 
+        {/* — now render the sheet at the very top level — */}
         {quickLogMenuVisible && (
           <QuickLogMenu onClose={closeQuickLog} onLogged={handleLogged} />
         )}
-      </SafeAreaView>
-
-      {!quickLogMenuVisible && (
-        <ActionButtons
-          onQuickLogPress={openQuickLog}
-          recentLogs={quickLogEntries}
-          onNewAiLog={raw => {
-            try {
-              const entries = JSON.parse(raw) as QuickLogEntry[]
-              entries.forEach(handleLogged)
-            } catch (err) {
-              console.error('[CareScreen] invalid AI JSON:', err)
-            }
-          }}
-        />
-      )}
-    </View>
+        </View>
+      {/* Modals */}
+      <LogDetailModal
+        visible={!!selectedLog}
+        entry={selectedLog!}
+        onClose={() => setSelectedLog(null)}
+      />
+    </SafeAreaView>
   )
 }
 
@@ -151,9 +176,16 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
   },
+  row: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  centered: {
+    flex: 1,
+  },
   graphHeading: {
     fontSize: 18,
     fontWeight: '600',
-    margin: 16,
   },
 })

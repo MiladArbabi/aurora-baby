@@ -1,10 +1,25 @@
 // src/components/common/ActionButtons.tsx
-import React from "react"
-import { View, TouchableOpacity, StyleSheet, Alert } from "react-native"
+import React, { useCallback } from "react"
+import {
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  Dimensions,
+} from "react-native"
 import AiLogGeneratorButton from "../../assets/whispr/AiLogGenerator"
 import QuickLogButton from "./QuickLogButton"
 import { askWhispr } from "../../services/LlamaLogGenerator"
 import { QuickLogEntry } from "../../models/QuickLogSchema"
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window")
+// Icon size will be 10% of screen width
+const ICON_SIZE = SCREEN_WIDTH * 0.10
+// Spacing from edges will be 5% of screen dimensions
+const HORIZONTAL_SPACING = SCREEN_WIDTH * 0.05
+const VERTICAL_SPACING   = SCREEN_HEIGHT * 0.05
+// Spacing between buttons equals horizontal spacing
+const BUTTON_SPACING = HORIZONTAL_SPACING
 
 interface Props {
   onQuickLogPress: () => void
@@ -17,7 +32,7 @@ const ActionButtons: React.FC<Props> = ({
   recentLogs,
   onNewAiLog,
 }) => {
-  const handleAi = async () => {
+  const handleAi = useCallback(async () => {
     try {
       const prompt = `Here are the last logs:\n${
         JSON.stringify(recentLogs.slice(-5), null, 2)
@@ -28,7 +43,7 @@ const ActionButtons: React.FC<Props> = ({
     } catch {
       Alert.alert("Error", "Failed to generate AI logs.")
     }
-  }
+  }, [recentLogs, onNewAiLog])
 
   return (
     <View style={styles.container}>
@@ -38,16 +53,22 @@ const ActionButtons: React.FC<Props> = ({
         activeOpacity={0.7}
         style={styles.buttonWrapper}
       >
-        <AiLogGeneratorButton />
+        <AiLogGeneratorButton
+          width={ICON_SIZE}
+          height={ICON_SIZE}
+        />
       </TouchableOpacity>
 
       <TouchableOpacity
         testID="action-menu"
         onPress={onQuickLogPress}
         activeOpacity={0.7}
-        style={styles.buttonWrapper}
+        style={[styles.buttonWrapper, { marginLeft: BUTTON_SPACING }]}
       >
-        <QuickLogButton/>
+        <QuickLogButton
+          width={ICON_SIZE}
+          height={ICON_SIZE}
+        />
       </TouchableOpacity>
     </View>
   )
@@ -58,15 +79,14 @@ export default ActionButtons
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    bottom: 20 + 110,
-    right: 20,
+    bottom: VERTICAL_SPACING,
+    left: HORIZONTAL_SPACING,
     flexDirection: "row",
     alignItems: "center",
   },
   buttonWrapper: {
-    padding: 8,
-    borderRadius: 8,
-    marginLeft: 12,
+    padding: ICON_SIZE * 0.2,           // 20% of icon size for touch target
+    borderRadius: (ICON_SIZE * 1.4) / 2, // keep tappable area roughly circular
     backgroundColor: "transparent",
   },
 })
