@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   container: {
     position: "absolute",
     bottom: VERTICAL_SPACING,
-    left: HORIZONTAL_SPACING,
+    right: HORIZONTAL_SPACING,
     flexDirection: "row",
     alignItems: "center",
   },
