@@ -9,7 +9,8 @@ const { width } = Dimensions.get('window')
 const InsightsView: React.FC<{ showLast24h: boolean }> = ({ showLast24h }) => {
   const { byDate } = useInsightsData(showLast24h)
 
-  const dates   = byDate.map(d => d.date.substr(5)) // MM-DD
+  // now use slice to get MM-DD
+  const dates   = byDate.map(d => d.date.slice(5))
   const sleep   = byDate.map(d => d.sleep)
   const feeding = byDate.map(d => d.feeding)
   const diaper  = byDate.map(d => d.diaper)
@@ -52,7 +53,7 @@ const InsightsView: React.FC<{ showLast24h: boolean }> = ({ showLast24h }) => {
         </View>
       </View>
 
-      {/* Diapers count bar */}
+      {/* Diaper changes bar */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Diaper changes</Text>
         <BarChart
@@ -86,5 +87,5 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: 16, fontWeight: '600', marginBottom: 8 },
   chart:    { height: 180, width: width - 64 },
   axisRow:  { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
-  axisLabel: { fontSize: 10, color: '#666' },
+  axisLabel:{ fontSize: 10, color: '#666' },
 })
