@@ -20,7 +20,7 @@ import TrackerFilter from '../components/carescreen/TrackerFilter'
 import QuickLogMenu from '../components/carescreen/QuickLogMenu'
 import LogDetailModal from '../components/carescreen/LogDetailModal'
 import InsightsView from './InsightsView'
-import CardsView from '../components/carescreen/CardsView'
+import PastLogsView from '../screens/PastLogsView'
 import ActionButtons from '../components/common/ActionButtons'
 
 import { getLogsBetween } from '../services/QuickLogAccess'
@@ -164,12 +164,11 @@ const CareScreen: React.FC = () => {
             showLast24h={showLast24h}
           />
         )}
-        {activeTab === 'cards' && <CardsView />}
+        <View style={[styles.row, { flex: 5, justifyContent: 'flex-start', alignItems: 'stretch' }]}>
+          {activeTab === 'cards' && <PastLogsView />}
+        </View>
         {activeTab === 'graph' && (
           <>
-            <Text style={styles.graphHeading} testID="graph-heading">
-              AI Suggestions
-            </Text>
             <InsightsView showLast24h={showLast24h} />
           </>
         )}
