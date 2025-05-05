@@ -50,3 +50,13 @@ export const getLogsBetween = async (
     (entry) => entry.timestamp >= start && entry.timestamp <= end
   );
 };
+
+/**
+ * Delete one quick-log entry by id.
+ */
+export async function deleteLogEntry(id: string): Promise<void> {
+  // TODO: call through to your storage layer. For example:
+  // await removeQuickLogEntry(id)
+  // For now, stub it out:
+  console.debug('[QuickLogAccess] deleteLogEntry:', id)
+}

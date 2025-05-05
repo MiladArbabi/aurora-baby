@@ -15,6 +15,8 @@ import ProfileSettingScreen from '../screens/ProfileSettingScreen';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import WhisprScreen from '../screens/WhisprScreen';
 import LogDetailScreen from '../screens/LogDetailScreen'
+import PastLogsView from '../screens/PastLogsView';
+import InsightsScreen from '../screens/InsightsView';
 
 import { QuickLogType } from '../models/QuickLogSchema';
 
@@ -25,6 +27,8 @@ export type RootStackParamList = {
   StoryPlayer: { storyId: string };
   StoryViewer: { storyId: string; mode: 'soothing' | 'choice' | 'daily' }; // Updated mode
   Care: undefined;
+  PastLogs: undefined;
+  Insights: undefined;
   Wonder: undefined;
   ProfileSettings: undefined;
   ForestMap: undefined;
@@ -61,6 +65,8 @@ export default function AppNavigator() {
             <Stack.Screen name="Harmony" component={HarmonyHomeScreen} />
             <Stack.Screen name="StoryPlayer" component={StoryPlayer} />
             <Stack.Screen name="Care" component={CareScreen} />
+            <Stack.Screen name="PastLogs" component={PastLogsView} options={{ headerShown: false }} />
+            <Stack.Screen name="Insights" component={InsightsScreen} options={{ headerShown: false }} />
             <Stack.Screen name="Wonder" component={WonderScreen} />
             <Stack.Screen name="ProfileSettings" component={ProfileSettingScreen} />
             <Stack.Screen name="Whispr" component={WhisprScreen} />
