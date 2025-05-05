@@ -139,11 +139,11 @@ export default function PastLogsView() {
 
 const styles = StyleSheet.create({
   filterRow: {
-    paddingVertical: 12,
+    paddingVertical: 6,
     paddingHorizontal: 16,
-    backgroundColor: '#f5f5f5',
   },
   filterButton: {
+    height: CARD_WIDTH * 0.085,
     paddingHorizontal: 12,
     paddingVertical: 6,
     marginRight: 8,
@@ -167,5 +167,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   type: { fontSize: 16, fontWeight: '600' },
-  timestamp: { color: '#666' },
+  timestamp: { color: '#000' },
 })
