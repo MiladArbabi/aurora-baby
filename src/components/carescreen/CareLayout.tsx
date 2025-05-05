@@ -12,6 +12,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { RootStackParamList } from '../../navigation/AppNavigator'
 import { QuickLogEntry } from '../../models/QuickLogSchema'
 import { getLogsBetween } from '../../services/QuickLogAccess'
+import QuickLogMenu from '../carescreen/QuickLogMenu'
 
 type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>
 
@@ -47,7 +48,11 @@ export default function CareLayout({ activeTab, onNavigate, children, bgColor }:
       console.error('[CareLayout] invalid AI JSON:', err)
     }
   }, [])
-  
+
+  const handleLogged = useCallback((entry: QuickLogEntry) => {
+    setQuickLogEntries(e => [entry, ...e])
+  }, [])
+
   return (
     <SafeAreaView style={[styles.screen, 
     { backgroundColor: bgColor ?? theme.colors.background }]}>
@@ -63,6 +68,13 @@ export default function CareLayout({ activeTab, onNavigate, children, bgColor }:
           onNewAiLog={handleNewAiLog}
         />
       </View>
+
+      {quickLogMenuVisible && (
+        <QuickLogMenu
+        onClose={closeQuickLog}
+        onLogged={handleLogged}
+        />
+      )}
 
       <View style={styles.bottom}><BottomNav navigation={navigation} activeScreen="Care" /></View>
     </SafeAreaView>
