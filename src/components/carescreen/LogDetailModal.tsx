@@ -1,4 +1,3 @@
-//src/components/carescreen/LogDetailModal.tsx
 import React, { useState } from 'react'
 import {
   Modal,
@@ -21,6 +20,7 @@ import DiaperIcon  from '../../assets/carescreen/LogDetailModalIcons/Diaper'
 import MoodIcon    from '../../assets/carescreen/LogDetailModalIcons/Mood'
 import NoteIcon    from '../../assets/carescreen/LogDetailModalIcons/Note'
 import HealthIcon  from '../../assets/carescreen/LogDetailModalIcons/Health'
+import DeleteButton from '../../assets/icons/common/DeleteButton'
 
 // 2×2 grid field
 const FormField: React.FC<{ label: string; value: string; onPress: () => void }> =
@@ -36,6 +36,7 @@ interface Props {
   entry: QuickLogEntry
   onClose: () => void
   onSave?: (entry: QuickLogEntry) => void
+  onDelete?: (id: string) => void
 }
 
 const iconMap: Record<QuickLogEntry['type'], React.ComponentType<any>> = {
@@ -47,7 +48,7 @@ const iconMap: Record<QuickLogEntry['type'], React.ComponentType<any>> = {
   health:  HealthIcon,
 }
 
-const LogDetailModal: React.FC<Props> = ({ visible, entry, onClose, onSave }) => {
+const LogDetailModal: React.FC<Props> = ({ visible, entry, onClose, onSave, onDelete }) => {
   if (!visible) return null
 
   const { type, timestamp, data } = entry
@@ -87,25 +88,21 @@ const LogDetailModal: React.FC<Props> = ({ visible, entry, onClose, onSave }) =>
     let updated = { ...entry } as any
 
     if (type === 'sleep' || type === 'health') {
-      // compose from date + startTime
+      const iso = new Date(`${dateValue} ${startTime}`).toISOString()
+      updated.timestamp = iso
+    } else if (type === 'feeding' || type === 'diaper' || type === 'mood') {
       const iso = new Date(`${dateValue} ${startTime}`).toISOString()
       updated.timestamp = iso
     }
-    // feeding, diaper, mood → use date+timeString
-    else if (type === 'feeding' || type === 'diaper' || type === 'mood') {
-      const iso = new Date(`${dateValue} ${startTime}`).toISOString()
-      updated.timestamp = iso
-    }
-    // note → keep original timestamp (or you could override with dateValue alone)
 
     onSave?.(updated)
     onClose()
   }
 
-  // render the correct 2×2 (or 3×1) grid per type
   const renderFields = () => {
     switch (type) {
       case 'sleep':
+      case 'health':
         return (
           <>
             <FormField label="Subtype" value={subtype} onPress={() => {/* picker */}} />
@@ -121,22 +118,18 @@ const LogDetailModal: React.FC<Props> = ({ visible, entry, onClose, onSave }) =>
         return (
           <>
             <FormField
-              label={type === 'feeding' ? 'Method' : type === 'diaper' ? 'Status' : 'Mood'}
+              label={
+                type === 'feeding'
+                  ? 'Method'
+                  : type === 'diaper'
+                    ? 'Status'
+                    : 'Mood'
+              }
               value={subtype}
               onPress={() => {/* picker */}}
             />
             <FormField label="Date" value={dateValue} onPress={() => {/* date picker */}} />
             <FormField label="Time" value={startTime} onPress={() => {/* time picker */}} />
-          </>
-        )
-
-      case 'health':
-        return (
-          <>
-            <FormField label="Type"  value={subtype} onPress={() => {/* picker */}} />
-            <FormField label="Date"  value={dateValue} onPress={() => {/* date */}} />
-            <FormField label="Start" value={startTime} onPress={() => {/* time */}} />
-            <FormField label="End"   value={endTime} onPress={() => {/* time */}} />
           </>
         )
 
@@ -153,6 +146,9 @@ const LogDetailModal: React.FC<Props> = ({ visible, entry, onClose, onSave }) =>
             />
           </>
         )
+
+      default:
+        return null
     }
   }
 
@@ -162,7 +158,16 @@ const LogDetailModal: React.FC<Props> = ({ visible, entry, onClose, onSave }) =>
         <View style={styles.backdrop} />
       </TouchableWithoutFeedback>
 
-      <View style={[styles.modal, { width: modalWidth, height: modalHeight }]}>
+      <View style={[styles.modal, { width: modalWidth, height: modalHeight }]}>    
+        {/* Delete icon top-right */}
+        <TouchableOpacity
+          style={styles.deleteBtn}
+          onPress={() => onDelete?.(entry.id)}
+          testID="log-detail-delete"
+        >
+          <DeleteButton width={75} height={75} />
+        </TouchableOpacity>
+
         {/* drag handle closes */}
         <TouchableOpacity onPress={onClose} testID="log-detail-close">
           <Handlebar
@@ -227,6 +232,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 6,
     elevation: 10,
+  },
+  deleteBtn: {
+    position: 'absolute',
+    top: 32,
+    right: 6,
+    zIndex: 10,
   },
   handlebar: {
     alignSelf: 'center',
@@ -293,6 +304,13 @@ const styles = StyleSheet.create({
     padding: 12,
     fontFamily: 'Inter',
   },
+  notePreview:{
+    width: '100%',
+    fontFamily: 'Inter',
+    fontSize: 12,
+    color: '#000',
+    marginBottom: 8
+  },
   actions: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -312,13 +330,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actionText: { fontFamily: 'Edrosa', fontSize: 16, color: '#000' },
-  notePreview:{
-    width: '100%',
-    fontFamily: 'Inter',
-    fontSize: 12,
-    color: '#000',
-    marginBottom: 8
-  }
-});
+})
 
-export default LogDetailModal;
+export default LogDetailModal

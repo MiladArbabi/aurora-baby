@@ -65,7 +65,7 @@ const FloatingButton = styled.TouchableOpacity<FloatingButtonProps>`
 
 type BottomNavProps = {
   navigation: StackNavigationProp<RootStackParamList>;
-  activeScreen: 'Home' | 'Harmony' | 'Care' | 'Wonder' | 'Whispr';
+  activeScreen: 'Home' | 'Harmony' | 'Care' | 'Wonder' | 'Whispr' ;
 };
 
 const BottomNav: React.FC<BottomNavProps> = ({ navigation, activeScreen }) => {
