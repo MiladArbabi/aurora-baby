@@ -1,6 +1,11 @@
 //src/screens/InsightsView.tsx (graphs)
 import React, { useState } from 'react'
-import { View, Text, StyleSheet, ScrollView, Dimensions, TouchableOpacity } from 'react-native'
+import { 
+  View,
+  Text, 
+  StyleSheet, 
+  ScrollView, 
+  TouchableOpacity } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTheme } from 'styled-components/native'
@@ -11,9 +16,15 @@ import { MiniTab } from 'components/carescreen/MiniNavBar'
 import { LineChart, BarChart, Grid } from 'react-native-svg-charts'
 import { useInsightsData } from '../hooks/useInsightsData'
 
-const { width } = Dimensions.get('window')
-
 type InsightsNavProp = StackNavigationProp<RootStackParamList, 'Care'>
+
+const SPACING = {
+  gutter: 16,
+  small: 8,
+  tiny: 4,
+  cardPadding: 12,
+  pillHeight: 32,
+}
 
 const logTypes = [
   'Sleep Summary',
@@ -36,9 +47,6 @@ const InsightsScreen: React.FC = () => {
 
   const dates = byDate.map(d => d.date.slice(5))
   const totalSleep = byDate.map(d => d.napMinutes + d.nightMinutes)
-  const feeding = byDate.map(d => d.feeding)
-  const diaper = byDate.map(d => d.diaper)
-
 
   const handleNavigate = (tab: MiniTab) => {
     if (tab === 'graph') return
@@ -52,21 +60,21 @@ const InsightsScreen: React.FC = () => {
         return (
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Total Sleep (min)</Text>
-      <LineChart
-        style={styles.chart}
-        data={totalSleep}
-        svg={{ stroke: theme.colors.primary }}
-        contentInset={{ top: 20, bottom: 20 }}
-      >
-        <Grid />
-      </LineChart>
-          <View style={styles.axisRow}>
-        {dates.map((d, i) => (
-          <Text key={i} style={styles.axisLabel}>{d}</Text>
-        ))}
+            <LineChart
+              style={styles.chart}
+              data={totalSleep}
+              svg={{ stroke: theme.colors.primary }}
+              contentInset={{ top: 20, bottom: 20 }}
+            >
+              <Grid />
+            </LineChart>
+            <View style={styles.axisRow}>
+              {dates.map((d, i) => (
+                <Text key={i} style={styles.axisLabel}>{d}</Text>
+              ))}
+            </View>
           </View>
-        </View>
-      )
+        )
 
       case 'Naps':
       return (
@@ -127,7 +135,6 @@ const InsightsScreen: React.FC = () => {
                 </BarChart>
               </View>
             );
-      
 
             case 'Diaper Changes':
               return (
@@ -151,79 +158,78 @@ const InsightsScreen: React.FC = () => {
 
   return (
     <CareLayout 
-        activeTab="graph" 
-        onNavigate={handleNavigate}
-        bgColor={theme.colors.darkBackground}
-        >
-      
-      {/* 1) Title + description */}
-      <View style={styles.headerContainer}>
-        <Text style={styles.heading}>Insights & Analytics</Text>
-        <Text style={styles.subheading}>
-          Discover how your little one’s sleep, feeds, and diapers ebb and flow over time.
-        </Text>
-      </View>
+      activeTab="graph" 
+      onNavigate={handleNavigate}
+      bgColor={theme.colors.darkBackground}
+    >
+      {/* make entire content scrollable */}
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
 
-      {/* 2) Date‐range & period selector */}
-      <View style={styles.selectorRow}>
-        <TouchableOpacity style={styles.selectorCell}>
-          <Text style={styles.selectorText}>Last 7 days ▾</Text>
-        </TouchableOpacity>
-        <View style={styles.separator} />
-        <View style={styles.selectorCell}>
-          {['Daily','Weekly','Monthly'].map(p => (
+        {/* 1) Title + description */}
+        <View style={styles.headerContainer}>
+          <Text style={styles.heading}>Insights & Analytics</Text>
+          <Text style={styles.subheading}>
+            Discover how your little one’s sleep, feeds, and diapers ebb and flow over time.
+          </Text>
+        </View>
+
+        {/* 2) Date‐range & period selector */}
+        <View style={styles.selectorRow}>
+          <TouchableOpacity style={styles.selectorCell}>
+            <Text style={styles.selectorText}>Last 7 days ▾</Text>
+          </TouchableOpacity>
+          <View style={styles.separator} />
+          <View style={styles.selectorCell}>
+            {['Daily','Weekly','Monthly'].map(p => (
+              <TouchableOpacity
+                key={p}
+                onPress={() => setPeriod(p as any)}
+                style={[
+                  styles.periodButton,
+                  period === p && styles.periodButtonActive,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.periodText,
+                    period === p && styles.periodTextActive,
+                  ]}
+                >
+                  {p}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* 3) Log-type horizontal picker */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.logTypeRow}
+        >
+          {logTypes.map(type => (
             <TouchableOpacity
-              key={p}
-              onPress={() => setPeriod(p as any)}
+              key={type}
+              onPress={() => setLogType(type)}
               style={[
-                styles.periodButton,
-                period === p && styles.periodButtonActive,
+                styles.logTypeButton,
+                logType === type && styles.logTypeButtonActive,
               ]}
             >
               <Text
                 style={[
-                  styles.periodText,
-                  period === p && styles.periodTextActive,
+                  styles.logTypeText,
+                  logType === type && styles.logTypeTextActive,
                 ]}
               >
-                {p}
+                {type}
               </Text>
             </TouchableOpacity>
           ))}
-        </View>
-      </View>
+        </ScrollView>
 
-      {/* 3) Log-type horizontal picker */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.logTypeRow}
-      >
-        {logTypes.map(type => (
-          <TouchableOpacity
-            key={type}
-            onPress={() => setLogType(type)}
-            style={[
-              styles.logTypeButton,
-              logType === type && styles.logTypeButtonActive,
-            ]}
-          >
-            <Text
-              style={[
-                styles.logTypeText,
-                logType === type && styles.logTypeTextActive,
-              ]}
-            >
-              {type}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-      {/* 4) Charts (dynamic by selected logType) */}
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
-      >
+        {/* 4) Charts (dynamic by selected logType) */}
         {renderLogTypeCharts()}
       </ScrollView>
     </CareLayout>
@@ -236,19 +242,18 @@ const styles = StyleSheet.create({
   screen:           { flex: 1 },
 
   container:        { flex: 1 },
-  content:          { paddingBottom: 16 },
+  content:          { paddingBottom: 16, paddingTop: 16, marginTop: 50 },
 
   card:             { margin: 16, padding: 12, borderRadius: 12 },
   cardTitle:        { fontSize: 16, fontWeight: '600', marginBottom: 8, color: '#FFF' },
-  chart:            { height: 180, width: width - 64 },
+  chart:            { flex: 1, aspectRatio: 1.8, marginHorizontal: 16 },
   axisRow:          { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
   axisLabel:        { fontSize: 10, color: '#FFF' },
 
   /** Header moved up by 50px **/
   headerContainer:  {
-    paddingHorizontal: 16,
-    paddingVertical:   12,
-    marginTop:        -50,
+    paddingHorizontal: SPACING.gutter,
+    paddingBottom:    SPACING.small,
     alignItems:       'center',
   },
   heading:          {
@@ -312,4 +317,14 @@ const styles = StyleSheet.create({
     color:    '#000',
     fontWeight:'600',
   },
+  outerScroll: {
+    flex: 1,               // take up all available space
+  },
+  outerContent: {
+    paddingBottom: 16,     // keep a bit of bottom padding
+  },
+  chartContainer: {
+    width: '100%',
+    paddingVertical: 8,
+  }
 })
