@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
   screen:           { flex: 1 },
 
   container:        { flex: 1 },
-  content:          { paddingBottom: 16, paddingTop: 16, marginTop: 50 },
+  content:          { paddingBottom: 16, paddingTop: 16 },
 
   card:             { margin: 16, padding: 12, borderRadius: 12 },
   cardTitle:        { fontSize: 16, fontWeight: '600', marginBottom: 8, color: '#FFF' },
