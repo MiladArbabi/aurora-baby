@@ -74,5 +74,5 @@ export function useInsightsData(showLast24h: boolean) {
     return Array.from(map.values());
   }, [entries, eventMarkers]);
 
-  return { byDate };
+  return { byDate, sleepSegments  };
 }
