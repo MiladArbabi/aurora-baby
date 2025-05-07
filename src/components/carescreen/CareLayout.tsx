@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   top:    { flex: 1 },
   nav:    { flex: 1 },
-  body:   { flex: 5, backgroundColor: 'rgba(0,0,255,0.1)' },
+  body:   { flex: 5 },
   actions:{ flex: 1 },
   bottom: { flex: 1 },
 })

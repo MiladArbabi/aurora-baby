@@ -31,31 +31,21 @@ const colorMap: Record<QuickLogEntry['type'], string> = {
  *                     otherwise from today’s midnight→now
  */
 export function useTrackerData(showLast24h: boolean = false) {
+  const [entries, setEntries] = useState<QuickLogEntry[]>([]);
   const [sleepSegments, setSleepSegments] = useState<SleepSegment[]>([])
   const [eventMarkers, setEventMarkers]   = useState<EventMarker[]>([])
 
   useEffect(() => {
     let alive = true
-
     async function load() {
       const now = new Date()
-        let start: Date
-          if (showLast24h) {
-            start = new Date(now.getTime() - 24 * 60 * 60 * 1000)
-          } else {
-            // UTC midnight of today
-            start = new Date(Date.UTC(
-            now.getUTCFullYear(),
-            now.getUTCMonth(),
-            now.getUTCDate(),
-            0, 0, 0, 0
-          ))
-        }
-            const startISO = start.toISOString()
-            const endISO   = now.toISOString()
-
-      // ① fetch
-      const entries: QuickLogEntry[] = await getLogsBetween(startISO, endISO)
+      const start = showLast24h
+      ? new Date(now.getTime() - 24*60*60*1000)
+      : new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(),0,0,0));
+      
+      const all = await getLogsBetween(start.toISOString(), now.toISOString());
+      if (!alive) return;
+      setEntries(all);
 
       // ② map sleeps to arcs
       const sleepSegs = entries
@@ -111,5 +101,5 @@ export function useTrackerData(showLast24h: boolean = false) {
     }
   }, [showLast24h])
 
-  return { sleepSegments, eventMarkers }
+  return { entries, sleepSegments, eventMarkers }
 }
