@@ -5,13 +5,15 @@ import {
   Text, 
   StyleSheet, 
   ScrollView, 
-  TouchableOpacity } from 'react-native'
+  TouchableOpacity,
+  Modal } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTheme } from 'styled-components/native'
 import { RootStackParamList } from '../navigation/AppNavigator'
 import CareLayout from 'components/carescreen/CareLayout'
 import { MiniTab } from 'components/carescreen/MiniNavBar'
+import CalendarGrid from 'components/common/CalendarGrid'
 
 import { useInsightsData } from '../hooks/useInsightsData'
 import { ChartCard, ChartSpec } from '../components/carescreen/ChartCard'
@@ -36,6 +38,8 @@ const logTypes = [
 ] as const
 type LogType = typeof logTypes[number]
 
+const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
 const InsightsScreen: React.FC = () => {
   const navigation = useNavigation<InsightsNavProp>()
   const theme = useTheme()
@@ -44,6 +48,52 @@ const InsightsScreen: React.FC = () => {
   const { byDate, sleepSegments } = useInsightsData(showLast24h)
   const [period, setPeriod] = useState<'Daily'|'Weekly'|'Monthly'>('Weekly')
   const [logType, setLogType] = useState<LogType>('Sleep Summary')
+  // －－ filter for Sleep Summary area chart －－
+  const [sleepFilter, setSleepFilter] = useState<'total'|'night'|'nap'>('total')
+  // around line 20 in src/screens/InsightsView.tsx
+  const [showDateModal,   setShowDateModal]   = useState(false)
+
+  // track the currently-viewed month in your custom date picker:
+  const [pickerYear, setPickerYear]   = useState(new Date().getFullYear())
+  const [pickerMonth, setPickerMonth] = useState(new Date().getMonth())  // 0–11
+
+  // 1) store our selected range
+  const [rangeStart, setRangeStart] = useState<Date>(
+      // default to last 7 days
+      new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    )
+    const [rangeEnd, setRangeEnd] = useState<Date>(new Date())
+  
+    // 2) derive the button labels
+    const formatLabel = (d: Date) =>
+      `${monthNames[d.getMonth()]}-${d.getDate()}`
+    const startLabel = formatLabel(rangeStart)
+    const endLabel = formatLabel(rangeEnd)
+  
+    // 3) helper to apply one of the presets
+    const applyPreset = (label: string) => {
+      const now = new Date()
+      let start: Date
+      switch (label) {
+        case 'Last 24h':
+          start = new Date(Date.now() - 24 * 60 * 60 * 1000)
+          break
+        case '7 days':
+          start = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+          break
+        case '30 days':
+          start = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+          break
+        default:
+          return
+      }
+      setRangeStart(start)
+      setRangeEnd(now)
+    }
+  // precompute each series
+  // const totalSleep = byDate.map(d => d.napMinutes + d.nightMinutes)
+  const nightSleep = byDate.map(d => d.nightMinutes)
+  const napSleep   = byDate.map(d => d.napMinutes)
 
   /* const dates = byDate.map(d => d.date.slice(5))
   const totalSleep = byDate.map(d => d.napMinutes + d.nightMinutes) */
@@ -84,16 +134,23 @@ const InsightsScreen: React.FC = () => {
       data:   { segments: timelineSegments },
     },    
     {
-      testID: 'chart-7day',
-      title: '7-Day Total Sleep',
-      type: 'area', 
-      data: totalSleep,
-      svgProps: { 
-        stroke: theme.colors.primary, 
-        fill: 'rgba(76,175,80,0.2)',
-        baseline: 14 * 60, // 14 hours
-      }
-    },
+            testID: 'chart-7day',
+            title:
+            sleepFilter === 'total' ? 'Total sleep duration'
+            : sleepFilter === 'night'
+            ? 'Total night time sleep duration'
+            : 'Total nap time duration',
+            type: 'area',
+            data:
+              sleepFilter === 'total' ? totalSleep
+            : sleepFilter === 'night' ? nightSleep
+            :                          napSleep,
+            svgProps: {
+              stroke:   theme.colors.primary,
+              fill:     'rgba(76,175,80,0.2)',
+              baseline: 14 * 60,
+            },
+          },
     {
       testID: 'chart-bedwake',
       title: 'Bedtime & Wake Time',
@@ -172,26 +229,23 @@ const InsightsScreen: React.FC = () => {
           </Text>
         </View>
 
-        {/* 2) Date‐range & period selector */}
+        {/* 2) Date‐range presets + Daily/Weekly/Monthly */}
         <View style={styles.selectorRow}>
-          <TouchableOpacity style={styles.selectorCell}>
-            <Text style={styles.selectorText}>Last 7 days ▾</Text>
-          </TouchableOpacity>
-          <View style={styles.separator} />
-          <View style={styles.selectorCell}>
-            {['Daily','Weekly','Monthly'].map(p => (
+          {/* segmented control */}
+          <View style={styles.segmentedControl}>
+            {(['Daily','Weekly','Monthly'] as const).map(p => (
               <TouchableOpacity
                 key={p}
-                onPress={() => setPeriod(p as any)}
+                onPress={() => setPeriod(p)}
                 style={[
-                  styles.periodButton,
-                  period === p && styles.periodButtonActive,
+                  styles.segment,
+                  period === p && styles.segmentActive,
                 ]}
               >
                 <Text
                   style={[
-                    styles.periodText,
-                    period === p && styles.periodTextActive,
+                    styles.segmentText,
+                    period === p && styles.segmentTextActive,
                   ]}
                 >
                   {p}
@@ -199,6 +253,16 @@ const InsightsScreen: React.FC = () => {
               </TouchableOpacity>
             ))}
           </View>
+
+          {/* single date-range button */}
+          <TouchableOpacity
+            style={styles.dateRangeButton}
+            onPress={() => setShowDateModal(true)}
+          >
+            <Text style={styles.selectorText}>
+              {startLabel} – {endLabel} ▾
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* 3) Log-type horizontal picker */}
@@ -229,8 +293,85 @@ const InsightsScreen: React.FC = () => {
         </ScrollView>
 
         {/* 4) Charts (dynamic by selected logType) */}
-        {renderLogTypeCharts()}
+        {chartSpecs[logType].map(spec => {
+          // render the chart itself
+          const card = <ChartCard key={spec.testID} {...spec} />;
+          // if this is our 7-day area chart, also render the pills underneath
+          if (spec.testID === 'chart-7day') {
+            return (
+              <React.Fragment key={spec.testID}>
+                {card}
+                <View style={styles.filterRow}>
+                  {(['total','night','nap'] as const).map(option => {
+                    const labels = { total: 'Total Sleep', night: 'Night Time Sleep', nap: 'Nap Times' };
+                    const active = sleepFilter === option;
+                    return (
+                      <TouchableOpacity
+                        key={option}
+                        onPress={() => setSleepFilter(option)}
+                        style={[
+                          styles.filterButton,
+                          active && { backgroundColor: theme.colors.primary },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.filterText,
+                            active && styles.filterTextActive,
+                          ]}
+                        >
+                          {labels[option]}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </React.Fragment>
+            );
+          }
+          return card;
+        })}
       </ScrollView>
+      {/* DATE-RANGE BOTTOM-SHEET (presets + calendar) */}
+      <Modal
+        visible={showDateModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowDateModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            {/* presets */}
+            <View style={styles.presetsRow}>
+              {['Last 24h','7 days','30 days','Custom'].map(label => (
+                <TouchableOpacity
+                  key={label}
+                  style={styles.presetButton}
+                  onPress={() => {
+                    if (label === 'Custom') return;
+                    applyPreset(label);
+                    setShowDateModal(false);
+                  }}
+                >
+                  <Text style={styles.presetText}>{label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* calendar grid */}
+            <CalendarGrid
+              year={pickerYear}
+              month={pickerMonth}
+              // annotate that `range` has start & end properties
+              onSelectDate={(range: { start: Date; end: Date }) => {
+                setRangeStart(range.start);
+                setRangeEnd(range.end);
+                setShowDateModal(false);
+              }}
+            />
+          </View>
+        </View>
+      </Modal>
     </CareLayout>
   )
 }
@@ -325,5 +466,81 @@ const styles = StyleSheet.create({
   chartContainer: {
     width: '100%',
     paddingVertical: 8,
-  }
+  },
+  filterRow: {
+        flexDirection:  'row',
+        justifyContent: 'center',
+        marginBottom:   8,
+      },
+  filterButton: {
+        marginHorizontal: 8,
+        paddingHorizontal: 12,
+        paddingVertical:   6,
+        borderRadius:      16,
+        backgroundColor:   'rgba(255,255,255,0.15)',
+      },
+      filterText: {
+        color: '#FFF',
+        fontSize: 12,
+      },
+      filterTextActive: {
+        fontWeight: '600',
+    },
+    modalOverlay: {
+      flex:           1,
+      backgroundColor:'rgba(0,0,0,0.5)',
+      justifyContent: 'flex-end',
+    },
+    modalContent: {
+      backgroundColor:'#fff',
+      padding:         16,
+      borderTopLeftRadius: 12,
+      borderTopRightRadius:12,
+    },
+    // top‐row segmented & date-range
+segmentedControl: {
+  flexDirection: 'row',
+  backgroundColor: 'rgba(255,255,255,0.1)',
+  borderRadius:  20,
+  overflow:      'hidden',
+},
+segment: {
+  flex:     1,
+  padding:  6,
+  alignItems:'center',
+},
+segmentActive: {
+  backgroundColor: '#FFF',
+},
+segmentText: {
+  fontSize:12,
+  color:    '#DDD',
+},
+segmentTextActive: {
+  color:    '#000',
+  fontWeight:'600',
+},
+dateRangeButton: {
+  marginLeft:     12,
+  paddingHorizontal:12,
+  paddingVertical:  6,
+  borderRadius:     16,
+  backgroundColor:  'rgba(255,255,255,0.15)',
+},
+
+// bottom-sheet
+presetsRow: {
+  flexDirection:    'row',
+  justifyContent:   'space-around',
+  marginBottom:     12,
+},
+presetButton: {
+  paddingHorizontal:8,
+  paddingVertical:  4,
+  borderRadius:     12,
+  backgroundColor:  'rgba(0,0,0,0.05)',
+},
+presetText: {
+  fontSize: 12,
+},
 })
