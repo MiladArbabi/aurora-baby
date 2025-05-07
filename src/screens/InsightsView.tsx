@@ -13,8 +13,8 @@ import { RootStackParamList } from '../navigation/AppNavigator'
 import CareLayout from 'components/carescreen/CareLayout'
 import { MiniTab } from 'components/carescreen/MiniNavBar'
 
-import { LineChart, BarChart, Grid } from 'react-native-svg-charts'
 import { useInsightsData } from '../hooks/useInsightsData'
+import { ChartCard, ChartSpec } from '../components/carescreen/ChartCard'
 
 type InsightsNavProp = StackNavigationProp<RootStackParamList, 'Care'>
 
@@ -41,12 +41,18 @@ const InsightsScreen: React.FC = () => {
   const theme = useTheme()
 
   const [showLast24h, setShowLast24h] = useState(false)
-  const { byDate } = useInsightsData(showLast24h)
+  const { byDate, sleepSegments } = useInsightsData(showLast24h)
   const [period, setPeriod] = useState<'Daily'|'Weekly'|'Monthly'>('Weekly')
   const [logType, setLogType] = useState<LogType>('Sleep Summary')
 
   const dates = byDate.map(d => d.date.slice(5))
   const totalSleep = byDate.map(d => d.napMinutes + d.nightMinutes)
+
+  const timelineSegments = sleepSegments.map(seg => ({
+    from: seg.startFraction,
+    to:   seg.endFraction,
+    color: seg.color,
+  }))
 
   const handleNavigate = (tab: MiniTab) => {
     if (tab === 'graph') return
@@ -54,118 +60,80 @@ const InsightsScreen: React.FC = () => {
     if (tab === 'cards')   navigation.navigate('PastLogs')
   }
 
-  const renderLogTypeCharts = () => {
-    switch (logType) {
-      case 'Sleep Summary':
-        return (
-          <View style={styles.card}>
-            <Text testID="chart-title" style={styles.cardTitle}>
-              Total Sleep (min)
-            </Text>
-            <LineChart
-              style={styles.chart}
-              data={totalSleep}
-              svg={{ stroke: theme.colors.primary }}
-              contentInset={{ top: 20, bottom: 20 }}
-            >
-              <Grid />
-            </LineChart>
-            <View style={styles.axisRow}>
-              {dates.map((d, i) => (
-                <Text key={i} style={styles.axisLabel}>{d}</Text>
-              ))}
-            </View>
-          </View>
-        )
-
-      case 'Naps':
-      return (
-        <View style={styles.card}>
-          <Text testID="chart-title" style={styles.cardTitle}>
-            Naps (min)
-          </Text>
-          <BarChart
-            style={styles.chart}
-            data={byDate.map(d => d.napMinutes)}
-            svg={{ fill: theme.colors.accent }}
-            contentInset={{ top: 20, bottom: 20 }}
-          >
-            <Grid/>
-          </BarChart>
-        </View>
-      );
-
-      case 'Awake Time':
-      return (
-        <View style={styles.card}>
-          <Text testID="chart-title" style={styles.cardTitle}>
-            Awake (min)
-          </Text>
-          <LineChart
-            style={styles.chart}
-            data={byDate.map(d => d.awakeMinutes)}
-            svg={{ stroke: theme.colors.accent }}
-            contentInset={{ top: 20, bottom: 20 }}
-          >
-            <Grid/>
-          </LineChart>
-        </View>
-      );
-
-        case 'Night Time Sleep':
-          return (
-            <View style={styles.card}>
-              <Text testID="chart-title" style={styles.cardTitle}>
-                Night Time Sleep (min)
-              </Text>
-              <BarChart
-                style={styles.chart}
-                data={byDate.map(d => d.nightMinutes)}
-                svg={{ fill: theme.colors.secondaryBackground }}
-                contentInset={{ top: 20, bottom: 20 }}
-              >
-                <Grid/>
-              </BarChart>
-            </View>
-          );
-
-          case 'Feedings':
-            return (
-              <View style={styles.card}>
-               <Text testID="chart-title" style={styles.cardTitle}>
-                  Feedings
-                </Text>
-                <BarChart
-                  style={styles.chart}
-                  data={byDate.map(d => d.feeding)}
-                  svg={{ fill: theme.colors.secondaryBackground }}
-                  contentInset={{ top: 20, bottom: 20 }}
-                >
-                  <Grid/>
-                </BarChart>
-              </View>
-            );
-
-            case 'Diaper Changes':
-              return (
-                <View style={styles.card}>
-                   <Text testID="chart-title" style={styles.cardTitle}>
-                    Diaper Changes
-                  </Text>
-                  <BarChart
-                    style={styles.chart}
-                    data={byDate.map(d => d.diaper)}
-                    svg={{ fill: theme.colors.accent }}
-                    contentInset={{ top: 20, bottom: 20 }}
-                  >
-                    <Grid/>
-                  </BarChart>
-                </View>
-              );
-
-      default:
-        return null
+  const chartSpecs: Record<LogType, ChartSpec[]> = {
+    'Sleep Summary': [
+    {
+      testID: 'chart-gauge',
+      title:  'Last 24h Sleep Timeline',
+      type:   'gauge',
+      data:   { segments: timelineSegments },
+    },    
+    {
+      testID: 'chart-7day',
+      title: '7-Day Total Sleep',
+      type: 'line', // will add area fill next
+      data: totalSleep,
+      svgProps: { stroke: theme.colors.primary, fill: 'rgba(76,175,80,0.2)' },
+    },
+    {
+      testID: 'chart-bedwake',
+      title: 'Bedtime & Wake Time',
+      type: 'line', // will implement scatter overlay next
+      data: [], // placeholder, will compute bedtime & wake minutes
+      svgProps: {},
     }
+  ],
+        'Naps': [
+          {
+            testID: 'chart-naps',
+            title: 'Naps (min)',
+            type: 'bar',
+            data: byDate.map(d => d.napMinutes),
+            svgProps: { fill: theme.colors.accent }
+          }
+        ],
+        'Awake Time': [
+          {
+            testID: 'chart-awake',
+            title: 'Awake (min)',
+            type: 'line',
+            data: byDate.map(d => d.awakeMinutes),
+            svgProps: { stroke: theme.colors.secondaryBackground }
+          }
+        ],
+        'Night Time Sleep': [
+          {
+            testID: 'chart-night',
+            title: 'Night Time Sleep (min)',
+            type: 'bar',
+            data: byDate.map(d => d.nightMinutes),
+            svgProps: { fill: theme.colors.secondaryBackground }
+          }
+        ],
+        'Feedings': [
+          {
+            testID: 'chart-feedings',
+            title: 'Feedings',
+            type: 'bar',
+            data: byDate.map(d => d.feeding),
+            svgProps: { fill: theme.colors.secondaryBackground }
+          }
+        ],
+        'Diaper Changes': [
+          {
+            testID: 'chart-diaper',
+            title: 'Diaper Changes',
+            type: 'bar',
+            data: byDate.map(d => d.diaper),
+            svgProps: { fill: theme.colors.accent }
+          }
+        ]
+      }
+
+  const renderLogTypeCharts = () => {
+    return chartSpecs[logType].map(spec => (
+      <ChartCard key={spec.testID} {...spec} />
+    ))
   }
 
   return (
