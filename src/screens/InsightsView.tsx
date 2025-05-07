@@ -48,11 +48,21 @@ const InsightsScreen: React.FC = () => {
   const dates = byDate.map(d => d.date.slice(5))
   const totalSleep = byDate.map(d => d.napMinutes + d.nightMinutes)
 
-  const timelineSegments = sleepSegments.map(seg => ({
+/*   const timelineSegments = sleepSegments.map(seg => ({
     from: seg.startFraction,
     to:   seg.endFraction,
     color: seg.color,
-  }))
+  })) */
+
+    // Smoke-test to see if the gauge works
+    const timelineSegments = [
+          { from: 0 / 24, to:  4 / 24, color: '#E57373' },  // midnight→4 AM
+          { from: 4 / 24, to:  8 / 24, color: '#BA68C8' },  // 4 AM→8 AM
+          { from: 8 / 24, to: 12 / 24, color: '#7986CB' },  // 8 AM→12 PM
+          { from:12 / 24, to: 16 / 24, color: '#4DB6AC' },  // 12 PM→4 PM
+          { from:16 / 24, to: 20 / 24, color: '#AED581' },  // 4 PM→8 PM
+          { from:20 / 24, to: 24 / 24, color: '#FFD54F' },  // 8 PM→midnight
+        ]
 
   const handleNavigate = (tab: MiniTab) => {
     if (tab === 'graph') return
