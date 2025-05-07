@@ -59,7 +59,9 @@ const InsightsScreen: React.FC = () => {
       case 'Sleep Summary':
         return (
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Total Sleep (min)</Text>
+            <Text testID="chart-title" style={styles.cardTitle}>
+              Total Sleep (min)
+            </Text>
             <LineChart
               style={styles.chart}
               data={totalSleep}
@@ -79,7 +81,9 @@ const InsightsScreen: React.FC = () => {
       case 'Naps':
       return (
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Naps (min)</Text>
+          <Text testID="chart-title" style={styles.cardTitle}>
+            Naps (min)
+          </Text>
           <BarChart
             style={styles.chart}
             data={byDate.map(d => d.napMinutes)}
@@ -94,7 +98,9 @@ const InsightsScreen: React.FC = () => {
       case 'Awake Time':
       return (
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Awake (min)</Text>
+          <Text testID="chart-title" style={styles.cardTitle}>
+            Awake (min)
+          </Text>
           <LineChart
             style={styles.chart}
             data={byDate.map(d => d.awakeMinutes)}
@@ -109,7 +115,9 @@ const InsightsScreen: React.FC = () => {
         case 'Night Time Sleep':
           return (
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Night Sleep (min)</Text>
+              <Text testID="chart-title" style={styles.cardTitle}>
+                Night Time Sleep (min)
+              </Text>
               <BarChart
                 style={styles.chart}
                 data={byDate.map(d => d.nightMinutes)}
@@ -124,7 +132,9 @@ const InsightsScreen: React.FC = () => {
           case 'Feedings':
             return (
               <View style={styles.card}>
-                <Text style={styles.cardTitle}>Feedings</Text>
+               <Text testID="chart-title" style={styles.cardTitle}>
+                  Feedings
+                </Text>
                 <BarChart
                   style={styles.chart}
                   data={byDate.map(d => d.feeding)}
@@ -139,7 +149,9 @@ const InsightsScreen: React.FC = () => {
             case 'Diaper Changes':
               return (
                 <View style={styles.card}>
-                  <Text style={styles.cardTitle}>Diaper Changes</Text>
+                   <Text testID="chart-title" style={styles.cardTitle}>
+                    Diaper Changes
+                  </Text>
                   <BarChart
                     style={styles.chart}
                     data={byDate.map(d => d.diaper)}
