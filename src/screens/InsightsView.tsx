@@ -6,10 +6,15 @@ import {
   StyleSheet, 
   ScrollView, 
   TouchableOpacity,
-  Modal } from 'react-native'
+  Modal,
+  PanResponder } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTheme } from 'styled-components/native'
+import { startOfDay, subDays, startOfWeek, subWeeks, addWeeks, addDays,
+  startOfMonth, subMonths, addMonths } from 'date-fns'
+import Icon from 'react-native-vector-icons/Feather'
+
 import { RootStackParamList } from '../navigation/AppNavigator'
 import CareLayout from 'components/carescreen/CareLayout'
 import { MiniTab } from 'components/carescreen/MiniNavBar'
@@ -17,6 +22,7 @@ import CalendarGrid from 'components/common/CalendarGrid'
 
 import { useInsightsData } from '../hooks/useInsightsData'
 import { ChartCard, ChartSpec } from '../components/carescreen/ChartCard'
+
 
 type InsightsNavProp = StackNavigationProp<RootStackParamList, 'Care'>
 
@@ -48,21 +54,36 @@ const InsightsScreen: React.FC = () => {
   const { byDate, sleepSegments } = useInsightsData(showLast24h)
   const [period, setPeriod] = useState<'Daily'|'Weekly'|'Monthly'>('Weekly')
   const [logType, setLogType] = useState<LogType>('Sleep Summary')
+  const [rangeEnd, setRangeEnd] = useState<Date>(new Date())
+
   // －－ filter for Sleep Summary area chart －－
   const [sleepFilter, setSleepFilter] = useState<'total'|'night'|'nap'>('total')
   // around line 20 in src/screens/InsightsView.tsx
   const [showDateModal,   setShowDateModal]   = useState(false)
+   // how many periods back we are viewing (0 = current, 1 = yesterday / last week / last month, etc.)
+   const [periodOffset, setPeriodOffset] = useState(0)
 
   // track the currently-viewed month in your custom date picker:
   const [pickerYear, setPickerYear]   = useState(new Date().getFullYear())
   const [pickerMonth, setPickerMonth] = useState(new Date().getMonth())  // 0–11
+
 
   // 1) store our selected range
   const [rangeStart, setRangeStart] = useState<Date>(
       // default to last 7 days
       new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
     )
-    const [rangeEnd, setRangeEnd] = useState<Date>(new Date())
+
+      // pan responder to detect left/right swipes
+  const panResponder = React.useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, { dx, dy }) => Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10,
+      onPanResponderRelease: (_, { dx }) => {
+        if (dx < -20)  setPeriodOffset(o => o + 1)               // swipe left → older
+        else if (dx > 20) setPeriodOffset(o => Math.max(0, o - 1)) // swipe right → newer (not beyond 0)
+      },
+    })
+  ).current
   
     // 2) derive the button labels
     const formatLabel = (d: Date) =>
@@ -119,38 +140,117 @@ const InsightsScreen: React.FC = () => {
           { from:20 / 24, to: 24 / 24, color: '#FFD54F' },  // 8 PM→midnight
         ]
 
+  /* // compute start/end of the current page based on period + offset
+  const now = new Date()
+  let windowStart: Date, windowEnd: Date
+
+  if (period === 'Daily') {
+    const day = subDays(startOfDay(now), periodOffset)
+    windowStart = day
+    windowEnd   = addDays(day, 1)
+  } else if (period === 'Weekly') {
+    const weekStart = subWeeks(startOfWeek(now, { weekStartsOn: 1 }), periodOffset)
+    windowStart = weekStart
+    windowEnd   = addWeeks(weekStart, 1)
+  } else {
+    const monthStart = subMonths(startOfMonth(now), periodOffset)
+    windowStart = monthStart
+    windowEnd   = addMonths(monthStart, 1)
+  } */
+
+  /* // now slice your sleepSegments into that window and scale to a 0–1 fraction ring:
+  const fullSpan = windowEnd.getTime() - windowStart.getTime()
+  const timelineSegments = sleepSegments
+    .filter(seg => {
+      const segStart = new Date(seg.startFraction).getTime()
+      return segStart >= windowStart.getTime() && segStart < windowEnd.getTime()
+    })
+    .map(seg => {
+      const a = new Date(seg.startFraction).getTime() - windowStart.getTime()
+      const b = new Date(seg.endFraction  ).getTime() - windowStart.getTime()
+      return {
+        from: a / fullSpan,
+        to:   b / fullSpan,
+        color: seg.color,
+      }
+    }) */
+
   const handleNavigate = (tab: MiniTab) => {
     if (tab === 'graph') return
     if (tab === 'tracker') navigation.navigate('Care')
     if (tab === 'cards')   navigation.navigate('PastLogs')
   }
 
+  // 1) compute a human-readable label for your current “window” based on period & offset
+const gaugeTitle = React.useMemo(() => {
+  const now = new Date()
+  let start: Date, end: Date
+  let label: string
+
+  if (period === 'Daily') {
+    // “current” day is offset=0, “1 day ago” offset=1, etc.
+    start = subDays(startOfDay(now), periodOffset)
+    end   = addDays(start, 1)
+    if (periodOffset === 0) {
+      label = `Today (${monthNames[start.getMonth()]} ${start.getDate()})`
+    } else {
+      const dayAgo = periodOffset
+      label = `${dayAgo} day${dayAgo>1?'s':''} ago (${monthNames[start.getMonth()]} ${start.getDate()})`
+    }
+
+  } else if (period === 'Weekly') {
+    // iso-week starting Monday
+    const weekStart = subWeeks(startOfWeek(now, { weekStartsOn: 1 }), periodOffset)
+    const weekEnd   = addWeeks(weekStart, 1)
+    if (periodOffset === 0) {
+      label = `This week (${monthNames[weekStart.getMonth()]} ${weekStart.getDate()}–${monthNames[weekEnd.getMonth()]} ${weekEnd.getDate()})`
+    } else if (periodOffset === 1) {
+      label = `Last week (${monthNames[weekStart.getMonth()]} ${weekStart.getDate()}–${monthNames[weekEnd.getMonth()]} ${weekEnd.getDate()})`
+    } else {
+      label = `${periodOffset} weeks ago (${monthNames[weekStart.getMonth()]} ${weekStart.getDate()}–${monthNames[weekEnd.getMonth()]} ${weekEnd.getDate()})`
+    }
+
+  } else { // Monthly
+    const monthStart = subMonths(startOfMonth(now), periodOffset)
+    if (periodOffset === 0) {
+      label = `This month (${monthNames[monthStart.getMonth()]} ${monthStart.getFullYear()})`
+    } else if (periodOffset === 1) {
+      label = `Last month (${monthNames[monthStart.getMonth()]} ${monthStart.getFullYear()})`
+    } else {
+      label = `${periodOffset} months ago (${monthNames[monthStart.getMonth()]} ${monthStart.getFullYear()})`
+    }
+  }
+
+  return label
+}, [period, periodOffset])
+
   const chartSpecs: Record<LogType, ChartSpec[]> = {
     'Sleep Summary': [
     {
       testID: 'chart-gauge',
-      title:  'Last 24h Sleep Timeline',
+      title:  gaugeTitle,
       type:   'gauge',
       data:   { segments: timelineSegments },
     },    
     {
-            testID: 'chart-7day',
-            title:
-            sleepFilter === 'total' ? 'Total sleep duration'
-            : sleepFilter === 'night'
-            ? 'Total night time sleep duration'
-            : 'Total nap time duration',
-            type: 'area',
-            data:
-              sleepFilter === 'total' ? totalSleep
-            : sleepFilter === 'night' ? nightSleep
-            :                          napSleep,
-            svgProps: {
-              stroke:   theme.colors.primary,
-              fill:     'rgba(76,175,80,0.2)',
-              baseline: 14 * 60,
-            },
-          },
+      testID: 'chart-7day',
+      title:
+      sleepFilter === 'total' ? 'Total sleep duration'
+      : sleepFilter === 'night'
+      ? 'Total night time sleep duration'
+      : 'Total nap time duration',
+      type: 'area',
+      data:
+      sleepFilter === 'total' ? totalSleep
+      : sleepFilter === 'night' ? nightSleep
+      : napSleep,
+      period,
+      svgProps: {
+      stroke:   theme.colors.primary,
+      fill:     'rgba(76,175,80,0.2)',
+      baseline: 14 * 60,
+        },
+      },
     {
       testID: 'chart-bedwake',
       title: 'Bedtime & Wake Time',
@@ -205,12 +305,6 @@ const InsightsScreen: React.FC = () => {
           }
         ]
       }
-
-  const renderLogTypeCharts = () => {
-    return chartSpecs[logType].map(spec => (
-      <ChartCard key={spec.testID} {...spec} />
-    ))
-  }
 
   return (
     <CareLayout 
@@ -294,38 +388,42 @@ const InsightsScreen: React.FC = () => {
 
         {/* 4) Charts (dynamic by selected logType) */}
         {chartSpecs[logType].map(spec => {
-          // render the chart itself
+          // the plain card
           const card = <ChartCard key={spec.testID} {...spec} />;
-          // if this is our 7-day area chart, also render the pills underneath
+
+          // our special swipeable wrapper for the gauge
+          if (spec.testID === 'chart-gauge') {
+            return (
+              <View
+                key="swipe-gauge"
+                {...panResponder.panHandlers}
+                style={{ position: 'relative', marginVertical: 16 }}
+              >
+                {/* left arrow hint */}
+                <Icon
+                  name="chevron-left"
+                  size={24}
+                  color="rgba(255,255,255,0.5)"
+                  style={[styles.arrow, { left: 8 }]}
+                />
+                {card}
+                {/* right arrow hint */}
+                <Icon
+                  name="chevron-right"
+                  size={24}
+                  color="rgba(255,255,255,0.5)"
+                  style={[styles.arrow, { right: 8 }]}
+                />
+              </View>
+            )
+          }
+
+          // 7-day area  others remain as before
           if (spec.testID === 'chart-7day') {
             return (
               <React.Fragment key={spec.testID}>
                 {card}
-                <View style={styles.filterRow}>
-                  {(['total','night','nap'] as const).map(option => {
-                    const labels = { total: 'Total Sleep', night: 'Night Time Sleep', nap: 'Nap Times' };
-                    const active = sleepFilter === option;
-                    return (
-                      <TouchableOpacity
-                        key={option}
-                        onPress={() => setSleepFilter(option)}
-                        style={[
-                          styles.filterButton,
-                          active && { backgroundColor: theme.colors.primary },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.filterText,
-                            active && styles.filterTextActive,
-                          ]}
-                        >
-                          {labels[option]}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
+                {/* … your filter pills … */}
               </React.Fragment>
             );
           }
@@ -542,5 +640,11 @@ presetButton: {
 },
 presetText: {
   fontSize: 12,
+},
+arrow: {
+  position:  'absolute',
+  top:       '50%',
+  marginTop: -12,
+  zIndex:    10,
 },
 })
