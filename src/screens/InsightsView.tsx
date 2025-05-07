@@ -45,8 +45,12 @@ const InsightsScreen: React.FC = () => {
   const [period, setPeriod] = useState<'Daily'|'Weekly'|'Monthly'>('Weekly')
   const [logType, setLogType] = useState<LogType>('Sleep Summary')
 
-  const dates = byDate.map(d => d.date.slice(5))
-  const totalSleep = byDate.map(d => d.napMinutes + d.nightMinutes)
+  /* const dates = byDate.map(d => d.date.slice(5))
+  const totalSleep = byDate.map(d => d.napMinutes + d.nightMinutes) */
+  // smoke-test: dummy 7-day total sleep (in minutes) 
+  // - Replace with above, once in production
+  const dates = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+  const totalSleep = [420, 480, 360, 540, 300, 600, 450]
 
 /*   const timelineSegments = sleepSegments.map(seg => ({
     from: seg.startFraction,
@@ -55,6 +59,7 @@ const InsightsScreen: React.FC = () => {
   })) */
 
     // Smoke-test to see if the gauge works
+    // - Replace with above, once in production
     const timelineSegments = [
           { from: 0 / 24, to:  4 / 24, color: '#E57373' },  // midnight→4 AM
           { from: 4 / 24, to:  8 / 24, color: '#BA68C8' },  // 4 AM→8 AM
@@ -81,9 +86,13 @@ const InsightsScreen: React.FC = () => {
     {
       testID: 'chart-7day',
       title: '7-Day Total Sleep',
-      type: 'line', // will add area fill next
+      type: 'area', 
       data: totalSleep,
-      svgProps: { stroke: theme.colors.primary, fill: 'rgba(76,175,80,0.2)' },
+      svgProps: { 
+        stroke: theme.colors.primary, 
+        fill: 'rgba(76,175,80,0.2)',
+        baseline: 14 * 60, // 14 hours
+      }
     },
     {
       testID: 'chart-bedwake',
