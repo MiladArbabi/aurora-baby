@@ -27,7 +27,6 @@ export type AreaSpec = {
   };
 };
 
-/** One slice of the 24h circle, from `from`→`to` (0–1 fraction), painted `color` */
 export type Segment = {
   from: number;
   to: number;
@@ -44,8 +43,9 @@ export type GaugeSpec = {
 
 export type ChartSpec = LineBarSpec | GaugeSpec | AreaSpec;
 
-export const ChartCard: React.FC<ChartSpec> = ({ testID, title, type, data, svgProps, }: ChartSpec) => {
+export const ChartCard: React.FC<ChartSpec> = props => {
   const theme = useTheme();
+  const { testID, title, type } = props;
   const legendLabels = [
     'Night Sleep',
     'Morning Wake',
@@ -56,13 +56,12 @@ export const ChartCard: React.FC<ChartSpec> = ({ testID, title, type, data, svgP
   ];
 
   if (type === 'area') {
-    // Narrow props to AreaSpec
-    const { data: values, period } = data as AreaSpec;
-    const { svgProps: areaSvg } = svgProps ? { svgProps } : ({} as any);
-    const yBaseline = values.map(() => areaSvg.baseline);
+    // props is narrowed to AreaSpec
+    const { data: values, period, svgProps } = props as AreaSpec;
+    const yBaseline = values.map(() => svgProps.baseline);
     const contentInset = { top: 20, bottom: 20 };
-
     const today = new Date();
+
     const labels = values.map((_, i) => {
       switch (period) {
         case 'Daily':
@@ -93,7 +92,7 @@ export const ChartCard: React.FC<ChartSpec> = ({ testID, title, type, data, svgP
             <AreaChart
               style={{ flex: 1 }}
               data={values}
-              svg={{ fill: areaSvg.fill }}
+              svg={{ fill: svgProps.fill }}
               curve={shape.curveMonotoneX}
               contentInset={contentInset}
             >
@@ -102,7 +101,7 @@ export const ChartCard: React.FC<ChartSpec> = ({ testID, title, type, data, svgP
             <LineChart
               style={StyleSheet.absoluteFill}
               data={values}
-              svg={{ stroke: areaSvg.stroke, strokeWidth: 2 }}
+              svg={{ stroke: svgProps.stroke, strokeWidth: 2 }}
               curve={shape.curveMonotoneX}
               contentInset={contentInset}
             />
@@ -127,9 +126,10 @@ export const ChartCard: React.FC<ChartSpec> = ({ testID, title, type, data, svgP
   }
 
   if (type === 'gauge') {
-    const { segments } = data as GaugeSpec['data'];
+    // props is narrowed to GaugeSpec
+    const { data: { segments } } = props as GaugeSpec;
     return (
-      <View style={[styles.card, { alignItems: 'center', width: '100%' }]}>      
+      <View style={[styles.card, { alignItems: 'center', width: '100%' }]}>
         <Text testID={testID} style={styles.cardTitle}>{title}</Text>
         <GaugeChart size={160} segments={segments} />
         <View style={styles.legendContainer}>
@@ -149,13 +149,13 @@ export const ChartCard: React.FC<ChartSpec> = ({ testID, title, type, data, svgP
   }
 
   // line or bar chart:
-  const values = data as number[];
+  const { data: values, svgProps: chartSvg } = props as LineBarSpec;
   return (
     <View style={styles.card}>
       <Text testID={testID} style={styles.cardTitle}>{title}</Text>
       {type === 'line'
-        ? <LineChart style={styles.chart} data={values} svg={svgProps!} curve={shape.curveMonotoneX} contentInset={{ top: 20, bottom: 20 }}><Grid/></LineChart>
-        : <BarChart style={styles.chart} data={values} svg={svgProps!} contentInset={{ top: 20, bottom: 20 }}><Grid/></BarChart>
+        ? <LineChart style={styles.chart} data={values} svg={chartSvg} curve={shape.curveMonotoneX} contentInset={{ top: 20, bottom: 20 }}><Grid/></LineChart>
+        : <BarChart style={styles.chart} data={values} svg={chartSvg} contentInset={{ top: 20, bottom: 20 }}><Grid/></BarChart>
       }
     </View>
   );
