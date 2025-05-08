@@ -423,7 +423,36 @@ const gaugeTitle = React.useMemo(() => {
             return (
               <React.Fragment key={spec.testID}>
                 {card}
-                {/* … your filter pills … */}
+                {/* filter pills for total/night/nap */}
+                <View style={styles.filterRow}>
+                  {(['total','night','nap'] as const).map(option => {
+                    const labels = {
+                      total: 'Total sleep',
+                      night: 'Night sleep',
+                      nap:   'Nap sleep',
+                    } as Record<typeof option, string>
+                    const active = sleepFilter === option
+                    return (
+                      <TouchableOpacity
+                        key={option}
+                        onPress={() => setSleepFilter(option)}
+                        style={[
+                          styles.filterButton,
+                          active && { backgroundColor: theme.colors.primary },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.filterText,
+                            active && styles.filterTextActive,
+                          ]}
+                        >
+                          {labels[option]}
+                        </Text>
+                      </TouchableOpacity>
+                    )
+                  })}
+                </View>
               </React.Fragment>
             );
           }
