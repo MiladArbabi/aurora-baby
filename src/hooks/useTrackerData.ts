@@ -5,8 +5,11 @@ import { QuickLogEntry } from '../models/QuickLogSchema'
 
 export interface SleepSegment {
   id: string
+  start: string // ISO date
+  end: string   // ISO date
   startFraction: number
   endFraction: number
+
   color: string
 }
 
@@ -66,6 +69,8 @@ export function useTrackerData(showLast24h: boolean = false) {
              endDate.getMinutes() +
              endDate.getSeconds() / 60) / 1440
           return {
+            start: e.data.start,
+            end: e.data.end,
             id: e.id,
             startFraction,
             endFraction,

@@ -36,6 +36,7 @@ const SPACING = {
 
 const logTypes = [
   'Sleep Summary',
+  'Sleep Intervals',
   'Naps',
   'Awake Time',
   'Night Time Sleep',
@@ -51,7 +52,7 @@ const InsightsScreen: React.FC = () => {
   const theme = useTheme()
 
   const [showLast24h, setShowLast24h] = useState(false)
-  const { byDate, sleepSegments } = useInsightsData(showLast24h)
+  const { byDate, sleepSegments, intervalData } = useInsightsData(showLast24h)
   const [period, setPeriod] = useState<'Daily'|'Weekly'|'Monthly'>('Weekly')
   const [logType, setLogType] = useState<LogType>('Sleep Summary')
   const [rangeEnd, setRangeEnd] = useState<Date>(new Date())
@@ -173,7 +174,14 @@ const InsightsScreen: React.FC = () => {
         to:   b / fullSpan,
         color: seg.color,
       }
-    }) */
+    }) */ 
+
+  // fallback to smoke-test intervals if your pipeline isn’t hooked up yet
+  const today = new Date().toISOString().slice(0,10)  // e.g. "2025-03-14"
+  const dummyIntervals = [
+    { date: today, startFraction: 22 / 24, endFraction: 6 / 24, color: '#7986CB' },
+  ];
+  const timelinePayload = intervalData.length > 0 ? intervalData : dummyIntervals;
 
   const handleNavigate = (tab: MiniTab) => {
     if (tab === 'graph') return
@@ -252,13 +260,21 @@ const gaugeTitle = React.useMemo(() => {
         },
       },
     {
-      testID: 'chart-bedwake',
-      title: 'Bedtime & Wake Time',
-      type: 'line', // will implement scatter overlay next
-      data: [], // placeholder, will compute bedtime & wake minutes
-      svgProps: {},
+      testID: 'chart-timeline',
+      title: 'Sleep Intervals',
+      type: 'timeline',
+      data: timelinePayload, //Switch back to intervalData for production
+      period,
     }
   ],
+  'Sleep Intervals': [
+        {
+          testID: 'chart-timeline',
+          title: 'Sleep Intervals',
+          type: 'timeline',
+          data: intervalData,
+          period,
+        }],
         'Naps': [
           {
             testID: 'chart-naps',

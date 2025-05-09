@@ -1,6 +1,8 @@
 // src/hooks/useInsightsData.ts
 import { useTrackerData } from './useTrackerData';
 import { useMemo } from 'react';
+import type { Interval } from '../components/carescreen/TimelineChart';
+import { color } from '@rneui/base';
 
 interface DayTotals {
   date:       string;
@@ -15,6 +17,13 @@ interface DayTotals {
 export function useInsightsData(showLast24h: boolean) {
   // ① get raw entries plus your existing segments/markers
   const { sleepSegments, eventMarkers, entries } = useTrackerData(showLast24h);
+
+  const intervalData = useMemo(() => sleepSegments.map(seg => ({
+    date: seg.start.slice(0,10), // MM-DD
+    startFraction: seg.startFraction,
+    endFraction: seg.endFraction,
+    color: seg.color,
+  })), [sleepSegments]);
 
   const byDate = useMemo(() => {
     // initialize a 7-day map
@@ -74,5 +83,5 @@ export function useInsightsData(showLast24h: boolean) {
     return Array.from(map.values());
   }, [entries, eventMarkers]);
 
-  return { byDate, sleepSegments  };
+  return { byDate, sleepSegments, intervalData };
 }

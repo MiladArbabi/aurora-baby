@@ -1,3 +1,4 @@
+//src/components/carescreen/ChartCard.tsx
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { LineChart, BarChart, Grid, AreaChart, XAxis, YAxis } from 'react-native-svg-charts';
@@ -5,6 +6,7 @@ import * as shape from 'd3-shape';
 import { format, subDays, subWeeks, subMonths } from 'date-fns';
 import { useTheme } from 'styled-components/native';
 import GaugeChart from './GaugeChart';
+import { TimelineChart, Interval } from './TimelineChart'
 
 export type LineBarSpec = {
   type: 'line' | 'bar';
@@ -41,7 +43,11 @@ export type GaugeSpec = {
   svgProps?: any;
 };
 
-export type ChartSpec = LineBarSpec | GaugeSpec | AreaSpec;
+export type ChartSpec = 
+    LineBarSpec 
+    | GaugeSpec 
+    | AreaSpec 
+    | { type: 'timeline'; testID: string; title: string; data: Interval[]; period: 'Daily'|'Weekly'|'Monthly' };
 
 export const ChartCard: React.FC<ChartSpec> = props => {
   const theme = useTheme();
@@ -54,6 +60,17 @@ export const ChartCard: React.FC<ChartSpec> = props => {
     'Nap 3',
     'Evening Wake',
   ];
+
+  if (type === 'timeline') {
+    const { data: intervals, period } = props as { 
+        data: Interval[]; period: 'Daily'|'Weekly'|'Monthly' };
+        return (
+          <View style={styles.card}>
+            <Text testID={testID} style={styles.cardTitle}>{title}</Text>
+            <TimelineChart intervals={intervals} period={period} />
+          </View>
+        );
+      }
 
   if (type === 'area') {
     // props is narrowed to AreaSpec
