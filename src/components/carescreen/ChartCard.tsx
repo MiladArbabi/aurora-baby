@@ -76,6 +76,15 @@ export type CalloutSpec = {
   data: string
 }
 
+export type TimelineSpec = {
+  type: 'timeline'
+  testID: string
+  title: string
+  data: Interval[]
+  markers?: { fraction: number; color: string; label: string }[]
+  period: 'Daily' | 'Weekly' | 'Monthly'
+}
+
 export type ChartSpec = 
     LineBarSpec 
     | GaugeSpec 
@@ -85,6 +94,7 @@ export type ChartSpec =
     | MarkerTimelineSpec
     | CalloutSpec
     | StackedBarSpec
+    | TimelineSpec
     | { type: 'timeline'; testID: string; title: string; data: Interval[]; 
       period: 'Daily' | 'Weekly' | 'Monthly' };
 
@@ -234,16 +244,21 @@ export const ChartCard: React.FC<ChartSpec> = props => {
   );
 }
 
-  if (type === 'timeline') {
-    const { data: intervals, period } = props as { 
-        data: Interval[]; period: 'Daily'|'Weekly'|'Monthly' };
-        return (
-          <View style={styles.card}>
-            <Text testID={testID} style={styles.cardTitle}>{title}</Text>
-            <TimelineChart intervals={intervals} period={period} />
-          </View>
-        );
-      }
+if (props.type === 'timeline') {
+  const { data: intervals, markers, period } = props as TimelineSpec;
+  return (
+    <View style={styles.card}>
+      <Text testID={props.testID} style={styles.cardTitle}>
+        {props.title}
+      </Text>
+      <TimelineChart
+        intervals={intervals}
+        markers={markers}
+        period={period}
+      />
+    </View>
+  );
+}
 
   if (type === 'area') {
     // props is narrowed to AreaSpec
