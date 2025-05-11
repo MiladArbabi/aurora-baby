@@ -13,7 +13,9 @@ export type Interval = {
 export const TimelineChart: React.FC<{
   intervals: Interval[]
   period: 'Daily' | 'Weekly' | 'Monthly'
-}> = ({ intervals, period }) => {
+  /** optional extra markers (e.g. feed events) */
+  markers?: { fraction: number; color: string; label: string }[]
+    }> = ({ intervals, period, markers }) => {
   // group intervals into rows by period
   type Row = { label: string; items: Interval[] }
   let rows: Row[] = []
@@ -137,6 +139,20 @@ export const TimelineChart: React.FC<{
             )
           })
         )}
+        {/* Feed Markers */}
+        {markers?.map((m, i) => {
+          const x = toX(m.fraction)
+          return (
+            <Line
+            key={`feed-${i}`}
+            x1={x} y1={MARGIN.top}
+            x2={x} y2={height - MARGIN.bottom}
+            stroke={m.color}
+            strokeWidth={2}
+            strokeDasharray={[2,4]}
+            />
+          )
+        })}
       </Svg>
     </View>
   )

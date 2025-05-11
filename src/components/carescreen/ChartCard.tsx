@@ -2,7 +2,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { 
-  LineChart, BarChart, Grid, AreaChart, StackedBarChart, XAxis, YAxis 
+  LineChart, BarChart, Grid, AreaChart, StackedBarChart, PieChart, XAxis, YAxis 
     } from 'react-native-svg-charts';
 import * as shape from 'd3-shape';
 import { format, subDays, subWeeks, subMonths } from 'date-fns';
@@ -45,13 +45,48 @@ export type GaugeSpec = {
   svgProps?: any;
 };
 
+export type StatStripSpec = {
+  type: 'statStrip'
+  testID: string
+  title: string
+  data: { avgDaily: number; avgWeekly: number; avgMonthly: number }
+}
+
+export type DonutSpec = {
+  type: 'donut'
+  testID: string
+  title: string
+  data: Record<string, number>
+  colors: string[]
+}
+
+export type MarkerTimelineSpec = {
+  type: 'markerTimeline'
+  testID: string
+  title: string
+  intervals: Interval[]
+  markers: { fraction: number; color: string; label: string }[]
+  period: 'Daily' | 'Weekly' | 'Monthly'
+}
+
+export type CalloutSpec = {
+  type: 'callout'
+  testID: string
+  title: string
+  data: string
+}
+
 export type ChartSpec = 
     LineBarSpec 
     | GaugeSpec 
     | AreaSpec 
+    | StatStripSpec
+    | DonutSpec
+    | MarkerTimelineSpec
+    | CalloutSpec
     | StackedBarSpec
-    | { type: 'timeline'; testID: string; title: string; 
-      data: Interval[]; period: 'Daily'|'Weekly'|'Monthly' };
+    | { type: 'timeline'; testID: string; title: string; data: Interval[]; 
+      period: 'Daily' | 'Weekly' | 'Monthly' };
 
 export type StackedBarSpec = {
   type: 'stackedBar';
@@ -74,6 +109,72 @@ export const ChartCard: React.FC<ChartSpec> = props => {
     'Nap 3',
     'Wake Inbetween Naps',
   ];
+
+  // ── 1) stat-strip (averages) ─────────────────────────────────────────
+  if (type === 'statStrip') {
+      const { avgDaily, avgWeekly, avgMonthly } = (props as StatStripSpec).data;
+      return (
+        <View style={styles.card}>
+          <Text testID={testID} style={styles.cardTitle}>{title}</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+            {(
+              [
+                ['day',   avgDaily  ],
+                ['week',  avgWeekly ],
+                ['month', avgMonthly]
+              ] as readonly [string, number][]
+          ).map(([lbl, val]) => (
+            <View key={lbl} style={styles.statCard}>
+              <Text style={styles.statValue}>{val.toFixed(1)}</Text>
+              <Text style={styles.statLabel}>{`/ ${lbl}`}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+      );
+    }
+  
+    // ── 2) donut (feed type breakdown) ────────────────────────────────────
+    if (type === 'donut') {
+      const { data, colors } = props as DonutSpec;
+      const pieData = Object.entries(data).map(([key, value], i) => ({
+        key,
+        value,
+        svg: { fill: colors[i % colors.length] },
+      }));
+      return (
+        <View style={styles.card}>
+          <Text testID={testID} style={styles.cardTitle}>{title}</Text>
+          <PieChart style={{ height: 180 }} data={pieData} />
+        </View>
+      );
+    }
+  
+    // ── 3) marker-timeline (feed vs sleep) ────────────────────────────────
+    if (type === 'markerTimeline') {
+      const { intervals, markers, period } = props as MarkerTimelineSpec;
+      return (
+        <View style={styles.card}>
+          <Text testID={testID} style={styles.cardTitle}>{title}</Text>
+          <TimelineChart
+            intervals={intervals}
+            markers={markers}
+            period={period}
+          />
+        </View>
+      );
+    }
+  
+    // ── 4) plain text callout ─────────────────────────────────────────────
+    if (type === 'callout') {
+      return (
+        <View style={styles.card}>
+          <Text testID={testID} style={[styles.cardTitle, styles.calloutText]}>
+            {(props as CalloutSpec).data}
+          </Text>
+        </View>
+      );
+    }
 
   if (props.type === 'stackedBar') {
     const { data, keys, colors, testID, title, period } 
@@ -258,5 +359,17 @@ const styles = StyleSheet.create({
   legendContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginTop: 8, paddingHorizontal: 12 },
   legendItem: { flexDirection: 'row', alignItems: 'center', margin: 4 },
   swatch: { width: 12, height: 12, borderRadius: 6, marginRight: 4 },
-  legendText: { fontSize: 12, color: '#FFF' }
+  legendText: { fontSize: 12, color: '#FFF' },
+  calloutText: { fontSize: 16, fontWeight: '600', color: '#FFF', textAlign: 'center' },
+  statCard: { flex: 1, alignItems: 'center', padding: 8, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.05)' },
+  statValue: { fontSize: 24, fontWeight: '600', color: '#FFF' },
+  statLabel: { fontSize: 12, color: '#FFF' },
+  statStrip: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' },
+  statStripLabel: { fontSize: 12, color: '#FFF' },
+  statStripValue: { fontSize: 24, fontWeight: '600', color: '#FFF' },
+  statStripUnit: { fontSize: 12, color: '#FFF' },
+  statStripContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  statStripValueContainer: { flexDirection: 'row', alignItems: 'center' },
+  statStripUnitContainer: { marginLeft: 4 },
+  statStripLabelContainer: { marginRight: 4 },
 });

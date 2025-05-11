@@ -50,7 +50,16 @@ const InsightsScreen: React.FC = () => {
   const theme = useTheme()
 
   const [showLast24h, setShowLast24h] = useState(false)
-  const { byDate, sleepSegments, intervalData } = useInsightsData(showLast24h)
+  const { 
+    byDate,
+    sleepSegments, 
+    intervalData,
+    feedMarks, 
+    feedTypeCounts, 
+    avgDaily, avgWeekly, avgMonthly,
+    correlationMessage, 
+    diaperTypeCounts, 
+    diaperMarks } = useInsightsData(showLast24h)
   const [period, setPeriod] = useState<'Daily'|'Weekly'|'Monthly'>('Weekly')
   const [logType, setLogType] = useState<LogType>('Sleep Summary')
   const [rangeEnd, setRangeEnd] = useState<Date>(new Date())
@@ -66,12 +75,10 @@ const InsightsScreen: React.FC = () => {
   const [pickerYear, setPickerYear]   = useState(new Date().getFullYear())
   const [pickerMonth, setPickerMonth] = useState(new Date().getMonth())  // 0–11
 
-
   // 1) store our selected range
   const [rangeStart, setRangeStart] = useState<Date>(
       // default to last 7 days
-      new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-    )
+      new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))
 
       // pan responder to detect left/right swipes
   const panResponder = React.useRef(
@@ -175,13 +182,37 @@ const InsightsScreen: React.FC = () => {
     }) */ 
 
   // fallback to smoke-test intervals if your pipeline isn’t hooked up yet
-  const today = new Date().toISOString().slice(0,10)  // e.g. "2025-03-14"
-  const dummyIntervals = [
-    { date: today, startFraction: 22 / 24, endFraction: 6 / 24, color: '#7986CB' },
-    { date: today, startFraction: 20 / 23, endFraction: 6 / 20, color: '#FFD1B3' },
-    { date: today, startFraction: 21 / 23, endFraction: 6 / 18, color: '#A4B9CC' },
-  ];
-  const timelinePayload = intervalData.length > 0 ? intervalData : dummyIntervals;
+  const todayISO = new Date().toISOString().slice(0,10)
+
+  // ── MODIFIED ──
+  // per-period dummy timeline if intervalData is empty
+  const dummyTimeline = (() => {
+    if (period === 'Daily') {
+      return [
+        { date: todayISO, startFraction: 22/24, endFraction: 6/24, color: '#7986CB' },
+        { date: todayISO, startFraction: 20/23, endFraction: 6/20, color: '#FFD1B3' },
+        { date: todayISO, startFraction: 21/23, endFraction: 6/18, color: '#A4B9CC' },
+      ]
+    }
+    if (period === 'Weekly') {
+      return [0,1,2].map(i => ({
+        date: subWeeks(new Date(), i).toISOString().slice(0,10),
+        startFraction: 22/24,
+        endFraction:   6/24,
+        color: ['#7986CB','#FFD1B3','#A4B9CC'][i],
+      }))
+    }
+    // Monthly
+    return [0,1,2].map(i => ({
+      date: subMonths(new Date(), i).toISOString().slice(0,10),
+      startFraction: 22/24,
+      endFraction:   6/24,
+      color: ['#7986CB','#FFD1B3','#A4B9CC'][i],
+    }))
+  })()
+  const timelinePayload = intervalData.length > 0
+    ? intervalData
+    : dummyTimeline
 
   // each day you’ve already broken out nap1, nap2, nap3
   type DayWithNaps = { nap1: number; nap2: number; nap3: number; /*…*/ };
@@ -220,6 +251,42 @@ const InsightsScreen: React.FC = () => {
       theme.colors.darkAccent, 
       theme.colors.aiGenerated,
     ]
+
+// ─── Smoke-test feeding data ────────────────────────────────
+const todayKey = new Date().toISOString().slice(0,10)
+const dummyFeedCounts   = [3, 5, 2, 4, 6, 3, 5]  // one bar per day
+const dummyFeedTypeData = { breast: 8, bottle: 12, solid: 4 }
+const dummyFeedIntervals: { date: string; startFraction: number; endFraction: number; color: string }[] = (() => {
+  if (period === 'Daily') {
+    // all on today
+    return [
+      { date: todayISO, startFraction: 8/24,   endFraction: 8.1/24, color: theme.colors.primary },
+      { date: todayISO, startFraction: 12/24,  endFraction: 12.05/24, color: theme.colors.secondaryAccent },
+      { date: todayISO, startFraction: 18/24,  endFraction: 18.1/24, color: theme.colors.accent },
+    ]
+  } else if (period === 'Weekly') {
+    // one per week for 0,1,2 weeks ago
+    return [0,1,2].map(i => {
+      const date = subWeeks(new Date(), i).toISOString().slice(0,10)
+      const colors = [ theme.colors.primary, theme.colors.secondaryAccent, theme.colors.accent ]
+      return { date, startFraction: 10/24, endFraction: 10.2/24, color: colors[i] }
+    })
+  } else {
+    // one per month for 0,1,2 months ago
+    return [0,1,2].map(i => {
+      const date = subMonths(new Date(), i).toISOString().slice(0,10)
+      const colors = [ theme.colors.primary, theme.colors.secondaryAccent, theme.colors.accent ]
+      return { date, startFraction: 14/24, endFraction: 14.2/24, color: colors[i] }
+    })
+  }
+})()
+
+const dummyFeedMarkers = [
+  { fraction: 8/24,  color: theme.colors.primary,        label:'breast' },
+  { fraction:12/24,  color: theme.colors.accent,         label:'bottle' },
+  { fraction:18/24,  color: theme.colors.secondaryAccent,label:'solid'  },
+]
+const dummyCorrelation = '❗ No real data—this is just a smoke-test insight.'
 
   const handleNavigate = (tab: MiniTab) => {
     if (tab === 'graph') return
@@ -269,6 +336,32 @@ const gaugeTitle = React.useMemo(() => {
 
   return label
 }, [period, periodOffset])
+
+// ─── Smoke-test diaper data ────────────────────────────────
+const dummyDiaperBuckets = [
+  { wet: 2, dirty: 1 },
+  { wet: 3, dirty: 2 },
+  { wet: 1, dirty: 3 },
+  { wet: 4, dirty: 0 },
+  { wet: 2, dirty: 2 },
+  { wet: 3, dirty: 1 },
+  { wet: 2, dirty: 2 },
+]  // 7 periods of [wet,dirty]
+
+// breakdown totals
+const dummyDiaperTypeData = { wet: 17, dirty: 11 }
+
+// timing intervals & markers
+const dummyDiaperIntervals = [
+  { date: todayKey, startFraction:  7/24, endFraction: 7.1/24, color: theme.colors.primary },
+  { date: todayKey, startFraction: 12/24, endFraction:12.1/24, color: theme.colors.accent },
+  { date: todayKey, startFraction: 18/24, endFraction:18.1/24, color: theme.colors.secondaryAccent },
+]
+const dummyDiaperMarkers = [
+  { fraction:  7/24, color: theme.colors.primary,        label: 'wet'   },
+  { fraction: 12/24, color: theme.colors.accent,         label: 'dirty' },
+  { fraction: 18/24, color: theme.colors.secondaryAccent,label: 'wet'   },
+]
 
   const chartSpecs: Record<LogType, ChartSpec[]> = {
     'Sleep Summary': [
@@ -333,25 +426,101 @@ const gaugeTitle = React.useMemo(() => {
       period,
     }
   ],
-        'Feedings': [
-          {
-            testID: 'chart-feedings',
-            title: 'Feedings',
-            type: 'bar',
-            data: byDate.map(d => d.feeding),
-            svgProps: { fill: theme.colors.secondaryBackground }
-          }
-        ],
+  'Feedings': [
+     // ─── 0) Stats strip
+     {
+      testID: 'chart-feed-stats',
+      title: 'Feedings stats',
+      type: 'statStrip',
+      data: { avgDaily, avgWeekly, avgMonthly },
+    },
+    // ─── 1) Total feeds per period ───────────────────────────────
+    {
+      testID: 'chart-feed-counts',
+      title:
+        period === 'Daily'
+          ? 'Feedings per Day'
+          : period === 'Weekly'
+            ? 'Feedings per Week'
+            : 'Feedings per Month',
+      type: 'bar',
+      data: dummyFeedCounts, // swap out for byDate.map(d => d.feeding) during production
+      svgProps: { fill: theme.colors.primary }
+    },
+
+    // ─── 2) Feeding‐type breakdown
+    {
+      testID: 'chart-feed-type',
+      title: 'Feeding Types',
+      type: 'donut',
+      data: dummyFeedTypeData, // swap out for feedTypeCounts during production
+      colors: [
+        theme.colors.primary,
+        theme.colors.secondaryAccent,
+        theme.colors.accent,
+      ],
+    },
+
+    // ─── 3) Annotated timeline
+    {
+      testID: 'chart-feed-timeline',
+      title: 'Feeding vs Sleep',
+      type: 'markerTimeline',
+      intervals: dummyFeedIntervals, // swap out for intervalData during production
+      markers: feedMarks.map(m => ({
+        fraction: m.fraction,
+        color:    m.color,
+        label:    m.type,
+      })),
+      period,
+    },
+
+    // ─── 4) Correlation call‐out
+    {
+      testID: 'chart-feed-correlation',
+      title: 'Insights',
+      type: 'callout',
+      data: dummyCorrelation, // swap out for correlationMessage during production
+    },
+  ],
+
         'Diaper Changes': [
-          {
-            testID: 'chart-diaper',
-            title: 'Diaper Changes',
-            type: 'bar',
-            data: byDate.map(d => d.diaper),
-            svgProps: { fill: theme.colors.accent }
-          }
-        ]
-      }
+    // (1) Total changes per period
+    {
+      testID: 'chart-diaper-total',
+      title:
+        period === 'Daily'
+          ? 'Diapers per Day'
+          : period === 'Weekly'
+            ? 'Diapers per Week'
+            : 'Diapers per Month',
+      type: 'stackedBar',
+      data: dummyDiaperBuckets,
+      // swap out with byDate.map(d => ({ wet: d.mood['wet'] || 0, dirty: d.mood['dirty'] || 0 })) for production
+      keys: ['wet','dirty'],
+      colors: [theme.colors.primary, theme.colors.accent],
+      period,
+    },
+    // (2) Wet vs. Dirty breakdown
+    {
+      testID: 'chart-diaper-type',
+      title: 'Wet vs Dirty',
+      type: 'donut',
+      data: dummyDiaperTypeData, // swap out for diaperTypeCounts during production
+      colors: [theme.colors.primary, theme.colors.accent],
+    },
+    // (3) Timing of changes
+    {
+      testID: 'chart-diaper-timing',
+      title: 'Change Timing',
+      type: 'markerTimeline',
+      intervals: dummyDiaperIntervals, // swap out for intervalData during production
+      markers: dummyDiaperMarkers, 
+      // swap out diaperMarks.map(m => ({ fraction: m.fraction, color:    m.color,label:    m.type,})) during production,
+      period,
+      },
+    ],
+  }
 
   return (
     <CareLayout 
@@ -437,6 +606,44 @@ const gaugeTitle = React.useMemo(() => {
         {chartSpecs[logType].map(spec => {
           // the plain card
           const card = <ChartCard key={spec.testID} {...spec} />;
+          
+          // ─── Stat-strip row ──────────────
+          if (spec.type === 'statStrip') {
+            const { avgDaily, avgWeekly, avgMonthly } = spec.data as any;
+            return (
+              <View key={spec.testID} style={styles.statsRow}>
+                {[
+                  ['day', avgDaily],
+                  ['week', avgWeekly],
+                  ['month', avgMonthly],
+                ].map(([lbl, val]) => (
+                  <View key={lbl} style={styles.statCard}>
+                    <Text style={styles.statValue}>{val.toFixed(1)}</Text>
+                    <Text style={styles.statLabel}>{`/ ${lbl}`}</Text>
+                  </View>
+                ))}
+              </View>
+            )
+          }
+
+          // ─── Donut chart ─────────
+          if (spec.type === 'donut') {
+            return <ChartCard key={spec.testID} {...(spec as any)} />
+          }
+
+          // ─── Marker-timeline ────────────
+          if (spec.type === 'markerTimeline') {
+            return <ChartCard key={spec.testID} {...(spec as any)} />
+          }
+
+          // ─── Callout text ───────
+          if (spec.type === 'callout') {
+            return (
+              <Text key={spec.testID} style={styles.calloutText}>
+                {spec.data}
+              </Text>
+            )
+          }
 
           // our special swipeable wrapper for the gauge
           if (spec.testID === 'chart-gauge') {
@@ -722,5 +929,32 @@ arrow: {
   top:       '50%',
   marginTop: -12,
   zIndex:    10,
+},
+
+statsRow: {
+  flexDirection: 'row',
+  justifyContent: 'space-around',
+  marginVertical: 8,
+},
+statCard: {
+  alignItems: 'center',
+  padding: 8,
+  backgroundColor: 'rgba(255,255,255,0.1)',
+  borderRadius: 8,
+},
+statValue: {
+  fontSize: 20,
+  fontWeight: '700',
+  color: '#FFF',
+},
+statLabel: {
+  fontSize: 12,
+  color: '#DDD',
+},
+calloutText: {
+  marginHorizontal: 16,
+  marginVertical: 8,
+  color: '#FFD54F',
+  fontStyle: 'italic',
 },
 })
