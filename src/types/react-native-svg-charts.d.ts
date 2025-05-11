@@ -8,4 +8,5 @@ declare module 'react-native-svg-charts' {
     export const LineChart: ComponentType<any>
     export const BarChart: ComponentType<any>
     export const StackedBarChart: ComponentType<any>
+    export const PieChart: ComponentType<any>
 }
