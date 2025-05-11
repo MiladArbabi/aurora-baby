@@ -1,7 +1,9 @@
 //src/components/carescreen/ChartCard.tsx
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { LineChart, BarChart, Grid, AreaChart, XAxis, YAxis } from 'react-native-svg-charts';
+import { 
+  LineChart, BarChart, Grid, AreaChart, StackedBarChart, XAxis, YAxis 
+    } from 'react-native-svg-charts';
 import * as shape from 'd3-shape';
 import { format, subDays, subWeeks, subMonths } from 'date-fns';
 import { useTheme } from 'styled-components/native';
@@ -47,7 +49,19 @@ export type ChartSpec =
     LineBarSpec 
     | GaugeSpec 
     | AreaSpec 
-    | { type: 'timeline'; testID: string; title: string; data: Interval[]; period: 'Daily'|'Weekly'|'Monthly' };
+    | StackedBarSpec
+    | { type: 'timeline'; testID: string; title: string; 
+      data: Interval[]; period: 'Daily'|'Weekly'|'Monthly' };
+
+export type StackedBarSpec = {
+  type: 'stackedBar';
+  testID: string;
+  title: string;
+  data: Array<Record<string, number>>;
+  keys: string[];
+  colors: string[];
+  period: 'Daily' | 'Weekly' | 'Monthly';
+};
 
 export const ChartCard: React.FC<ChartSpec> = props => {
   const theme = useTheme();
@@ -58,8 +72,66 @@ export const ChartCard: React.FC<ChartSpec> = props => {
     'Nap 1',
     'Nap 2',
     'Nap 3',
-    'Evening Wake',
+    'Wake Inbetween Naps',
   ];
+
+  if (props.type === 'stackedBar') {
+    const { data, keys, colors, testID, title, period } 
+    = props as StackedBarSpec & 
+    { period: 'Daily'|'Weekly'|'Monthly' };
+
+     // compute the total for each stack to drive the Y axis:
+      const totals = data.map(row =>
+        keys.reduce((sum, k) => sum + (row[k] || 0), 0)
+      );
+
+      // generate labels based on your incoming `period` prop
+      const labels = data.map((_, i) => {
+        switch ((props as any).period) {
+          case 'Daily':   return `Day ${i+1}`;
+          case 'Weekly':  return `Wk ${i+1}`;
+          case 'Monthly': return `Mth ${i+1}`;
+          default:        return `${i+1}`;
+        }
+      });
+
+    return (
+    <View style={styles.card}>
+      <Text testID={testID} style={styles.cardTitle}>{title}</Text>
+      <View style={{ flexDirection: 'row', height: 180, paddingHorizontal: 8 }}>
+        {/* ─── Y‐Axis on the left ────────────────── */}
+        <YAxis
+          data={[0, 24]}
+          min={0}
+          max={24}
+          numberOfTicks={7}          
+          /* only top padding, so the 0‐line is flush */
+          contentInset={{ top: 20, bottom: 20 }}
+          svg={{ fill: '#AAA', fontSize: 10 }}
+          formatLabel={(v: number) => `${v}h`}
+        />
+        <View style={{ flex: 1, marginLeft: 8 }}>
+          {/* ─── The stacked bars ─────────────────── */}
+          <StackedBarChart
+            style={{ flex: 1 }}
+            keys={keys}
+            colors={colors}
+            data={data}
+            contentInset={{ top: 20, bottom: 0 }}
+          />
+          {/* ─── X‐Axis across the bottom ──────────── */}
+          <XAxis
+            style={{ marginTop: 4 }}
+            data={data}
+            formatLabel={(_: any, idx: number) => labels[idx]}
+            contentInset={{ left:20, right:20 }}
+            svg={{ fill:'#AAA', fontSize:10 }}
+          />
+        </View>
+      </View>
+    </View>
+  );
+}
 
   if (type === 'timeline') {
     const { data: intervals, period } = props as { 

@@ -1,17 +1,19 @@
 // src/hooks/useInsightsData.ts
 import { useTrackerData } from './useTrackerData';
 import { useMemo } from 'react';
-import type { Interval } from '../components/carescreen/TimelineChart';
-import { color } from '@rneui/base';
+import { addDays, startOfDay } from 'date-fns';
+import { QuickLogEntry } from '../models/QuickLogSchema';
 
 interface DayTotals {
-  date:       string;
-  napMinutes: number;
-  nightMinutes:number;
-  awakeMinutes:number;
-  feeding:    number;
-  diaper:     number;
-  mood:       Record<string,number>;
+  date:         string;
+  napMinutes:   number;
+  nightMinutes: number;
+  awakeMinutes: number;
+  feeding:      number;
+  diaper:       number;
+  mood:         Record<string,number>;
+  napDurations: number[] 
+  awakeWindows: number[]; 
 }
 
 export function useInsightsData(showLast24h: boolean) {
@@ -36,10 +38,12 @@ export function useInsightsData(showLast24h: boolean) {
         date: key,
         napMinutes:   0,
         nightMinutes: 0,
-        awakeMinutes: 0,    // filled later
+        awakeMinutes: 0,    
         feeding:      0,
         diaper:       0,
         mood:         {},
+        napDurations: [],
+        awakeWindows: [],
       });
     }
 
@@ -53,6 +57,7 @@ export function useInsightsData(showLast24h: boolean) {
         const dur = e.data.duration;   // already in minutes
         if (e.data.subtype && e.data.subtype.startsWith('nap')) {
           bucket.napMinutes += dur;
+          bucket.napDurations.push(dur)   // ← record each nap
         } else {
           // anything not labeled nap is night-sleep
           bucket.nightMinutes += dur;
@@ -72,16 +77,30 @@ export function useInsightsData(showLast24h: boolean) {
       }
     });
 
-    // ④ compute awake = 1440 – (nap + night)
-    map.forEach(b => {
-      b.awakeMinutes = Math.max(
-        0,
-        1440 - (b.napMinutes + b.nightMinutes)
-      );
+    // ④ carve out awake windows:
+    map.forEach((bucket, dayKey) => {
+      // 1) collect all the sleep spans for that date
+      const spans = sleepSegments
+      .filter(s => s.start.slice(0,10) === dayKey)
+      .map(s => [new Date(s.start), new Date(s.end)] as [Date,Date])
+      .sort((a,b) => a[0].getTime() - b[0].getTime())
+    
+      // 2) walk through them, carving out the awake gaps
+      let lastEnd = startOfDay(new Date(dayKey)).getTime()
+      spans.forEach(([start,end]) => {
+        bucket.awakeWindows.push((start.getTime() - lastEnd) / 60000)
+        lastEnd = end.getTime()
+      })
+    
+      // 3) and finally the bit from last sleep until midnight
+      const midnight = startOfDay(addDays(new Date(dayKey),1)).getTime()
+      bucket.awakeWindows.push((midnight - lastEnd)/60000)
+    
+      // (you’ve already separately computed bucket.awakeMinutes if you want a total)
     });
 
-    return Array.from(map.values());
-  }, [entries, eventMarkers]);
+    return Array.from(map.values())
+  }, [sleepSegments, entries, eventMarkers])
 
   return { byDate, sleepSegments, intervalData };
 }

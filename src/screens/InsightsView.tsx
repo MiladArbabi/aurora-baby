@@ -36,10 +36,8 @@ const SPACING = {
 
 const logTypes = [
   'Sleep Summary',
-  'Sleep Intervals',
   'Naps',
   'Awake Time',
-  'Night Time Sleep',
   'Feedings',
   'Diaper Changes',
 ] as const
@@ -180,8 +178,48 @@ const InsightsScreen: React.FC = () => {
   const today = new Date().toISOString().slice(0,10)  // e.g. "2025-03-14"
   const dummyIntervals = [
     { date: today, startFraction: 22 / 24, endFraction: 6 / 24, color: '#7986CB' },
+    { date: today, startFraction: 20 / 23, endFraction: 6 / 20, color: '#FFD1B3' },
+    { date: today, startFraction: 21 / 23, endFraction: 6 / 18, color: '#A4B9CC' },
   ];
   const timelinePayload = intervalData.length > 0 ? intervalData : dummyIntervals;
+
+  // each day you’ve already broken out nap1, nap2, nap3
+  type DayWithNaps = { nap1: number; nap2: number; nap3: number; /*…*/ };
+
+  /* // build a per-day map of up to 3 nap durations:
+  const napBuckets = byDate.map(day => ({
+    nap1: day.napDurations[0] || 0,
+    nap2: day.napDurations[1] || 0,
+    nap3: day.napDurations[2] || 0,
+  })) */
+
+    // 🔥 smoke-test for Naps stackedBar: 3 days of dummy nap durations
+  const napBuckets = [
+    { nap1: 30/60, nap2: 20/60, nap3: 10/60 },
+    { nap1: 45/60, nap2: 30/60, nap3: 20/60 },
+    { nap1: 25/60, nap2: 35/60, nap3: 15/60 },
+
+  ];
+
+  // colors for each “stack”:
+  const napColors = [
+    theme.colors.darkAccent,       // nap1
+    theme.colors.background,       // nap2
+    theme.colors.highlight,        // nap3
+  ];
+
+  // 🔥 smoke-test for Awake-Windows stackedBar …
+    const awakeBuckets = [
+      { w1: 60/60,  w2: 120/60, w3: 30/60,  w4: 450/60 },  // dummy window durations
+      { w1: 95/60,  w2: 100/60, w3: 50/60,  w4: 380/60 },
+      { w1: 75/60,  w2: 110/60, w3: 40/60,  w4: 420/60 },
+    ]
+    const wakeColors = [
+      theme.colors.secondaryAccent, 
+      theme.colors.primary, 
+      theme.colors.darkAccent, 
+      theme.colors.aiGenerated,
+    ]
 
   const handleNavigate = (tab: MiniTab) => {
     if (tab === 'graph') return
@@ -267,41 +305,34 @@ const gaugeTitle = React.useMemo(() => {
       period,
     }
   ],
-  'Sleep Intervals': [
-        {
-          testID: 'chart-timeline',
-          title: 'Sleep Intervals',
-          type: 'timeline',
-          data: intervalData,
-          period,
-        }],
-        'Naps': [
-          {
-            testID: 'chart-naps',
-            title: 'Naps (min)',
-            type: 'bar',
-            data: byDate.map(d => d.napMinutes),
-            svgProps: { fill: theme.colors.accent }
-          }
-        ],
-        'Awake Time': [
-          {
-            testID: 'chart-awake',
-            title: 'Awake (min)',
-            type: 'line',
-            data: byDate.map(d => d.awakeMinutes),
-            svgProps: { stroke: theme.colors.secondaryBackground }
-          }
-        ],
-        'Night Time Sleep': [
-          {
-            testID: 'chart-night',
-            title: 'Night Time Sleep (min)',
-            type: 'bar',
-            data: byDate.map(d => d.nightMinutes),
-            svgProps: { fill: theme.colors.secondaryBackground }
-          }
-        ],
+  'Naps': [
+    {
+      testID: 'chart-naps',
+      title: period === 'Daily'
+        ? 'Naps per Day'
+        : period === 'Weekly'
+        ? 'Naps per Week'
+        : 'Naps per Month',
+      type: 'stackedBar',
+      data: napBuckets,
+      keys: ['nap1','nap2','nap3'],
+      colors: napColors,
+      period,
+    }
+  ],
+  'Awake Time': [
+    {
+      testID: 'chart-awakeStack',
+      title: period === 'Daily' ? 'Awake Windows (Daily)'
+          : period === 'Weekly'? 'Awake Windows (Weekly)'
+          : 'Awake Windows (Monthly)',
+      type: 'stackedBar',
+      data: awakeBuckets,
+      keys: ['w1','w2','w3','w4'],
+      colors: wakeColors,
+      period,
+    }
+  ],
         'Feedings': [
           {
             testID: 'chart-feedings',
