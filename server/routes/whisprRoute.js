@@ -36,4 +36,16 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.post('/suggest-logs', async (req, res) => {
+  try {
+    const { getAllEntries } = require('../../src/services/QuickLogAccess')
+    const { generateAIQuickLogs } = require('../../src/services/LlamaLogGenerator')
+    const logs = await getAllEntries()
+    const suggestions = await generateAIQuickLogs(logs, 24)
+    return res.json(suggestions)
+  } catch (err) {
+    return res.status(err.status || 500).json({ error: err.message })
+  }
+})
+
 module.exports = router;

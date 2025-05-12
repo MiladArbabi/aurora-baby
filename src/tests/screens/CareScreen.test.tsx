@@ -1,92 +1,136 @@
-import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import CareScreen from '../../screens/CareScreen';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { PortalProvider } from '@gorhom/portal';
-import { ThemeProvider as RneThemeProvider } from '@rneui/themed';
-import { ThemeProvider as StyledThemeProvider } from 'styled-components/native';
-import { NavigationContainer } from '@react-navigation/native';
-import { rneThemeBase, theme } from '../../styles/theme';
+import React from 'react'
+import {
+  render,
+  fireEvent,
+  waitFor,
+} from '@testing-library/react-native'
+import CareScreen from '../../screens/CareScreen'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import { PortalProvider } from '@gorhom/portal'
+import { ThemeProvider as Rne } from '@rneui/themed'
+import { ThemeProvider as SC } from 'styled-components/native'
+import { NavigationContainer } from '@react-navigation/native'
+import { rneThemeBase, theme } from '../../styles/theme'
+import { quickLogEmitter } from '../../storage/QuickLogEvents'
+import type { QuickLogEntry } from '../../models/QuickLogSchema'
 
-// --- NAV MOCK ---
-const mockNavigate = jest.fn();
+// 1) Mock navigation
+const mockNavigate = jest.fn()
 jest.mock('@react-navigation/native', () => {
-  const actual = jest.requireActual('@react-navigation/native');
+  const actual = jest.requireActual('@react-navigation/native')
   return {
     ...actual,
     useNavigation: () => ({ navigate: mockNavigate }),
-  };
-});
+  }
+})
 
-// --- VOICE RECORDER MOCK (not used in CareScreen) ---
-jest.mock('../../hooks/useVoiceRecorder', () => ({
-  useVoiceRecorder: () => ({
-    transcript: 'hello world',
-    isListening: false,
-    error: null,
-    start: jest.fn(),
-    stop: jest.fn(),
+// 2) Stub out useActionMenuLogic so we can toggle activeTab & quickLogMenuVisible
+const openQuickLog = jest.fn()
+const closeQuickLog = jest.fn()
+const setActiveTab = jest.fn()
+let activeTab = 'tracker'
+let quickLogMenuVisible = false
+
+jest.mock('../../hooks/useActionMenuLogic', () => ({
+  useActionMenuLogic: () => ({
+    quickLogMenuVisible,
+    openQuickLog,
+    closeQuickLog,
+    activeTab,
+    setActiveTab,
   }),
-}));
+}))
 
-const renderWithProviders = () =>
-  render(
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <RneThemeProvider theme={rneThemeBase}>
-        <StyledThemeProvider theme={theme}>
-          <NavigationContainer>
-            <PortalProvider>
-              <CareScreen />
-            </PortalProvider>
-          </NavigationContainer>
-        </StyledThemeProvider>
-      </RneThemeProvider>
-    </GestureHandlerRootView>
-  );
+const App = () => (
+  <GestureHandlerRootView style={{ flex: 1 }}>
+    <Rne theme={rneThemeBase}>
+      <SC theme={theme}>
+        <NavigationContainer>
+          <PortalProvider>
+            <CareScreen />
+          </PortalProvider>
+        </NavigationContainer>
+      </SC>
+    </Rne>
+  </GestureHandlerRootView>
+);
+
+const renderScreen = () => render(<App />);
 
 describe('CareScreen', () => {
   beforeEach(() => {
-    mockNavigate.mockClear();
-  });
+    jest.clearAllMocks()
+    activeTab = 'tracker'
+    quickLogMenuVisible = false
+  })
 
-  it('renders MiniNavBar and switches tabs on icon press', () => {
-    const { getByTestId, getByText } = renderWithProviders();
-    expect(getByTestId('outter-rim')).toBeTruthy();
+  it('shows the Tracker and filter pill in tracker mode', () => {
+    const { getByTestId } = renderScreen()
 
-    fireEvent.press(getByTestId('graph-icon'));
-    expect(getByText('AI Suggestions')).toBeTruthy();
+    // by default we should see the "today" button
+    expect(getByTestId('filter-today-button')).toBeTruthy()
+    // and the main tracker arc (smoke-test for Tracker)
+    expect(getByTestId('main-arc')).toBeTruthy()
+  })
 
-    fireEvent.press(getByTestId('cards-icon'));
-    expect(getByText('No logs yet.')).toBeTruthy();
+  it('toggles between 24h and Today filters when pressed', async () => {
+    const { getByTestId } = renderScreen()
 
-    fireEvent.press(getByTestId('tracker-icon'));
-    expect(getByTestId('outter-rim')).toBeTruthy();
-  });
+    // starts out as "today"
+    const todayBtn = getByTestId('filter-today-button')
+    fireEvent.press(todayBtn)
 
-  it('renders a linear gradient background', () => {
-    const { getByTestId } = renderWithProviders();
-    expect(getByTestId('carescreen-gradient')).toBeTruthy();
-  });
-
-  it('opens and closes QuickLogMenu via the plus button', async () => {
-    const { getByTestId, queryByTestId } = renderWithProviders();
-
-    expect(queryByTestId('quick-log-menu')).toBeNull();
-
-    fireEvent.press(getByTestId('action-menu'));
+    // after toggle we should see the 24h pill
     await waitFor(() => {
-      expect(getByTestId('quick-log-menu')).toBeTruthy();
-    });
+      expect(getByTestId('filter-24h-button')).toBeTruthy()
+    })
+  })
 
-    fireEvent.press(getByTestId('menu-handle'));
+  it('injects a quick-log marker when an entry is saved, and opens detail modal on press', async () => {
+    const { findByTestId, queryByTestId } = renderScreen()
+
+    // ensure no marker yet
+    expect(queryByTestId('quicklog-marker-foo')).toBeNull()
+
+    // emit a fake log
+    const entry: QuickLogEntry = {
+      id: 'foo',
+      babyId: 'b1',
+      timestamp: new Date().toISOString(),
+      type: 'sleep',
+      version: 1,
+      data: { start: new Date().toISOString(), end: new Date().toISOString(), duration: 10 },
+    }
+    quickLogEmitter.emit('saved', entry)
+
+    // marker should appear
+    const marker = await findByTestId('quicklog-marker-foo')
+    expect(marker).toBeTruthy()
+
+    // before press, detail modal is hidden
+    expect(queryByTestId('log-detail-modal')).toBeNull()
+
+    // press the marker
+    fireEvent.press(marker)
+
+    // now the detail modal should show up
     await waitFor(() => {
-      expect(queryByTestId('quick-log-menu')).toBeNull();
-    });
-  });
+      expect(queryByTestId('log-detail-modal')).toBeTruthy()
+    })
+  })
 
-  it('navigates to Whispr when the whispr button is pressed', () => {
-    const { getByTestId } = renderWithProviders();
-    fireEvent.press(getByTestId('bottom-nav-whispr'));
-    expect(mockNavigate).toHaveBeenCalledWith('Whispr');
-  });
-});
+  it('shows QuickLogMenu when quickLogMenuVisible is true and closes on handle press', async () => {
+    quickLogMenuVisible = true
+    const { getByTestId, queryByTestId, rerender } = renderScreen()
+
+    // rerender so hook sees quickLogMenuVisible = true
+    rerender(<App />)
+
+    // menu appears
+    expect(getByTestId('quick-log-menu')).toBeTruthy()
+
+    // pressing the handle should call closeQuickLog
+    fireEvent.press(getByTestId('menu-handle'))
+    expect(closeQuickLog).toHaveBeenCalled()
+  })
+})
