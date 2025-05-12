@@ -1,3 +1,4 @@
+// src/screens/CareScreen.tsx
 import React, { useCallback, useState, useEffect } from 'react'
 import {
   View,
@@ -19,6 +20,7 @@ import LogDetailModal from '../components/carescreen/LogDetailModal'
 import { getLogsBetween } from '../services/QuickLogAccess'
 import { QuickLogEntry } from '../models/QuickLogSchema'
 import { useActionMenuLogic } from '../hooks/useActionMenuLogic'
+import { quickLogEmitter } from '../storage/QuickLogEvents';
 
 type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>
 
@@ -76,6 +78,15 @@ const CareScreen: React.FC = () => {
       console.error('[CareScreen] handleLogged error:', err)
     }
   }, [])
+
+  // whenever anything is saved to storage, turn it into a marker:
+  useEffect(() => {
+    const onSaved = (entry: QuickLogEntry) => handleLogged(entry)
+    quickLogEmitter.on('saved', onSaved)
+    return () => {
+      quickLogEmitter.off('saved', onSaved)
+    }
+  }, [handleLogged])
 
   const handleMarkerPress = useCallback(
     (id: string) => {

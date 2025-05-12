@@ -32,7 +32,7 @@ const App = () => (
 
 describe('Quick-log → Tracker integration', () => {
   it('closes the menu and drops a quick-log marker when Sleep is pressed', async () => {
-    const { getByTestId, queryByTestId } = render(<App />)
+    const { getByTestId, queryByTestId, findByTestId } = render(<App />)
 
     // open menu
     fireEvent.press(getByTestId('action-menu'))
@@ -45,7 +45,8 @@ describe('Quick-log → Tracker integration', () => {
     await waitFor(() => expect(queryByTestId('quick-log-menu')).toBeNull())
 
     // marker with our mocked ID shows up
-    expect(getByTestId('quicklog-marker-quicklog1')).toBeTruthy()
+    const marker = await findByTestId('quicklog-marker-quicklog1')
+    expect(marker).toBeTruthy()
   })
 
   it.each([
@@ -57,15 +58,21 @@ describe('Quick-log → Tracker integration', () => {
   ])(
     'Quick-log → pressing %s closes menu & drops a dot',
     async (buttonTestID, markerTestID) => {
-      const { getByTestId, queryByTestId } = render(<App />)
+      const { getByTestId, queryByTestId, findByTestId } = render(<App />)
 
+      // open menu
       fireEvent.press(getByTestId('action-menu'))
-      await waitFor(() => getByTestId('quick-log-menu'))
+      await waitFor(() => expect(getByTestId('quick-log-menu')).toBeTruthy())
 
+      // press the specific log button
       fireEvent.press(getByTestId(buttonTestID))
+
+      // menu should close
       await waitFor(() => expect(queryByTestId('quick-log-menu')).toBeNull())
 
-      expect(getByTestId(markerTestID)).toBeTruthy()
+      // and the marker appears
+      const marker = await findByTestId(markerTestID)
+      expect(marker).toBeTruthy()
     }
   )
 })

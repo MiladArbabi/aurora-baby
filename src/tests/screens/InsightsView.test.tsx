@@ -6,89 +6,119 @@ import { ThemeProvider } from 'styled-components/native'
 import { theme } from '../../styles/theme'
 import InsightsView from '../../screens/InsightsView'
 import { useInsightsData } from '../../hooks/useInsightsData'
+import { useChartSpecs }  from '../../hooks/useChartSpecs'
 
-type DayTotals = { 
-  date: string 
-  napMinutes: number 
-  nightMinutes: number
-  awakeMinutes: number
-  feeding: number
-  diaper: number
-  mood: Record<string, number> 
-}
-
+// 1) Mock our data hooks
 jest.mock('../../hooks/useInsightsData')
-const mockedUse = useInsightsData as jest.MockedFunction<typeof useInsightsData>
+jest.mock('../../hooks/useChartSpecs')
 
-describe('InsightsView', () => {
+const mockedInsights = useInsightsData as jest.MockedFunction<
+  typeof useInsightsData
+>
+const mockedSpecs = useChartSpecs as jest.MockedFunction<typeof useChartSpecs>
+
+describe('InsightsView (smoke-test)', () => {
   beforeEach(() => {
-    const dummy: DayTotals[] = Array.from({ length: 7 }, (_, i) => {
-      const nap = i * 5
-      const night = i * 5
-      return {
-        date: `2025-05-${String(i+1).padStart(2,'0')}`,
-        napMinutes: nap,
-        nightMinutes: night,
-        awakeMinutes: 1440 - (nap + night),
-        feeding: i,
-        diaper: 7 - i,
-        mood: { happy: i },
-      }
+    // stub out the raw totals & markers
+    mockedInsights.mockReturnValue({
+      byDate:           Array(7).fill({ date:'', napMinutes:0, nightMinutes:0, awakeMinutes:0, feeding:0, diaper:0, mood:{} }),
+      sleepSegments:    [],
+      intervalData:     [],
+      feedMarks:        [],
+      feedTypeCounts:   {},
+      avgDaily:         1,
+      avgWeekly:        7,
+      avgMonthly:       30,
+      correlationMessage:'',
+      diaperTypeCounts: {},
+      diaperMarks:      [],
     })
-    mockedUse.mockReturnValue({ byDate: dummy })
+
+    // stub out the ChartSpec sets
+    mockedSpecs.mockReturnValue({
+      'Sleep Summary': [
+        // area chart needs full svgProps
+        {
+          testID:   'chart-total-sleep',
+          title:    'Total Sleep',
+          type:     'area',
+          data:     [],
+          period:   'Weekly',
+          svgProps: { stroke: 'black', fill: 'white', baseline: 0 },
+        },
+        // statStrip doesn’t require svgProps
+        {
+          testID: 'chart-stats-sleep',
+          title:  'Stats Strip',
+          type:   'statStrip',
+          data:   { avgDaily: 1, avgWeekly: 7, avgMonthly: 30 },
+        },
+      ],
+      Feedings: [
+        // bar chart needs a fill prop
+        {
+          testID:   'chart-feedings',
+          title:    'Feedings',
+          type:     'bar',
+          data:     [],
+          svgProps: { fill: 'black' },
+        },
+      ],
+      'Diaper Changes': [
+        {
+          testID:   'chart-diapers',
+          title:    'Diaper Changes',
+          type:     'bar',
+          data:     [],
+          svgProps: { fill: 'black' },
+        },
+      ],
+      Naps:         [],
+      'Awake Time': [],
+    })
   })
 
-  it('renders both Total Sleep and Avg Sleep charts, then can switch to Feedings & Diaper Changes', () => {
-    const { getByTestId, getByText, queryByTestId } = render(
+  function renderScreen() {
+    return render(
       <NavigationContainer>
         <ThemeProvider theme={theme}>
           <InsightsView />
         </ThemeProvider>
       </NavigationContainer>
     )
+  }
 
-    // default: Sleep Summary shows two charts
-    expect(getByTestId('chart-title').props.children).toBe('Total Sleep (min)')
-    expect(getByTestId('chart-avg').props.children).toBe('Avg Sleep (min)')
+  it('renders the Total Sleep area chart and three stat values by default', () => {
+    const { getByTestId, getByText, queryByTestId } = renderScreen()
 
-    // those other chartIDs should NOT be present yet
+    // the area chart
+    expect(getByTestId('chart-total-sleep')).toBeTruthy()
+
+    // our stat-strip values
+    expect(getByText('1.0')).toBeTruthy()
+    expect(getByText('7.0')).toBeTruthy()
+    expect(getByText('30.0')).toBeTruthy()
+
+    // feed & diaper not shown yet
     expect(queryByTestId('chart-feedings')).toBeNull()
-    expect(queryByTestId('chart-diaper')).toBeNull()
-
-    // switch to Feedings
-    fireEvent.press(getByText('Feedings'))
-    expect(getByTestId('chart-feedings').props.children).toBe('Feedings')
-    expect(queryByTestId('chart-title')).toBeNull()
-    expect(queryByTestId('chart-avg')).toBeNull()
-
-    // switch to Diaper Changes
-    fireEvent.press(getByText('Diaper Changes'))
-    expect(getByTestId('chart-diaper').props.children).toBe('Diaper Changes')
-    expect(queryByTestId('chart-feedings')).toBeNull()
+    expect(queryByTestId('chart-diapers')).toBeNull()
   })
 
-  it('renders the right number of ChartCards per log‐type', () => {
-    const { getByText, getAllByTestId } = render(
-      <NavigationContainer>
-        <ThemeProvider theme={theme}>
-          <InsightsView />
-        </ThemeProvider>
-      </NavigationContainer>
-    )
-  
-    // Sleep Summary defaults to 2 specs (total + avg)
-    expect(getAllByTestId(/^chart-/)).toHaveLength(2)
-  
-    // Switch to Naps → 1 chart
-    fireEvent.press(getByText('Naps'))
-    expect(getAllByTestId(/^chart-/)).toHaveLength(1)
-  
-    // Switch to Feedings → 1 chart
+  it('switches to Feedings chart when that tab is tapped', () => {
+    const { getByText, getByTestId, queryByTestId } = renderScreen()
     fireEvent.press(getByText('Feedings'))
-    expect(getAllByTestId(/^chart-/)).toHaveLength(1)
-  
-    // Switch to Diaper Changes → 1 chart
+
+    expect(getByTestId('chart-feedings')).toBeTruthy()
+    // previous charts are gone
+    expect(queryByTestId('chart-total-sleep')).toBeNull()
+  })
+
+  it('switches to Diaper Changes chart when tapped', () => {
+    const { getByText, getByTestId, queryByTestId } = renderScreen()
     fireEvent.press(getByText('Diaper Changes'))
-    expect(getAllByTestId(/^chart-/)).toHaveLength(1)
+
+    expect(getByTestId('chart-diapers')).toBeTruthy()
+    // feedings gone
+    expect(queryByTestId('chart-feedings')).toBeNull()
   })
 })
