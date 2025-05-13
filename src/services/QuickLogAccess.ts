@@ -1,6 +1,13 @@
 //src/services/QuickLogAccess.ts
 import { QuickLogEntry, QuickLogType } from '../models/QuickLogSchema';
-import { getAllQuickLogEntries } from '../storage/QuickLogStorage';
+import { 
+  getAllQuickLogEntries, 
+  saveFutureLogEntry, 
+  getAllFutureLogEntries } from '../storage/QuickLogStorage';
+import { quickLogEmitter } from '../storage/QuickLogEvents';
+
+
+
 
 /**
  * Exactly the storage call, but renamed so tests can mock it directly.
@@ -60,3 +67,21 @@ export async function deleteLogEntry(id: string): Promise<void> {
   // For now, stub it out:
   console.debug('[QuickLogAccess] deleteLogEntry:', id)
 }
+
+/**
+ * Persist AI-generated “future” logs:
+ * here you could AsyncStorage them under a different key, etc.
+ * For now we just re-emit them so screens can listen.
+ */
+export async function saveFutureEntries(entries: QuickLogEntry[]): Promise<void> {
+  // TODO: persist to storage
+  entries.forEach((e) => quickLogEmitter.emit('future-saved', e));
+}
+
+/** Load any already-saved future entries. */
+export async function getFutureEntries(): Promise<QuickLogEntry[]> {
+  // TODO: read from your “future” storage key
+  return []; 
+}
+
+

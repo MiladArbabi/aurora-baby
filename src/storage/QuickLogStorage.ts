@@ -6,6 +6,7 @@ import { quickLogEmitter } from './QuickLogEvents';
 
 const STORAGE_KEY = '@quicklog_entries';
 const OFFLINE_QUEUE_KEY = '@quicklog_offline_queue';
+const FUTURE_KEY = '@future_quicklog_entries';
 
 /**
  * Save a new QuickLog entry to AsyncStorage.
@@ -82,12 +83,20 @@ export const syncQueuedLogs = async (
 ): Promise<void> => {
   // 1. fetch the current backlog
   const queued = await getOfflineQueue();
-
   // 2. send each one sequentially
   for (const log of queued) {
     await sendFunc(log);
   }
-
   // 3. clear the queue once all have gone out
   await clearOfflineQueue();
+};
+
+export const saveFutureLogEntry = async (entry: QuickLogEntry) => {
+  const all = await getAllFutureLogEntries();
+  await AsyncStorage.setItem(FUTURE_KEY, JSON.stringify([...all, entry]));
+};
+
+export const getAllFutureLogEntries = async (): Promise<QuickLogEntry[]> => {
+  const raw = await AsyncStorage.getItem(FUTURE_KEY);
+  return raw ? JSON.parse(raw) : [];
 };

@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react'
 import { getLogsBetween } from '../services/QuickLogAccess'
 import { QuickLogEntry } from '../models/QuickLogSchema'
+import { quickLogEmitter } from '../storage/QuickLogEvents';
+
 
 export interface SleepSegment {
   id: string
@@ -44,14 +46,14 @@ export function useTrackerData(showLast24h: boolean = false) {
       const now = new Date()
       const start = showLast24h
       ? new Date(now.getTime() - 24*60*60*1000)
-      : new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(),0,0,0));
-      
+      : new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
       const all = await getLogsBetween(start.toISOString(), now.toISOString());
       if (!alive) return;
       setEntries(all);
 
       // ② map sleeps to arcs
-      const sleepSegs = entries
+      const sleepSegs = all
         .filter(
           (e): e is QuickLogEntry & {
             data: { start: string; end: string; duration: number }
@@ -79,7 +81,7 @@ export function useTrackerData(showLast24h: boolean = false) {
         })
 
       // ③ map non‐sleep to point markers
-      const markers = entries
+      const markers = all
         .filter((e) => e.type !== 'sleep')
         .map((e) => {
           const t = new Date(e.timestamp)
@@ -101,8 +103,14 @@ export function useTrackerData(showLast24h: boolean = false) {
     }
 
     load()
+
+    // re-run load whenever we quick-log
+    const onSaved = () => load();
+    quickLogEmitter.on('saved', onSaved);
+
     return () => {
-      alive = false
+      alive = false;
+      quickLogEmitter.off('saved', onSaved);
     }
   }, [showLast24h])
 
