@@ -19,7 +19,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useNavigation } from '@react-navigation/native'
 import { RootStackParamList } from '../navigation/AppNavigator'
 import LogDetailModal from 'components/carescreen/LogDetailModal'
-import FutureLogsGenerator from '../components/carescreen/FutureLogsGenerator';
+import { startOfToday } from 'date-fns';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window')
 const CARD_WIDTH = SCREEN_WIDTH * 0.9
@@ -112,10 +112,19 @@ export default function PastLogsView() {
     ),[]
   )
 
-  const handleGenerateFuture = (hoursAhead: number) => {
-    navigation.navigate('Care'); // or whatever makes sense
-    // or fire off a request for “future logs” suggestions
-  };
+  async function handleGenerateFuture(hoursAhead: number) {
+    // 1) Grab recent logs & baby profile
+    const recent = await getLogsBetween(startOfToday)
+    const profile = await getBabyProfile(recent[0]?.babyId) 
+  
+    // 2) Ask your AI endpoint for recommendations
+    const suggestions: QuickLogEntry[] = await generateAIQuickLogs(recent, profile, hoursAhead)
+  
+    // 3) Persist & emit them as “future” entries
+    await saveFutureEntries(suggestions)
+    // 4) Update your local state so the pills insert dashed strokes immediately
+    setEntries(es => [...suggestions, ...es])
+  }
 
   const handleNavigate = (tab: MiniTab) => {
     if (tab==='cards') return
@@ -138,11 +147,21 @@ export default function PastLogsView() {
           // 1. Slide all of your non-scrolling UI into ListHeaderComponent
           ListHeaderComponent={() => (
             <View>
-              <FutureLogsGenerator
-                onGenerate={handleGenerateFuture}
-                buttonLabel="Suggest future logs"
-              />
-              {/* Filters */}
+              <View style={[styles.pillRow, { backgroundColor: theme.colors.background,}]}>
+              <TouchableOpacity
+                style={styles.pill}
+                onPress={() => handleGenerateFuture(24)}
+                >
+                  <Text style={styles.pillText}>Fill next-day logs</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                style={styles.pill}
+                onPress={() => handleGenerateFuture(168)}
+                >
+                  <Text style={styles.pillText}>Fill next-week logs</Text>
+                </TouchableOpacity>
+              </View>
+              {/* LogType Filters */}
               <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -227,4 +246,19 @@ const styles = StyleSheet.create({
   timestamp: { color: '#000' },
   timeContainer: { color: '#000', fontSize: 12, alignItems: 'flex-end', },
   dayLabel: { color: '#666', fontSize: 12, marginTop: 4 },
+  pillRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    paddingVertical: 12
+  },
+  pill: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    borderWidth: 1,      // pick your accent color
+    marginHorizontal: 8,
+  },
+  pillText: {
+    fontWeight: '600',
+  },
 })
