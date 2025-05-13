@@ -11,6 +11,7 @@ import {
 } from 'react-native'
 import { useTheme } from 'styled-components/native'
 import { QuickLogEntry } from '../models/QuickLogSchema'
+import { quickLogEmitter } from '../storage/QuickLogEvents';
 import { getLogsBetween, deleteLogEntry  } from '../services/QuickLogAccess'
 import CareLayout from 'components/carescreen/CareLayout'
 import { MiniTab } from '../components/carescreen/MiniNavBar'
@@ -18,6 +19,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useNavigation } from '@react-navigation/native'
 import { RootStackParamList } from '../navigation/AppNavigator'
 import LogDetailModal from 'components/carescreen/LogDetailModal'
+import FutureLogsGenerator from '../components/carescreen/FutureLogsGenerator';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window')
 const CARD_WIDTH = SCREEN_WIDTH * 0.9
@@ -39,14 +41,49 @@ export default function PastLogsView() {
   const [selectedCategory, setSelectedCategory] = useState<Category>('all')
   const [selectedEntry, setSelectedEntry] = useState<QuickLogEntry | null>(null)
 
+  // helper: relative‐day label
+  const getDayLabel = (ts: string) => {
+    const date = new Date(ts)
+    const now = new Date()
+    // midnight today
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const diffMs = date.getTime() - today.getTime()
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+    if (diffDays === 0) return 'Today'
+    if (diffDays === -1) return 'Yesterday'
+    if (diffDays === 1) return 'Tomorrow'
+    if (diffDays < 0) return `${-diffDays} days ago`
+    if (diffDays > 0) return `In ${diffDays} days`
+    return `In ${diffDays} days`
+  }
+
   // fetch once
+  // fetch & sort once
   useEffect(() => {
     getLogsBetween(
-      new Date(Date.now()-7*24*60*60*1000).toISOString(),
+      new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
       new Date().toISOString()
-    ).then(setEntries)
-     .catch(console.error)
-  },[])
+    )
+    .then((logs: QuickLogEntry[]) => {
+      const sorted = [...logs].sort(
+        (a: QuickLogEntry, b: QuickLogEntry) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      )
+      setEntries(sorted)
+    })
+    .catch(console.error)
+  }, [])
+
+  // whenever any new entry is saved, prepend it into the list:
+  useEffect(() => {
+    const handler = (entry: QuickLogEntry) => {
+      setEntries(es => [entry, ...es]);
+    };
+    quickLogEmitter.on('saved', handler);
+    return () => {
+      quickLogEmitter.off('saved', handler);
+    };
+  }, []);
 
   const filtered = selectedCategory==='all'
     ? entries
@@ -61,14 +98,24 @@ export default function PastLogsView() {
         <Text style={styles.type}>
           {item.type[0].toUpperCase()+item.type.slice(1)}
         </Text>
-        <Text style={styles.timestamp}>
-          {new Date(item.timestamp).toLocaleTimeString([],{
-            hour:'2-digit',minute:'2-digit'
-          })}
-        </Text>
+        {/* right: time + relative‐day */}
+        <View style={styles.timeContainer}>
+          <Text style={styles.timestamp}>
+            {new Date(item.timestamp).toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </Text>
+          <Text style={styles.dayLabel}>{getDayLabel(item.timestamp)}</Text>
+        </View>
       </TouchableOpacity>
     ),[]
   )
+
+  const handleGenerateFuture = (hoursAhead: number) => {
+    navigation.navigate('Care'); // or whatever makes sense
+    // or fire off a request for “future logs” suggestions
+  };
 
   const handleNavigate = (tab: MiniTab) => {
     if (tab==='cards') return
@@ -82,22 +129,34 @@ export default function PastLogsView() {
       onNavigate={handleNavigate}
       bgColor={theme.colors.background}
     >
-      <View style={{ flex: 1 }}>
-        {/* Filters */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterRow}
-        >
-          {categories.map(cat=>(
-            <TouchableOpacity
-              key={cat}
-              style={[
+      {/* Cards list */}
+      <FlatList
+          data={filtered}
+          keyExtractor={e=>e.id}
+          renderItem={renderCard}
+          contentContainerStyle={{ paddingVertical: 16 }}
+          // 1. Slide all of your non-scrolling UI into ListHeaderComponent
+          ListHeaderComponent={() => (
+            <View>
+              <FutureLogsGenerator
+                onGenerate={handleGenerateFuture}
+                buttonLabel="Suggest future logs"
+              />
+              {/* Filters */}
+              <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filterRow}
+              >
+              {categories.map(cat=>(
+                <TouchableOpacity
+                key={cat}
+                style={[
                 styles.filterButton,
                 selectedCategory===cat && styles.filterButtonActive
-              ]}
-              onPress={()=>setSelectedCategory(cat)}
-            >
+                ]}
+                onPress={()=>setSelectedCategory(cat)}
+              >
               <Text style={
                 selectedCategory===cat
                   ? styles.filterTextActive
@@ -108,15 +167,13 @@ export default function PastLogsView() {
             </TouchableOpacity>
           ))}
         </ScrollView>
-
-        {/* Cards list */}
-        <FlatList
-          data={filtered}
-          keyExtractor={e=>e.id}
-          renderItem={renderCard}
-          contentContainerStyle={{ paddingVertical: 16 }}
-        />
       </View>
+      )}
+       // 2. Tell FlatList that header (index 0) should stick
+      stickyHeaderIndices={[0]}
+      // 3. Let the FlatList itself fill remaining space
+      style={{ flex: 1 }}
+      />  
       {/* Modal */}
       {selectedEntry && (
         <LogDetailModal
@@ -168,4 +225,6 @@ const styles = StyleSheet.create({
   },
   type: { fontSize: 16, fontWeight: '600' },
   timestamp: { color: '#000' },
+  timeContainer: { color: '#000', fontSize: 12, alignItems: 'flex-end', },
+  dayLabel: { color: '#666', fontSize: 12, marginTop: 4 },
 })

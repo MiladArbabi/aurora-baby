@@ -16,11 +16,13 @@ import Tracker, { QuickMarker } from '../components/carescreen/Tracker'
 import TrackerFilter from '../components/carescreen/TrackerFilter'
 import QuickLogMenu from '../components/carescreen/QuickLogMenu'
 import LogDetailModal from '../components/carescreen/LogDetailModal'
+import FutureLogsGenerator from '../components/carescreen/FutureLogsGenerator';
 
-import { getLogsBetween } from '../services/QuickLogAccess'
+import { getLogsBetween, getFutureEntries, saveFutureEntries } from '../services/QuickLogAccess'
 import { QuickLogEntry } from '../models/QuickLogSchema'
 import { useActionMenuLogic } from '../hooks/useActionMenuLogic'
 import { quickLogEmitter } from '../storage/QuickLogEvents';
+import { generateAIQuickLogs } from '../services/LlamaLogGenerator'
 
 type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>
 
@@ -38,26 +40,26 @@ const CareScreen: React.FC = () => {
   const [quickLogMarkers, setQuickLogMarkers] = useState<QuickMarker[]>([])
   const [quickLogEntries, setQuickLogEntries] = useState<QuickLogEntry[]>([])
   const [selectedLog, setSelectedLog] = useState<QuickLogEntry | null>(null)
+  const [futureEntries, setFutureEntries] = useState<QuickLogEntry[]>([])
   const [showLast24h, setShowLast24h] = useState(false)
 
   // fetch logs when filter changes
   useEffect(() => {
     const now = new Date()
     const start = showLast24h
-      ? new Date(now.getTime() - 24 * 60 * 60 * 1000)
-      : new Date(
-          Date.UTC(
-            now.getUTCFullYear(),
-            now.getUTCMonth(),
-            now.getUTCDate(),
-            0,
-            0,
-            0,
-            0
-          )
-        )
+      ? new Date(now.getTime() - 24*60*60*1000)
+      : new Date(now.getFullYear(), now.getMonth(), now.getDate())
     getLogsBetween(start.toISOString(), now.toISOString())
-      .then(setQuickLogEntries)
+      .then(entries => {
+        setQuickLogEntries(entries)
+      // seed the markers array so even already‐saved entries show up
+      const seededMarkers = entries.map(e => {
+        const t = new Date(e.timestamp)
+        const fraction = (t.getHours()*60 + t.getMinutes() + t.getSeconds()/60) / 1440
+        return { id: e.id, fraction, color: e.type, type: e.type }
+      })
+      setQuickLogMarkers(seededMarkers)
+    })
       .catch(err => console.error('[CareScreen] fetch logs:', err))
   }, [showLast24h])
 
@@ -72,8 +74,10 @@ const CareScreen: React.FC = () => {
           : [
               ...existing,
               { id: entry.id, fraction, color: entry.type, type: entry.type },
-            ]
-      )
+            ]);
+            // and also put it into the entries list so the PastLogsView (if visible)
+            // or any other consumer can pick it up immediately:
+            setQuickLogEntries(existing => [entry, ...existing]);
     } catch (err) {
       console.error('[CareScreen] handleLogged error:', err)
     }
@@ -96,11 +100,37 @@ const CareScreen: React.FC = () => {
     [quickLogEntries]
   )
 
+  useEffect(() => {
+    getFutureEntries().then(setFutureEntries).catch(console.error);
+    const handler = (entry: QuickLogEntry) =>
+      setFutureEntries((f) => [...f, entry]);
+    quickLogEmitter.on('future-saved', handler);
+    return () => {
+      quickLogEmitter.off('future-saved', handler);
+    };
+  }, []);
+
   const handleSegmentPress = useCallback((id: string) => {}, [])
   const handleToggleFilter = useCallback(
     () => setShowLast24h(v => !v),
     []
   )
+
+  function handleGenerateFuture(hoursAhead: number) {
+    const now = new Date()
+    const start = new Date(now.getTime() - (showLast24h ? 24 : now.getHours() * 60 + now.getMinutes()) * 60 * 1000)
+    
+    // 1) load recent logs
+    getLogsBetween(start.toISOString(), now.toISOString())
+    // 2) ask AI
+    .then((recent) => generateAIQuickLogs(recent, hoursAhead))  
+    // 3) persist them
+    .then((suggestions: QuickLogEntry[]) => saveFutureEntries(suggestions))
+    // 4) update UI
+    .then(() => navigation.navigate('Care'))
+    .catch(err => console.error('[CareScreen] future-logs generation error:', err)
+  )
+  }
 
   const handleNavigate = (tab: MiniTab) => {
     if (tab === 'cards') navigation.navigate('PastLogs')
@@ -127,6 +157,18 @@ const CareScreen: React.FC = () => {
           />
         )}
       </View>
+
+      {/* Future‐logs dropdown */}
+      {activeTab === 'tracker' && (
+        <FutureLogsGenerator
+          onGenerate={handleGenerateFuture}
+          options={[
+            { label: 'Next 24 hours', value: 24 },
+            { label: 'Next week',    value: 168 },
+          ]}
+          buttonLabel="Plan ahead"
+        />
+      )}
 
       {/* Content */}
       <View style={[
