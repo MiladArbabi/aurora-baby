@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Image, TouchableOpacity } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
 import { useNavigation } from '@react-navigation/native';
@@ -7,6 +7,9 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { DefaultTheme } from 'styled-components/native';
 import { getAuth, signOut } from 'firebase/auth';
+
+import { getChildProfile } from '../storage/ChildProfileStorage'
+import { getParentProfile } from '../storage/ParentProfileStorage'
 
 const Container = styled.View`
   flex: 1;
@@ -90,6 +93,21 @@ const ProfileSettingScreen: React.FC = () => {
   const [childName, setChildName] = useState('Child Name');
   const [childBirthdate, setChildBirthdate] = useState('YYYY-MM-DD');
   const [colorMode, setColorMode] = useState<'light' | 'dark'>('light');
+  const [parentName,    setParentName]    = useState('')
+
+
+  useEffect(() => {
+    ;(async () => {
+      const p = await getParentProfile()   // implement this
+      if (p) setParentName(p.name)
+
+      const c = await getChildProfile()
+      if (c) {
+        setChildName(c.name)
+        setChildBirthdate(c.dob)
+      }
+    })()
+  }, [])
 
   const handleAvatarPress = () => {
     // Mock avatar change

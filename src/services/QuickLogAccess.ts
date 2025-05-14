@@ -6,9 +6,6 @@ import {
   getAllFutureLogEntries } from '../storage/QuickLogStorage';
 import { quickLogEmitter } from '../storage/QuickLogEvents';
 
-
-
-
 /**
  * Exactly the storage call, but renamed so tests can mock it directly.
  */
