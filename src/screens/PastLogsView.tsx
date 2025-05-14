@@ -114,7 +114,7 @@ export default function PastLogsView() {
 
   async function handleGenerateFuture(hoursAhead: number) {
     // 1) Grab recent logs & baby profile
-    const recent = await getLogsBetween(startOfToday)
+    const recent = await getLogsBetween(past)
     const profile = await getBabyProfile(recent[0]?.babyId) 
   
     // 2) Ask your AI endpoint for recommendations
