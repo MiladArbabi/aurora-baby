@@ -1,3 +1,4 @@
+// src/types/styled.d.ts
 import 'styled-components/native';
 
 declare module 'styled-components/native' {
@@ -50,6 +51,13 @@ declare module 'styled-components/native' {
       bottomNavHeight: number;
       miniCardWidth: number; 
       miniCardHeight: number; 
+    };
+    carousel: {
+      main: { w: number; h: number; r: number };
+      feature: { w: number; h: number; r: number };
+      category: { w: number; h: number; r: number };
+      game: { w: number; h: number; r: number };
+      stroke: number;
     };
     mode: string;
   }

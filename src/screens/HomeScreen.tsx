@@ -1,88 +1,84 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, SafeAreaView as RNSafeAreaView } from 'react-native';
-import styled, { useTheme } from 'styled-components/native';
+import { View, StyleSheet, ScrollView, SafeAreaView as RNSafeAreaView } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import { DefaultTheme } from 'styled-components/native';
 import { saveLastScreen } from '../services/LastScreenTracker';
 import BottomNav from '../components/common/BottomNav';
-import Card from '../components/common/Card';
 import TopNav from '../components/common/TopNav';
+import { ReusableCarousel } from '../components/common/Carousel';
+import styled, { useTheme, DefaultTheme } from 'styled-components/native';
 
-
-const Container = styled.View`
-  flex: 1;
-  background-color: ${({ theme }: { theme: DefaultTheme }) =>
-     theme.colors.background};
-`;
-const CardsContainer = styled.View`
-  flex: 1;
-  align-items: center;
-  justify-content: center;
-  padding-top: ${({ theme }: { theme: DefaultTheme }) => 
-    theme.spacing.large}px;
-  padding-bottom: ${({ theme }: { theme: DefaultTheme }) =>
-    theme.sizes.bottomNavHeight + theme.spacing.xlarge}px;
-`;
+// Example data imports (replace with your actual hooks/services)
+import { mainCarouselItems, featureItems, categoryItems, gameItems } from '../data/home';
 
 type Props = StackScreenProps<RootStackParamList, 'Home'>;
-const NAV_HEIGHT = 110;
-
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const theme = useTheme();
+
+  const Section = styled.View`
+  margin-bottom: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.medium}px;
+`;
+
+const SectionHeader = styled.Text`
+    font-size: ${({ theme }: { theme: DefaultTheme }) => theme.fonts.sizes.subtext}px;
+    font-family: ${({ theme }: { theme: DefaultTheme }) => theme.fonts.bold};
+    color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.text};
+    margin-bottom: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.small}px;
+    margin-left: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.medium}px;
+  `;
+
+  const headerMap: Record<string, string> = {
+    feature: 'Features',
+    category: 'Categories',
+    game: 'Games',
+  };
 
   useEffect(() => {
     saveLastScreen('Home');
   }, []);
 
-  const cardData = [
-    {
-      testID: 'home-card-harmony',
-      backgroundImage: require('../assets/png/harmony/harmonycardbackground1.png'),
-      title: 'Harmony',
-      onPress: () => navigation.navigate('Harmony'),
-    },
-    {
-      testID: 'home-card-care',
-      backgroundImage: require('../assets/png/care/carecardbackground1.png'),
-      title: 'Care',
-      onPress: () => navigation.navigate('Care'),
-    },
-    {
-      testID: 'home-card-wonder',
-      backgroundImage: require('../assets/png/wonder/wondercardbackground1.png'),
-      title: 'Wonder',
-      onPress: () => navigation.navigate('Wonder'),
-    },
+  const sections = [
+    { id: 'main',    items: mainCarouselItems, config: theme.carousel.main },
+    { id: 'game',    items: gameItems,         config: theme.carousel.game },
+    { id: 'feature', items: featureItems,      config: theme.carousel.feature },
+    { id: 'feature', items: featureItems,      config: theme.carousel.feature },
+    { id: 'feature', items: featureItems,      config: theme.carousel.feature },
+    { id: 'category',items: categoryItems,     config: theme.carousel.category },
+    { id: 'feature', items: featureItems,      config: theme.carousel.feature },
+    { id: 'feature', items: featureItems,      config: theme.carousel.feature },
+    { id: 'feature', items: featureItems,      config: theme.carousel.feature },
+
   ];
 
   return (
     <View style={styles.screen}>
-      <RNSafeAreaView
-        style={{ flex: 1, backgroundColor: theme.colors.background }}
-      >
-        <Container>
-          <TopNav navigation={navigation} />
-          <CardsContainer>
-            {cardData.map((card) => (
-              <Card
-                key={card.testID}
-                testID={card.testID}
-                backgroundImage={card.backgroundImage}
-                title={card.title}
-                onPress={card.onPress}
-              />
-            ))}
-          </CardsContainer>
-          <BottomNav navigation={navigation} activeScreen="Home" />
-        </Container>
+      <RNSafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
+        {/* Top navigation bar */}
+        <TopNav navigation={navigation} />
+
+        {/* Scrollable carousel sections */}
+        <ScrollView
+          contentContainerStyle={{ paddingVertical: theme.spacing.large }}
+          showsVerticalScrollIndicator={false}
+        >
+          {sections.map(({ id, items, config }, idx) => (
+            <Section key={`${id}-${idx}`}>
+              {id !== 'main' && <SectionHeader>{headerMap[id]}</SectionHeader>}
+              <ReusableCarousel data={items(navigation)} config={config} />
+            </Section>
+          ))}
+        </ScrollView>
+
+        {/* Bottom tab navigation */}
+        <BottomNav navigation={navigation} activeScreen="Home" />
       </RNSafeAreaView>
     </View>
   );
-};
+}
 
 export default HomeScreen;
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 }
-});
+  screen: { flex: 1 },
+
+})
