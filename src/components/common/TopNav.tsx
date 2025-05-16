@@ -8,6 +8,7 @@ import { DefaultTheme } from 'styled-components/native';
 const TopNavContainer = styled.View`
   height: ${({ theme }: { theme: DefaultTheme }) => theme.sizes.topNavHeight}px;
   width: 100%;
+  margin-top: 25px;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;

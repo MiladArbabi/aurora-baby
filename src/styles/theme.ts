@@ -25,6 +25,11 @@ export const colors = {
   darkAccent: '#FFD1B3', // Peach
   darkText: '#E9DAFA', // Light Lavender for dark mode text
   darkContrastText: '#E9DAFA', // Light Lavender
+
+  // Bottomnav Colors
+  navBackground: '#2F2346',
+  iconActive:    '#A4B9CC',
+  iconInactive:  '#A9A9A9',
 } as const;
 
 export const fonts = {
