@@ -17,6 +17,14 @@ jest.mock('../../services/firebase', () => ({
   }),
 }));
 
+// Mock child‐profile so we skip onboarding
+jest.mock('../../services/ChildProfileAccess', () => ({
+    getChildProfile: jest.fn(() =>
+      Promise.resolve({ id: 'abc123', name: 'Test Baby', dob: '2021-01-01' })
+    ),
+    saveChildProfile: jest.fn(),
+  }));
+
 // Mock expo-modules-core to suppress LegacyEventEmitter errors
 jest.mock('expo-modules-core', () => ({
   EventEmitter: jest.fn(() => ({

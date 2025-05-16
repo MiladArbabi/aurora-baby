@@ -4,7 +4,6 @@ import { getLogsBetween } from '../services/QuickLogAccess'
 import { QuickLogEntry } from '../models/QuickLogSchema'
 import { quickLogEmitter } from '../storage/QuickLogEvents';
 
-
 export interface SleepSegment {
   id: string
   start: string // ISO date

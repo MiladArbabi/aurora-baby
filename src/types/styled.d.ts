@@ -20,6 +20,9 @@ declare module 'styled-components/native' {
       darkAccent: string; 
       darkText: string; 
       darkContrastText: string; 
+      navBackground: string;
+      iconActive: string;
+      iconInactive: string;
     };
     fonts: {
       regular: string;

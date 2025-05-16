@@ -1,6 +1,6 @@
 // src/components/common/BottomNav.tsx
-import React from 'react';
-import { useWindowDimensions, Text } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import { useWindowDimensions, Text, Animated } from 'react-native';
 import styled, { DefaultTheme, useTheme } from 'styled-components/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
@@ -8,6 +8,8 @@ import HomeIcon from '../../assets/bottomnavicons/HomeIcon';
 import HarmonyIcon from '../../assets/bottomnavicons/HarmonyIcon';
 import CareIcon from '../../assets/bottomnavicons/CareIcon';
 import WonderIcon from '../../assets/bottomnavicons/WonderIcon';
+import Svg, { Defs, LinearGradient, Stop, Circle } from 'react-native-svg';
+import LinearGradientView from 'react-native-linear-gradient';
 
 const Wrapper = styled.View`
   position: absolute;
@@ -21,7 +23,7 @@ const NAV_H = 98;
 const Container = styled.View`
   width: 100%;
   height: ${NAV_H}px;
-  background-color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.primary};
+  background-color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.navBackground};
   border-top-left-radius: 50px;
   border-top-right-radius: 50px;
   border-top-width: 1px;
@@ -43,24 +45,15 @@ interface FloatingButtonProps {
   bgColor: string;
 }
 
+// container for our stroked circle gradient
 const FloatingButton = styled.TouchableOpacity<FloatingButtonProps>`
   position: absolute;
-  bottom: ${({ size }: FloatingButtonProps) => size * 0.7}px;
-  width: ${({ size }: FloatingButtonProps) => size}px;
-  height: ${({ size }: FloatingButtonProps) => size}px;
-  border-radius: ${({ size }: FloatingButtonProps) => size / 2}px;
-  background-color: ${({ bgColor }: FloatingButtonProps) => bgColor};
+  bottom: ${({ size }: FloatingButtonProps) => `${size * 0.9}px`};
+  width: ${({ size }: FloatingButtonProps) => `${size}px`};
+  height: ${({ size }: FloatingButtonProps) => `${size}px`};
   justify-content: center;
   align-items: center;
   z-index: 10;
-
-  /* iOS shadow */
-  shadow-color: #000;
-  shadow-offset: 0px 4px;
-  shadow-opacity: 0.3;
-  shadow-radius: 6px;
-  /* Android elevation */
-  elevation: 8;
 `;
 
 type BottomNavProps = {
@@ -74,8 +67,26 @@ const BottomNav: React.FC<BottomNavProps> = ({ navigation, activeScreen }) => {
   const navHeight = screenHeight * 0.10; // 10% of height
   const floatSize = navHeight * 1;     // tweak as needed
 
-  const activeColor = theme.colors.secondaryBackground;
-  const inactiveColor = theme.colors.background;
+  // we’ll bump the active icon to 1.2× scale:
+  const scaleValues = {
+    Home:    useRef(new Animated.Value(activeScreen === 'Home'    ? 1.2 : 1)).current,
+    Harmony: useRef(new Animated.Value(activeScreen === 'Harmony' ? 1.2 : 1)).current,
+    Care:    useRef(new Animated.Value(activeScreen === 'Care'    ? 1.2 : 1)).current,
+    Wonder:  useRef(new Animated.Value(activeScreen === 'Wonder'  ? 1.2 : 1)).current,
+  };
+
+  useEffect(() => {
+    // whenever activeScreen changes, spring‐animate each tab
+    (['Home','Harmony','Care','Wonder'] as const).forEach(screen => {
+      Animated.spring(scaleValues[screen], {
+        toValue: activeScreen === screen ? 1.2 : 1,
+        useNativeDriver: true,
+      }).start();
+    });
+  }, [activeScreen]);
+
+  const activeColor = theme.colors.iconActive;
+  const inactiveColor = theme.colors.iconInactive;
 
   // pick your floating-button color here:
   const whisprBg = activeScreen === 'Whispr'
@@ -87,16 +98,24 @@ const BottomNav: React.FC<BottomNavProps> = ({ navigation, activeScreen }) => {
       {/* the main nav */}
       <Container style={{ width: screenWidth }}>
         <NavButton testID="bottom-nav-home" onPress={() => navigation.navigate('Home')}>
-          <HomeIcon fill={activeScreen === 'Home' ? activeColor : inactiveColor} />
+          <Animated.View style={{ transform: [{ scale: scaleValues.Home }] }}>
+            <HomeIcon fill={activeScreen === 'Home' ? activeColor : inactiveColor} />
+          </Animated.View>
         </NavButton>
         <NavButton testID="bottom-nav-harmony" onPress={() => navigation.navigate('Harmony')}>
-          <HarmonyIcon fill={activeScreen === 'Harmony' ? activeColor : inactiveColor} />
+          <Animated.View style={{ transform: [{ scale: scaleValues.Harmony }] }}>
+            <HarmonyIcon fill={activeScreen === 'Harmony' ? activeColor : inactiveColor} />
+          </Animated.View>
         </NavButton>
         <NavButton testID="bottom-nav-care" onPress={() => navigation.navigate('Care')}>
-          <CareIcon fill={activeScreen === 'Care' ? activeColor : inactiveColor} />
+          <Animated.View style={{ transform: [{ scale: scaleValues.Care }] }}>
+            <CareIcon fill={activeScreen === 'Care' ? activeColor : inactiveColor} />
+          </Animated.View>
         </NavButton>
         <NavButton testID="bottom-nav-wonder" onPress={() => navigation.navigate('Wonder')}>
-          <WonderIcon fill={activeScreen === 'Wonder' ? activeColor : inactiveColor} />
+          <Animated.View style={{ transform: [{ scale: scaleValues.Wonder }] }}>
+            <WonderIcon fill={activeScreen === 'Wonder' ? activeColor : inactiveColor} />
+          </Animated.View>
         </NavButton>
       </Container>
 
@@ -107,7 +126,23 @@ const BottomNav: React.FC<BottomNavProps> = ({ navigation, activeScreen }) => {
         bgColor={whisprBg}
         onPress={() => navigation.navigate('Whispr')}
       >
-        <Text>Whispr</Text>
+        {/* use SVG + LinearGradient to draw just the circle stroke */}
+        <Svg width={floatSize} height={floatSize}>
+          <Defs>
+            <LinearGradient id="auroraGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <Stop offset="0%" stopColor="#50E3C2" />
+              <Stop offset="100%" stopColor="#9013FE" />
+            </LinearGradient>
+          </Defs>
+          <Circle
+            cx={floatSize/2}
+            cy={floatSize/2}
+            r={floatSize/3}          // leave a bit of padding
+            stroke="url(#auroraGrad)"
+            strokeWidth={15}
+            fill="transparent"
+          />
+        </Svg>
       </FloatingButton>
     </Wrapper>
   );

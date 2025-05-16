@@ -9,6 +9,14 @@ import { NavigationContainer } from '@react-navigation/native'
 import CareScreen from '../../../screens/CareScreen'
 import { rneThemeBase, theme } from '../../../styles/theme'
 
+// Mock out QuickLogAccess so we start with no pre-existing logs
+jest.mock('../../../services/QuickLogAccess', () => ({
+  getLogsBetween: jest.fn(() => Promise.resolve([])),
+  getLogsGroupedByDate:   jest.fn(() => Promise.resolve([])),  // ← add this line
+  getFutureEntries: jest.fn(() => Promise.resolve([])),
+  saveFutureEntries: jest.fn(() => Promise.resolve()),
+}));
+
 // 1) Mock nanoid instead of uuid
 jest.mock('nanoid', () => ({ nanoid: () => 'quicklog1' }))
 

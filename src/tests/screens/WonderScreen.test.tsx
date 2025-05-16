@@ -72,12 +72,12 @@ describe('WonderScreen', () => {
         const wonderIconInstance = await getByTestId('bottom-nav-wonder')
       .findByType(WonderIcon);
     expect(wonderIconInstance.props.fill)
-      .toBe(theme.colors.secondaryBackground);
+      .toBe(theme.colors.iconActive);
 
     const homeIconInstance = await getByTestId('bottom-nav-home')
       .findByType(HomeIcon);
     expect(homeIconInstance.props.fill)
-      .toBe(theme.colors.background);
+      .toBe(theme.colors.iconInactive);
     });
 
   it('navigates to Home when Home icon is pressed', async () => {

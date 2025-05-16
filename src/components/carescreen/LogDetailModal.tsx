@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+// src/components/carescreen/LogDetailModal.tsx
+import React, { useState, useEffect, useRef } from 'react'
 import {
   Modal,
   View,
@@ -99,9 +100,55 @@ const LogDetailModal: React.FC<Props> = ({ visible, entry, onClose, onSave, onDe
     onClose()
   }
 
+  const isActiveSleep = type === 'sleep' && (!data.end || new Date(data.end) > new Date())
+const [elapsed, setElapsed] = useState<number>(() => {
+  if (type === 'sleep') {
+    const startMs = new Date((data as any).start).getTime()
+    return Math.floor((Date.now() - startMs) / 1000)
+  }
+  return 0
+})
+const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+useEffect(() => {
+  if (!isActiveSleep) return
+  timerRef.current = setInterval(() => {
+    setElapsed(prev => prev + 1)
+  }, 1000)
+  return () => {
+    if (timerRef.current) clearInterval(timerRef.current)
+  }
+}, [isActiveSleep])
+
+  const formatElapsed = (secs: number) => {
+    const h = Math.floor(secs/3600).toString().padStart(2,'0')
+    const m = Math.floor((secs%3600)/60).toString().padStart(2,'0')
+    const s = (secs%60).toString().padStart(2,'0')
+    return `${h}:${m}:${s}`
+  }
+
   const renderFields = () => {
     switch (type) {
       case 'sleep':
+        return (
+          <>
+          <FormField label="Subtype" value={subtype} onPress={() => {/*…*/}}/>
+          <FormField label="Date"    value={dateValue} onPress={() => {/*…*/}}/>
+          {isActiveSleep ? (
+            // live counter
+            <View style={styles.liveTimerContainer}>
+              <Text style={styles.liveTimerLabel}>Ongoing:</Text>
+              <Text style={styles.liveTimerValue}>{formatElapsed(elapsed)}</Text>
+            </View>
+            ) : (
+              // past sleep: show both start & end
+              <>
+               <FormField label="Start" value={startTime} onPress={() => {/*…*/}}/>
+               <FormField label="End"   value={endTime}   onPress={() => {/*…*/}}/>
+              </>
+             )} 
+          </>
+        )
       case 'health':
         return (
           <>
@@ -330,6 +377,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actionText: { fontFamily: 'Edrosa', fontSize: 16, color: '#000' },
+  liveTimerContainer: { width: '100%', marginVertical: 12, alignItems: 'center'},
+  liveTimerLabel: { fontSize: 14, color: '#E9DAFA', marginBottom: 4 },
+  liveTimerValue: { fontSize: 20, fontWeight: 'bold', color: '#FFFFFF' }
 })
 
 export default LogDetailModal
