@@ -62,11 +62,21 @@ export const sizes = {
   miniCardHeight: 200,
 } as const;
 
+// ---- carousel config ----
+export const carousel = {
+  main:    { w: 0.9, h: 0.55, r: 10, strokeColor: '#FFFFFF', center: true },
+  feature: { w: 0.25, h: 0.2, r: 5 },
+  category:{ w: 0.4, h: 0.4, r: 5 },
+  game:    { w: 0.2, h: 0.1, r: 10 },
+  stroke:  1,
+} as const;
+
 export const theme = {
   colors,
   fonts,
   spacing,
   sizes,
+  carousel,
   mode: 'light',
 } as const;
 
