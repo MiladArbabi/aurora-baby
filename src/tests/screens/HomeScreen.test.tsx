@@ -1,17 +1,17 @@
-import React from 'react';
-import { render, waitFor, fireEvent } from '@testing-library/react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { ThemeProvider } from '@rneui/themed';
-import { ThemeProvider as StyledThemeProvider } from 'styled-components/native';
-import { RouteProp } from '@react-navigation/native'; // Add this import
-import HomeScreen from '../../screens/HomeScreen';
-import { rneThemeBase, theme } from '../../styles/theme';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../../navigation/AppNavigator';
-import { DefaultTheme } from 'styled-components/native';
+import React from 'react'
+import { render, waitFor } from '@testing-library/react-native'
+import { NavigationContainer } from '@react-navigation/native'
+import { ThemeProvider } from '@rneui/themed'
+import { ThemeProvider as StyledThemeProvider } from 'styled-components/native'
+import HomeScreen from '../../screens/HomeScreen'
+import { rneThemeBase, theme } from '../../styles/theme'
+import type { StackNavigationProp } from '@react-navigation/stack'
+import type { RouteProp } from '@react-navigation/native'
+import type { RootStackParamList } from '../../navigation/AppNavigator'
+import type { DefaultTheme } from 'styled-components/native'
 
 describe('HomeScreen', () => {
-  const mockNavigation: StackNavigationProp<RootStackParamList, 'Home'> = {
+  const mockNavigation = {
     navigate: jest.fn(),
     getState: jest.fn(),
     dispatch: jest.fn(),
@@ -33,15 +33,15 @@ describe('HomeScreen', () => {
     navigateDeprecated: jest.fn(),
     preload: jest.fn(),
     setStateForNextRouteNamesChange: jest.fn(),
-  };
+  } as unknown as StackNavigationProp<RootStackParamList, 'Home'>
 
-  const mockRoute: RouteProp<RootStackParamList, 'Home'> = {
+  const mockRoute = {
     key: 'Home-123',
     name: 'Home',
     params: undefined,
-  };
+  } as RouteProp<RootStackParamList, 'Home'>
 
-  const renderWithNavigation = () =>
+  const renderWithProviders = () =>
     render(
       <ThemeProvider theme={rneThemeBase}>
         <StyledThemeProvider theme={theme as DefaultTheme}>
@@ -50,46 +50,33 @@ describe('HomeScreen', () => {
           </NavigationContainer>
         </StyledThemeProvider>
       </ThemeProvider>
-    );
+    )
 
-  it('renders top nav with logo, text, and avatar', async () => {
-    const { getByTestId, getByText } = renderWithNavigation();
+  it('renders top nav with logo and avatar', async () => {
+    const { getByTestId, getByText } = renderWithProviders()
     await waitFor(() => {
-      expect(getByTestId('top-nav-logo')).toBeTruthy();
-      expect(getByText('Aurora Baby')).toBeTruthy();
-      expect(getByTestId('top-nav-avatar')).toBeTruthy();
-    });
-  });
+      expect(getByTestId('top-nav-logo')).toBeTruthy()
+      expect(getByText('Aurora Baby')).toBeTruthy()
+      expect(getByTestId('top-nav-avatar')).toBeTruthy()
+    })
+  })
 
-  it('renders three static vertical cards for Harmony, Care, and Wonder', async () => {
-    const { getByTestId, getByText } = renderWithNavigation();
+  it('renders section headers for Features, Categories, and Games', async () => {
+    const { getByText } = renderWithProviders()
     await waitFor(() => {
-      expect(getByTestId('home-card-harmony')).toBeTruthy();
-      expect(getByText('Harmony')).toBeTruthy();
+      expect(getByText('Features')).toBeTruthy()
+      expect(getByText('Categories')).toBeTruthy()
+      expect(getByText('Games')).toBeTruthy()
+    })
+  })
 
-      expect(getByTestId('home-card-care')).toBeTruthy();
-      expect(getByText('Care')).toBeTruthy();
-
-      expect(getByTestId('home-card-wonder')).toBeTruthy();
-      expect(getByText('Wonder')).toBeTruthy();
-    });
-  });
-
-  it('navigates to Harmony when Harmony card is pressed', async () => {
-    const { getByTestId } = renderWithNavigation();
+  it('renders bottom nav icons', async () => {
+    const { getByTestId } = renderWithProviders()
     await waitFor(() => {
-      fireEvent.press(getByTestId('home-card-harmony'));
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('Harmony');
-    });
-  });
-
-  it('renders bottom nav with all icons', async () => {
-    const { getByTestId } = renderWithNavigation();
-    await waitFor(() => {
-      expect(getByTestId('bottom-nav-home')).toBeTruthy();
-      expect(getByTestId('bottom-nav-harmony')).toBeTruthy();
-      expect(getByTestId('bottom-nav-care')).toBeTruthy();
-      expect(getByTestId('bottom-nav-wonder')).toBeTruthy();
-    });
-  });
-});
+      expect(getByTestId('bottom-nav-home')).toBeTruthy()
+      expect(getByTestId('bottom-nav-harmony')).toBeTruthy()
+      expect(getByTestId('bottom-nav-care')).toBeTruthy()
+      expect(getByTestId('bottom-nav-wonder')).toBeTruthy()
+    })
+  })
+})
