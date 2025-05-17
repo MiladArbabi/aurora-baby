@@ -1,57 +1,102 @@
 // src/screens/WonderScreen.tsx
-import React, { useState, useCallback, useEffect } from 'react';
-import { View, StyleSheet, SafeAreaView as RNSafeAreaView } from 'react-native';
-import styled, { useTheme } from 'styled-components/native';
-import { StackScreenProps } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import { saveLastScreen } from '../services/LastScreenTracker';
-import BottomNav from '../components/common/BottomNav';
-import TopNav from '../components/common/TopNav';
-import QuickLogMenu from '../components/carescreen/QuickLogMenu';
-import { useActionMenuLogic } from '../hooks/useActionMenuLogic';
+import React, { useState } from 'react'
+import { View, ScrollView, StyleSheet } from 'react-native'
+import { useTheme } from 'styled-components/native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { useNavigation } from '@react-navigation/native'
+import type { StackNavigationProp } from '@react-navigation/stack'
+import { RootStackParamList } from '../navigation/AppNavigator'
 
-type Props = StackScreenProps<RootStackParamList, 'Wonder'>;
-const NAV_HEIGHT = 110;
+import { wonderSections } from '../data/wonderSections'
+import WonderCardList from '../components/wonderscreen/WonderCardList'
+import TopNav from '../components/common/TopNav'
+import BottomNav from '../components/common/BottomNav'
+import GameIcon from '../assets/wonderscreen/GameIcon'
+import ARIcon   from '../assets/wonderscreen/ARIcon'
+import VRIcon from '../assets/wonderscreen/VRIcon'
+import type { WonderCardData } from '../types/WonderCardData'
+import { sizes } from '../styles/theme'
 
-const WonderScreen: React.FC<Props> = ({ navigation }) => {
-  const theme = useTheme();
-  const { handleVoiceCommand } = useActionMenuLogic();
+export const WonderScreen = () => {
+  const [selectedFilter, setSelectedFilter] = useState<'all'|'ar'|'vr'|'play'>('all')
+  const theme = useTheme()
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>()
 
-  // local quick-log sheet state
-  const [quickLogVisible, setQuickLogVisible] = useState(false);
-  const openQuickLog  = useCallback(() => setQuickLogVisible(true), []);
-  const closeQuickLog = useCallback(() => setQuickLogVisible(false), []);
+  const filterCards = (cards: WonderCardData[]) =>
+    selectedFilter === 'all'
+      ? cards
+      : cards.filter(card => card.features?.includes(selectedFilter))
 
-  // track last screen (optional)
-  useEffect(() => {
-    saveLastScreen('Wonder');
-  }, []);
+  const onIconPress = (filter: 'ar' | 'vr' | 'play') => {
+    setSelectedFilter(prev => (prev === filter ? 'all' : filter))
+  }
 
   return (
-    <View style={styles.screen}>
-      <RNSafeAreaView
-        style={[styles.safeArea, { backgroundColor: theme.colors.darkAccent }]}
-      >
-        <TopNav navigation={navigation} />
-        <BottomNav navigation={navigation} activeScreen="Wonder" />
-      </RNSafeAreaView>
-    </View>
-  );
-};
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.darkAccent }]}>
+      {/* Top */}
+      <TopNav navigation={navigation} />
 
-export default WonderScreen;
+      {/* Filters */}
+      <View style={styles.iconRow}>
+        <VRIcon
+          fill={ selectedFilter === 'vr' ? theme.colors.secondaryBackground : theme.colors.primary }
+          onPress={() => onIconPress('vr')}
+        />
+        <GameIcon
+          fill={ selectedFilter === 'play' ? theme.colors.secondaryBackground : theme.colors.primary }
+          style={styles.iconSpacing}
+          onPress={() => onIconPress('play')}
+        />
+        <ARIcon
+          fill={ selectedFilter === 'ar' ? theme.colors.secondaryBackground : theme.colors.primary }
+          style={styles.iconSpacing}
+          onPress={() => onIconPress('ar')}
+        />
+      </View>
+
+      {/* Scrollable Content */}
+      <View style={styles.content}>
+        <ScrollView
+          contentContainerStyle={{
+            paddingBottom: sizes.bottomNavHeight + 16
+          }}
+          showsVerticalScrollIndicator={false}
+        >
+          {wonderSections.map(section => (
+            <WonderCardList
+              key={section.id}
+              title={section.title}
+              data={filterCards(section.data)}
+            />
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* Fixed Bottom Nav */}
+      <BottomNav navigation={navigation} activeScreen="Wonder" />
+    </SafeAreaView>
+  )
+}
+
+export default WonderScreen
 
 const styles = StyleSheet.create({
-  screen: {
+  container: {
     flex: 1,
   },
-  safeArea: {
+  content: {
     flex: 1,
   },
-  quickLogContainer: {
-    position: 'absolute',
-    right: 20,
-    bottom: NAV_HEIGHT + 20,
-    alignItems: 'center',
+  scrollContent: {
+    paddingBottom: sizes.bottomNavHeight,
   },
-});
+  iconRow: {
+    flexDirection: 'row',
+    marginTop: 20,        
+    marginLeft: 16,
+    justifyContent: 'center'
+  },
+  iconSpacing: {
+    marginLeft: 50,  
+  }
+})

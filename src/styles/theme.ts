@@ -8,7 +8,7 @@ export const colors = {
   secondaryBackground: '#453F4E', // Dark Lavender
   accent: '#A3FFF6', // Teal
   secondaryAccent: '#E6E1F4', // Light Lavender
-  tertiaryAccent: '#A4B9CC', // Dusty Blue
+  tertiaryAccent: '#00ADEE', // Dusty Blue
   warning: '#FFB400',    // ⚠️ for diaper/mood “warnings”
   error:   '#F44336',    // 🛑 for health errors
   info:    '#2196F3',    // ℹ️ for notes/info

@@ -1,3 +1,4 @@
+// src/screens/HomeScreen.tsx
 import React, { useEffect } from 'react';
 import { View, StyleSheet, ScrollView, SafeAreaView as RNSafeAreaView } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -7,11 +8,10 @@ import BottomNav from '../components/common/BottomNav';
 import TopNav from '../components/common/TopNav';
 import { ReusableCarousel } from '../components/common/Carousel';
 import styled, { useTheme, DefaultTheme } from 'styled-components/native';
-
-// Example data imports (replace with your actual hooks/services)
-import { mainCarouselItems, featureItems, categoryItems, gameItems } from '../data/home';
+import { mainCarouselItems, featureItems, categoryItems, gameItems } from '../data/homeSections';
 
 type Props = StackScreenProps<RootStackParamList, 'Home'>;
+
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const theme = useTheme();
 
@@ -41,13 +41,7 @@ const SectionHeader = styled.Text`
     { id: 'main',    items: mainCarouselItems, config: theme.carousel.main },
     { id: 'game',    items: gameItems,         config: theme.carousel.game },
     { id: 'feature', items: featureItems,      config: theme.carousel.feature },
-    { id: 'feature', items: featureItems,      config: theme.carousel.feature },
-    { id: 'feature', items: featureItems,      config: theme.carousel.feature },
     { id: 'category',items: categoryItems,     config: theme.carousel.category },
-    { id: 'feature', items: featureItems,      config: theme.carousel.feature },
-    { id: 'feature', items: featureItems,      config: theme.carousel.feature },
-    { id: 'feature', items: featureItems,      config: theme.carousel.feature },
-
   ];
 
   return (
@@ -58,7 +52,9 @@ const SectionHeader = styled.Text`
 
         {/* Scrollable carousel sections */}
         <ScrollView
-          contentContainerStyle={{ paddingVertical: theme.spacing.large }}
+          contentContainerStyle={{
+            paddingBottom: theme.sizes.bottomNavHeight + 75, // 👈 Prevent overlap
+          }}
           showsVerticalScrollIndicator={false}
         >
           {sections.map(({ id, items, config }, idx) => (
