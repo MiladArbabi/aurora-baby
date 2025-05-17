@@ -1,120 +1,75 @@
-import React from 'react';
-import { render, waitFor, fireEvent } from '@testing-library/react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { ThemeProvider } from '@rneui/themed';
-import { ThemeProvider as StyledThemeProvider } from 'styled-components/native';
-import StoryPlayer from '../../screens/StoryPlayer';
-import { rneThemeBase, theme } from '../../styles/theme';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp } from '@react-navigation/native';
-import { RootStackParamList } from '../../navigation/AppNavigator';
-import { DefaultTheme } from 'styled-components/native';
+// src/tests/screens/StoryPlayer.test.tsx
+import React from 'react'
+import { render, waitFor, fireEvent } from '@testing-library/react-native'
+import { ThemeProvider as RNEProvider } from '@rneui/themed'
+import { ThemeProvider as StyledThemeProvider } from 'styled-components/native'
+import StoryPlayer from '../../screens/StoryPlayer'
+import { rneThemeBase, theme } from '../../styles/theme'
+import type { StackNavigationProp } from '@react-navigation/stack'
+import type { RouteProp } from '@react-navigation/native'
+import type { RootStackParamList } from '../../navigation/AppNavigator'
+import type { DefaultTheme } from 'styled-components/native'
+import { harmonySections } from '../../data/harmonySections'
 
 describe('StoryPlayer', () => {
-  const mockNavigation: StackNavigationProp<RootStackParamList, 'StoryPlayer'> = {
-    navigate: jest.fn(),
-    getState: jest.fn(),
-    dispatch: jest.fn(),
-    addListener: jest.fn(() => () => {}),
-    canGoBack: jest.fn(),
-    getId: jest.fn(),
-    getParent: jest.fn(),
-    goBack: jest.fn(),
-    isFocused: jest.fn(),
-    removeListener: jest.fn(),
-    reset: jest.fn(),
-    setOptions: jest.fn(),
-    setParams: jest.fn(),
-    push: jest.fn(),
-    replace: jest.fn(),
-    pop: jest.fn(),
-    popTo: jest.fn(),
-    popToTop: jest.fn(),
-    navigateDeprecated: jest.fn(),
-    preload: jest.fn(),
-    setStateForNextRouteNamesChange: jest.fn(),
-  };
+  // pick a known story from harmonySections
+  const story = harmonySections
+    .flatMap(sec => sec.data)
+    .find(item => item.id === 'birk-freya-vanished-star')!
 
-  const mockRoute: RouteProp<RootStackParamList, 'StoryPlayer'> = {
+  const mockRoute = {
     key: 'StoryPlayer-123',
     name: 'StoryPlayer',
-    params: { storyId: 'birk-freya-vanished-star' },
-  };
+    params: { storyId: story.id },
+  } as RouteProp<RootStackParamList, 'StoryPlayer'>
 
-  const renderWithNavigation = () =>
+  const mockNavigation = {} as StackNavigationProp<RootStackParamList, 'StoryPlayer'>
+
+  const renderWithProviders = () =>
     render(
-      <ThemeProvider theme={rneThemeBase}>
+      <RNEProvider theme={rneThemeBase}>
         <StyledThemeProvider theme={theme as DefaultTheme}>
-          <NavigationContainer>
-            <StoryPlayer navigation={mockNavigation} route={mockRoute} />
-          </NavigationContainer>
+          <StoryPlayer navigation={mockNavigation} route={mockRoute} />
         </StyledThemeProvider>
-      </ThemeProvider>
-    );
+      </RNEProvider>
+    )
 
-    it('renders top nav with logo, text, and avatar', async () => {
-      const { getByTestId } = renderWithNavigation();
-      await waitFor(() => {
-        expect(getByTestId('top-nav-logo')).toBeTruthy();
-        expect(getByTestId('top-nav-text')).toBeTruthy();
-        expect(getByTestId('top-nav-avatar')).toBeTruthy();
-      }, { timeout: 10000 }); 
-    }, 10000);
+  it('renders story content correctly', async () => {
+    const { getByText } = renderWithProviders()
+    // title
+    expect(getByText(story.title)).toBeTruthy()
+    // default description if none provided
+    const expectedDesc = story.description || 'A calm, delightful story for your child.'
+    expect(getByText(expectedDesc)).toBeTruthy()
+    // Play button label
+    const cta = story.ctaLabel || 'Play'
+    expect(getByText(cta)).toBeTruthy()
+  })
 
-  it('renders three storytelling cards', async () => {
-    const { getByTestId, getByText } = renderWithNavigation();
-    await waitFor(() => {
-      expect(getByTestId('story-card-soothing')).toBeTruthy();
-      expect(getByText('Soothing Storytime')).toBeTruthy();
+  it('logs play action when PlayButton is pressed', async () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation()
+    const { getByText } = renderWithProviders()
+    const cta = story.ctaLabel || 'Play'
+    fireEvent.press(getByText(cta))
+    expect(consoleSpy).toHaveBeenCalledWith(`Playing story: ${story.id}`)
+    consoleSpy.mockRestore()
+  })
 
-      expect(getByTestId('story-card-choice')).toBeTruthy();
-      expect(getByText('Make a Choice')).toBeTruthy();
+  it('shows not found message for invalid storyId', () => {
+    const badRoute = {
+      key: 'StoryPlayer-456',
+      name: 'StoryPlayer',
+      params: { storyId: 'nonexistent-id' },
+    } as RouteProp<RootStackParamList, 'StoryPlayer'>
 
-      expect(getByTestId('story-card-daily')).toBeTruthy(); // Updated testID
-      expect(getByText('Story of the Day')).toBeTruthy(); // Updated title
-    });
-  });
+    const { getByText } = render(
+      <RNEProvider theme={rneThemeBase}>
+        <StyledThemeProvider theme={theme as DefaultTheme}>
+          <StoryPlayer navigation={mockNavigation} route={badRoute} />
+        </StyledThemeProvider>
+      </RNEProvider>
+    )
 
-  it('navigates to StoryViewer with soothing mode when Soothing card is pressed', async () => {
-    const { getByTestId } = renderWithNavigation();
-    await waitFor(() => {
-      fireEvent.press(getByTestId('story-card-soothing'));
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('StoryViewer', {
-        storyId: 'birk-freya-vanished-star',
-        mode: 'soothing',
-      });
-    });
-  });
-
-  it('navigates to StoryViewer with choice mode when Choice card is pressed', async () => {
-    const { getByTestId } = renderWithNavigation();
-    await waitFor(() => {
-      fireEvent.press(getByTestId('story-card-choice'));
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('StoryViewer', {
-        storyId: 'birk-freya-vanished-star',
-        mode: 'choice',
-      });
-    });
-  });
-
-  it('navigates to StoryViewer with daily mode when Daily card is pressed', async () => { // Updated test
-    const { getByTestId } = renderWithNavigation();
-    await waitFor(() => {
-      fireEvent.press(getByTestId('story-card-daily'));
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('StoryViewer', {
-        storyId: 'birk-freya-vanished-star',
-        mode: 'daily', // Updated mode
-      });
-    });
-  });
-
-  it('renders bottom nav with all icons', async () => {
-    const { getByTestId } = renderWithNavigation();
-    await waitFor(() => {
-      expect(getByTestId('bottom-nav-home')).toBeTruthy();
-      expect(getByTestId('bottom-nav-harmony')).toBeTruthy();
-      expect(getByTestId('bottom-nav-care')).toBeTruthy();
-      expect(getByTestId('bottom-nav-wonder')).toBeTruthy();
-    });
-  });
-});
+    expect(getByText('Story not found.')).toBeTruthy()
+  })
+})
