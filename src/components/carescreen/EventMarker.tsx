@@ -5,6 +5,14 @@ import {
   StyleSheet,
   GestureResponderEvent,
 } from 'react-native'
+import { QuickLogEntry } from '../../models/QuickLogSchema'
+
+import SleepButton from '../../assets/carescreen/QuickLogMenu/SleepButton';
+import NotesButton from '../../assets/carescreen/QuickLogMenu/NotesButton';
+import FeedButton from '../../assets/carescreen/QuickLogMenu/FeedingButton';
+import DiaperButton from '../../assets/carescreen/QuickLogMenu/DiaperButton';
+import MoodButton from '../../assets/carescreen/QuickLogMenu/MoodButton';
+import HealthButton from '../../assets/carescreen/QuickLogMenu/HealthButton';
 
 interface Props {
   size: number            // Tracker diameter
@@ -12,7 +20,8 @@ interface Props {
   color: string
   testID?: string
   onPress?: (e: GestureResponderEvent) => void
-  ringStrokeWidth?: number  // <— NEW
+  ringStrokeWidth?: number 
+  type?: QuickLogEntry['type'] 
 }
 
 const EventMarker: React.FC<Props> = ({
@@ -21,7 +30,8 @@ const EventMarker: React.FC<Props> = ({
   color,
   testID,
   onPress,
-  ringStrokeWidth = 0,       // <— default if you don’t pass it
+  ringStrokeWidth = 0,  
+  type,     // <— default if you don’t pass it
 }) => {
   // compute the “inner” radius at the center of your main arc
   const fullRadius = size / 2
@@ -32,11 +42,24 @@ const EventMarker: React.FC<Props> = ({
   const x = fullRadius + placementRadius * Math.cos(angle)
   const y = fullRadius + placementRadius * Math.sin(angle)
 
-  const markerSize = 42  // whatever diameter you like
+  const markerSize = 42
+
+const iconMap = {
+  sleep: SleepButton,
+  feeding: FeedButton,
+  diaper: DiaperButton,
+  mood: MoodButton,
+  health: HealthButton,
+  note: NotesButton,
+} as const
+
+  const IconComponent = type ? iconMap[type] : null
+
   return (
     <TouchableOpacity
       testID={testID}
       onPress={onPress}
+      accessibilityLabel={`${type ?? 'event'} marker`}
       activeOpacity={0.7}
       style={[
         styles.container,
@@ -49,7 +72,16 @@ const EventMarker: React.FC<Props> = ({
           backgroundColor: color,
         },
       ]}
-    />
+    >
+    {IconComponent && (
+      <IconComponent
+        width={markerSize}
+        height={markerSize}
+        fill="#FFFFFF" 
+        />
+    )}
+    </TouchableOpacity>
+
   )
 }
 

@@ -89,6 +89,7 @@ const Tracker: React.FC<Props> = ({
           fraction={m.fraction}
           color={m.color}
           ringStrokeWidth={40} 
+          type={m.type} 
           onPress={() => onMarkerPress?.(m.id, m.type)}
         />
       ))}
@@ -102,6 +103,7 @@ const Tracker: React.FC<Props> = ({
           fraction={m.fraction}
           color={m.color}
           ringStrokeWidth={40}
+          type={m.type} 
           onPress={() => onMarkerPress?.(m.id, m.type)}
         />
       ))}
