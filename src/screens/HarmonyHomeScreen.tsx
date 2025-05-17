@@ -1,96 +1,143 @@
 import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, SafeAreaView as RNSafeAreaView } from 'react-native';
+import { View, StyleSheet, FlatList, Text, Image, TouchableOpacity } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { DefaultTheme } from 'styled-components/native';
 import BottomNav from '../components/common/BottomNav';
-import Card from '../components/common/Card';
 import TopNav from '../components/common/TopNav';
-import { prebuiltStories } from '../data/stories';
-import { useActionMenuLogic } from '../hooks/useActionMenuLogic';
+import { harmonySections } from '../data/harmonySections';
+import { StoryCardData } from '../types/HarmonyFlatList';
+
+// ✅ Added new types to support placeholders
+type PlaceholderCard = {
+  id: string;
+  title: '';
+  thumbnail: '';
+  type: 'prebuilt';
+  cardColor?: undefined;
+  isPlaceholder: true;
+};
+
+// ✅ Union type used throughout FlatList
+type CardWithPlaceholder = StoryCardData | PlaceholderCard;
 
 const Container = styled.View`
   flex: 1;
-  background-color: ${({ theme }: { theme: DefaultTheme }) => 
-    theme.colors.background};
+  background-color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.background};
 `;
 
-const CardsContainer = styled.View`
-  flex: 1;
-  align-items: center;
-  justify-content: center;
-  padding-top: ${({ theme }: { theme: DefaultTheme }) =>  
-    theme.spacing.large}px;
-  padding-bottom: ${({ theme }: { theme: DefaultTheme }) => 
-    theme.sizes.bottomNavHeight + theme.spacing.xlarge}px;
+const SectionTitle = styled.Text`
+  font-size: 18px;
+  font-weight: 600;
+  color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.text};
+  margin-left: 20px;
+  margin-top: 30px;
+`;
+
+const SectionSubtitle = styled.Text`
+  font-size: 14px;
+  color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.contrastText};
+  margin-left: 20px;
+  margin-bottom: 10px;
+`;
+
+const StoryCard = styled.TouchableOpacity<{ cardColor?: 'lavender' | 'teal' | 'peach' }>`
+  width: 160px;
+  margin-horizontal: 10px;
+  background-color: ${({ theme, cardColor }: 
+    { theme: DefaultTheme; cardColor?: 'lavender' | 'teal' | 'peach' }) =>
+    cardColor === 'lavender' ? theme.colors.primary :
+    cardColor === 'teal' ? theme.colors.accent :
+    cardColor === 'peach' ? theme.colors.darkAccent :
+    theme.colors.tertiaryAccent};
+  border-radius: 16px;
+  padding: 8px;
+  border: 1px solid white;
+`;
+
+const StoryImage = styled.Image`
+  width: 160px;
+  height: 90px;
+  border-radius: 16px;
+  margin-bottom: 8px;
+`;
+
+const StoryTitle = styled.Text`
+  font-size: 14px;
+  font-weight: 500;
+  color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.text};
+  text-align: center;
+  margin-top: 4px;
 `;
 
 type Props = StackScreenProps<RootStackParamList, 'Harmony'>;
 
-const NAV_HEIGHT = 110;
-
 const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
   const theme = useTheme();
-  const { handleVoiceCommand } = useActionMenuLogic();
 
-  // local quick-log state
-  const [quickLogVisible, setQuickLogVisible] = useState(false);
-  const openQuickLog = useCallback(() => setQuickLogVisible(true), []);
-  const closeQuickLog = useCallback(() => setQuickLogVisible(false), []);
+  const renderStoryCard = (item: StoryCardData) => (
+    <StoryCard
+      key={item.id}
+      cardColor={item.cardColor}
+      onPress={item.action ?? (() => navigation.navigate('StoryPlayer', { storyId: item.id }))}
+    >
+      <StoryImage source={{ uri: item.thumbnail }} resizeMode="cover" />
+      <View style={{ alignItems: 'center' }}>
+        <StoryTitle>{item.title}</StoryTitle>
+      </View>  
+    </StoryCard>
+  );
 
-  const cardData = [
-    {
-      testID: 'harmony-card-play',
-      backgroundImage: require('../assets/png/characters/birkandfreya.png'),
-      title: 'Play a Story',
-      subtext: prebuiltStories[0].title,
-      badges: [prebuiltStories[0].stemFocus, prebuiltStories[0].traitFocus],
-      onPress: () =>
-        navigation.navigate('StoryPlayer', { storyId: prebuiltStories[0].id }),
-    },
-    {
-      testID: 'harmony-card-create',
-      backgroundImage: require('../assets/png/harmony/auroraforest.png'),
-      title: 'Create Your Own Story',
-      icon: require('../assets/png/icons/generative-ai.png'),
-      onPress: () =>
-        navigation.navigate('StoryPlayer', { storyId: 'mock-custom-story' }),
-    },
-    {
-      testID: 'harmony-card-explore',
-      backgroundImage: require('../assets/png/harmony/auroraforestmap.png'),
-      title: 'Explore the Forest',
-      subtext: 'Discover the Aurora Forest',
-      icon: require('../assets/png/icons/magnifying-glass.png'),
-      onPress: () => navigation.navigate('ForestMap'),
-    },
-  ];
+  // ✅ Ensures each list has minimum of 3 items (real + placeholders)
+  const ensureMinimumCards = (cards: StoryCardData[], sectionId: string): CardWithPlaceholder[] => {
+    const placeholdersNeeded = Math.max(0, 3 - cards.length);
+    const placeholders: PlaceholderCard[] = Array.from({ length: placeholdersNeeded }).map((_, i) => ({
+      id: `placeholder-${sectionId}-${i}`,
+      title: '',
+      thumbnail: '',
+      type: 'prebuilt',
+      cardColor: undefined,
+      isPlaceholder: true,
+    }));
+    return [...cards, ...placeholders];
+  };
 
   return (
     <View style={styles.screen}>
-      <RNSafeAreaView
-        style={{ flex: 1, backgroundColor: theme.colors.background }}
-      >
-        <Container>
-          <TopNav navigation={navigation} />
-          <CardsContainer>
-            {cardData.map((card) => (
-              <Card
-                key={card.testID}
-                testID={card.testID}
-                backgroundImage={card.backgroundImage}
-                title={card.title}
-                subtext={card.subtext}
-                badges={card.badges}
-                icon={card.icon}
-                onPress={card.onPress}
+      <Container>
+        <TopNav navigation={navigation} />
+        <FlatList
+          data={harmonySections}
+          keyExtractor={(section) => section.id}
+          contentContainerStyle={{
+            paddingBottom: theme.sizes.bottomNavHeight + 75,
+          }}
+          renderItem={({ item: section }) => (
+            <View>
+              <SectionTitle>{section.title}</SectionTitle>
+              {section.subtitle && (
+                <SectionSubtitle>{section.subtitle}</SectionSubtitle>
+              )}
+              <FlatList
+                data={ensureMinimumCards(section.data, section.id)} // ✅ apply min-card logic
+                keyExtractor={(item) => item.id}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 10 }}
+                renderItem={({ item }) =>
+                  'isPlaceholder' in item && item.isPlaceholder ? (
+                    <View style={{ width: 160, marginHorizontal: 10, opacity: 0 }} />
+                  ) : (
+                    renderStoryCard(item as StoryCardData)
+                  )
+                }
               />
-            ))}
-          </CardsContainer>
-          <BottomNav navigation={navigation} activeScreen="Harmony" />
-        </Container>
-      </RNSafeAreaView>
+            </View>
+          )}
+        />
+        <BottomNav navigation={navigation} activeScreen="Harmony" />
+      </Container>
     </View>
   );
 };
@@ -99,10 +146,4 @@ export default HarmonyHomeScreen;
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  quickLogContainer: {
-    position: 'absolute',
-    right: 20,
-    bottom: NAV_HEIGHT + 20,
-    alignItems: 'center',
-  },
 });
