@@ -1,3 +1,4 @@
+// src/screens/HarmonyHomeScreen.tsx
 import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, FlatList, Text, Image, TouchableOpacity } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
@@ -8,6 +9,12 @@ import BottomNav from '../components/common/BottomNav';
 import TopNav from '../components/common/TopNav';
 import { harmonySections } from '../data/harmonySections';
 import { StoryCardData } from '../types/HarmonyFlatList';
+import { Dimensions } from 'react-native';
+
+const { width: screenWidth } = Dimensions.get('window');
+const CARD_WIDTH = screenWidth * 0.38; // ~38% of screen
+const CARD_IMAGE_HEIGHT = CARD_WIDTH * 0.5625; // 16:9 aspect ratio
+const CARD_MARGIN_HORIZONTAL = screenWidth * 0.025; // ~2.5%
 
 // ✅ Added new types to support placeholders
 type PlaceholderCard = {
@@ -31,20 +38,20 @@ const SectionTitle = styled.Text`
   font-size: 18px;
   font-weight: 600;
   color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.text};
-  margin-left: 20px;
+  margin-left: ${CARD_MARGIN_HORIZONTAL * 2}px;
   margin-top: 30px;
 `;
 
 const SectionSubtitle = styled.Text`
   font-size: 14px;
   color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.contrastText};
-  margin-left: 20px;
+  margin-left: ${CARD_MARGIN_HORIZONTAL * 2}px;
   margin-bottom: 10px;
 `;
 
 const StoryCard = styled.TouchableOpacity<{ cardColor?: 'lavender' | 'teal' | 'peach' }>`
-  width: 160px;
-  margin-horizontal: 10px;
+  width: ${CARD_WIDTH}px;
+  margin-horizontal: ${CARD_MARGIN_HORIZONTAL}px;
   background-color: ${({ theme, cardColor }: 
     { theme: DefaultTheme; cardColor?: 'lavender' | 'teal' | 'peach' }) =>
     cardColor === 'lavender' ? theme.colors.primary :
@@ -57,8 +64,8 @@ const StoryCard = styled.TouchableOpacity<{ cardColor?: 'lavender' | 'teal' | 'p
 `;
 
 const StoryImage = styled.Image`
-  width: 160px;
-  height: 90px;
+  width: ${CARD_WIDTH}px;
+  height: ${CARD_IMAGE_HEIGHT}px;
   border-radius: 16px;
   margin-bottom: 8px;
 `;
@@ -76,18 +83,31 @@ type Props = StackScreenProps<RootStackParamList, 'Harmony'>;
 const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
   const theme = useTheme();
 
-  const renderStoryCard = (item: StoryCardData) => (
+  const renderStoryCard = (item: StoryCardData, sectionId: string) => (
     <StoryCard
       key={item.id}
       cardColor={item.cardColor}
-      onPress={item.action ?? (() => navigation.navigate('StoryPlayer', { storyId: item.id }))}
+      onPress={
+        item.action
+          ? item.action
+          : () => {
+              if (sectionId === 'play-a-story') {
+                navigation.navigate('PlayStory', { storyId: item.id });
+              } else if (sectionId === 'create-a-story') {
+                navigation.navigate('CreateStory');
+              } else {
+                navigation.navigate('StoryPlayer', { storyId: item.id });
+              }
+            }
+      }
     >
       <StoryImage source={{ uri: item.thumbnail }} resizeMode="cover" />
       <View style={{ alignItems: 'center' }}>
         <StoryTitle>{item.title}</StoryTitle>
-      </View>  
+      </View>
     </StoryCard>
   );
+  
 
   // ✅ Ensures each list has minimum of 3 items (real + placeholders)
   const ensureMinimumCards = (cards: StoryCardData[], sectionId: string): CardWithPlaceholder[] => {
@@ -129,7 +149,7 @@ const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
                   'isPlaceholder' in item && item.isPlaceholder ? (
                     <View style={{ width: 160, marginHorizontal: 10, opacity: 0 }} />
                   ) : (
-                    renderStoryCard(item as StoryCardData)
+                    renderStoryCard(item as StoryCardData, section.id)
                   )
                 }
               />

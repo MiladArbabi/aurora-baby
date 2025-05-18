@@ -41,6 +41,7 @@ const SectionHeader = styled.Text`
     { id: 'main',    items: mainCarouselItems, config: theme.carousel.main },
     { id: 'game',    items: gameItems,         config: theme.carousel.game },
     { id: 'feature', items: featureItems,      config: theme.carousel.feature },
+    { id: 'feature', items: featureItems,      config: theme.carousel.feature },
     { id: 'category',items: categoryItems,     config: theme.carousel.category },
   ];
 
@@ -76,5 +77,4 @@ export default HomeScreen;
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-
 })

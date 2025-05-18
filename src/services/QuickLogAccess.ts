@@ -3,7 +3,9 @@ import { QuickLogEntry, QuickLogType } from '../models/QuickLogSchema';
 import { 
   getAllQuickLogEntries, 
   saveFutureLogEntry, 
-  getAllFutureLogEntries } from '../storage/QuickLogStorage';
+  getAllFutureLogEntries,
+  removeQuickLogEntry
+ } from '../storage/QuickLogStorage';
 import { quickLogEmitter } from '../storage/QuickLogEvents';
 
 /**
@@ -59,9 +61,7 @@ export const getLogsBetween = async (
  * Delete one quick-log entry by id.
  */
 export async function deleteLogEntry(id: string): Promise<void> {
-  // TODO: call through to your storage layer. For example:
-  // await removeQuickLogEntry(id)
-  // For now, stub it out:
+  await removeQuickLogEntry(id);
   console.debug('[QuickLogAccess] deleteLogEntry:', id)
 }
 

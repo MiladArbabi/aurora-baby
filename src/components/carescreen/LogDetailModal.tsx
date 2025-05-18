@@ -11,7 +11,8 @@ import {
   Dimensions,
   PixelRatio,
 } from 'react-native'
-import { QuickLogEntry } from '../../models/QuickLogSchema'
+import { QuickLogEntry, SleepLog } from '../../models/QuickLogSchema'
+import { saveQuickLogEntry } from '../../storage/QuickLogStorage'
 
 // SVGR’d TSX icons
 import Handlebar   from '../../assets/carescreen/LogDetailModalIcons/Handelbar'
@@ -101,7 +102,33 @@ const LogDetailModal: React.FC<Props> = ({ visible, entry, onClose, onSave, onDe
   }
 
   const isActiveSleep = type === 'sleep' && (!data.end || new Date(data.end) > new Date())
-const [elapsed, setElapsed] = useState<number>(() => {
+   // helper to finish sleep
+  const handleEndSleep = () => {
+  // 1) narrow to the sleep‐case:
+    if (entry.type !== 'sleep') return
+    const sleepEntry = entry as SleepLog
+
+  // 2) compute new end & duration from the typed .data.start
+  const nowIso = new Date().toISOString()
+  const startMs = new Date(sleepEntry.data.start).getTime()
+  const duration = Math.round((Date.now() - startMs) / 60000)
+
+  // 3) build a properly‐typed SleepLog
+  const updated: SleepLog = {
+    ...sleepEntry,
+     data: {
+      ...sleepEntry.data,
+       end: nowIso,
+       duration,
+     },
+   }
+   // 4) persist & re‐emit
+   saveQuickLogEntry(updated).catch(console.error)
+   onSave?.(updated)
+   onClose()
+ }
+
+  const [elapsed, setElapsed] = useState<number>(() => {
   if (type === 'sleep') {
     const startMs = new Date((data as any).start).getTime()
     return Math.floor((Date.now() - startMs) / 1000)
@@ -240,6 +267,15 @@ useEffect(() => {
         <View style={styles.formContainer}>{renderFields()}</View>
 
         <View style={styles.actions}>
+        {isActiveSleep && (
+          <TouchableOpacity
+          onPress={handleEndSleep}
+          style={[styles.actionBtn, styles.endSleepBtn]}
+          testID='log-detail-end-sleep'
+          >
+            <Text style={styles.actionText}> End Sleep </Text>
+          </TouchableOpacity>
+        )}
           <TouchableOpacity
             onPress={onClose}
             style={styles.actionBtn}
@@ -279,6 +315,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 6,
     elevation: 10,
+  },
+  endSleepBtn: {
+    backgroundColor: '#D0021B',   
+    marginRight: 8,            
   },
   deleteBtn: {
     position: 'absolute',
