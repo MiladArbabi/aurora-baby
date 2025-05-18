@@ -10,9 +10,12 @@ export interface SleepSegment {
   end: string   // ISO date
   startFraction: number
   endFraction: number
-
   color: string
 }
+
+// helper to turn a Date into a 0–1 fraction of the day
+const fracOfDay = (d: Date) =>
+  (d.getHours()*60 + d.getMinutes() + d.getSeconds()/60) / 1440;
 
 export interface EventMarker {
   id: string
@@ -21,7 +24,7 @@ export interface EventMarker {
   type: QuickLogEntry['type']
 }
 
-const colorMap: Record<QuickLogEntry['type'], string> = {
+export const colorMap: Record<QuickLogEntry['type'], string> = {
   sleep:   '#4A90E2',
   feeding: '#50E3C2',
   diaper:  '#F5A623',
@@ -38,6 +41,13 @@ export function useTrackerData(showLast24h: boolean = false) {
   const [entries, setEntries] = useState<QuickLogEntry[]>([]);
   const [sleepSegments, setSleepSegments] = useState<SleepSegment[]>([])
   const [eventMarkers, setEventMarkers]   = useState<EventMarker[]>([])
+  // update every minute so ongoing naps animate
+  const [nowFrac, setNowFrac] = useState(fracOfDay(new Date()));
+  
+  useEffect(() => {
+  const id = setInterval(() => setNowFrac(fracOfDay(new Date())), 60_000);
+  return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     let alive = true
@@ -60,18 +70,19 @@ export function useTrackerData(showLast24h: boolean = false) {
         )
         .map((e) => {
           const startDate = new Date(e.data.start)
-          const endDate   = new Date(e.data.end)
-          const startFraction =
-            (startDate.getHours() * 60 +
-             startDate.getMinutes() +
-             startDate.getSeconds() / 60) / 1440
-          const endFraction =
-            (endDate.getHours() * 60 +
-             endDate.getMinutes() +
-             endDate.getSeconds() / 60) / 1440
+          const startFraction = fracOfDay(startDate)
+
+          // if the sleep is still ongoing (no end or end in the future), use nowFrac
+          let endFraction: number
+          if (!e.data.end || new Date(e.data.end) > now) {
+            endFraction = nowFrac
+          } else {
+            endFraction = fracOfDay(new Date(e.data.end))
+          }
+
           return {
             start: e.data.start,
-            end: e.data.end,
+            end: e.data.end ?? now.toISOString(),
             id: e.id,
             startFraction,
             endFraction,
@@ -111,7 +122,7 @@ export function useTrackerData(showLast24h: boolean = false) {
       alive = false;
       quickLogEmitter.off('saved', onSaved);
     }
-  }, [showLast24h])
+  }, [showLast24h, nowFrac])
 
-  return { entries, sleepSegments, eventMarkers }
+  return { entries, sleepSegments, eventMarkers, nowFrac }
 }

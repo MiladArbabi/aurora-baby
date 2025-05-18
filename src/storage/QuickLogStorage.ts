@@ -91,6 +91,16 @@ export const syncQueuedLogs = async (
   await clearOfflineQueue();
 };
 
+/**
++ * Remove one QuickLog entry by id.
++ */
+export const removeQuickLogEntry = async (id: string): Promise<void> => {
+  const existing = await getAllQuickLogEntries();
+  const filtered = existing.filter(e => e.id !== id);
+  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+  quickLogEmitter.emit('deleted', id);
+  };
+
 export const saveFutureLogEntry = async (entry: QuickLogEntry) => {
   const all = await getAllFutureLogEntries();
   await AsyncStorage.setItem(FUTURE_KEY, JSON.stringify([...all, entry]));

@@ -13,12 +13,17 @@ import CareLayout from '../components/carescreen/CareLayout'
 import MiniNavBar, { MiniTab } from '../components/carescreen/MiniNavBar'
 
 import Tracker, { QuickMarker } from '../components/carescreen/Tracker'
+import { colorMap } from '../hooks/useTrackerData'
 import TrackerFilter from '../components/carescreen/TrackerFilter'
 import QuickLogMenu from '../components/carescreen/QuickLogMenu'
 import LogDetailModal from '../components/carescreen/LogDetailModal'
 import FutureLogsGenerator from '../components/carescreen/FutureLogsGenerator';
-
-import { getLogsBetween, getFutureEntries, saveFutureEntries } from '../services/QuickLogAccess'
+import { 
+  getLogsBetween, 
+  getFutureEntries, 
+  saveFutureEntries, 
+  deleteLogEntry
+} from '../services/QuickLogAccess'
 import { QuickLogEntry } from '../models/QuickLogSchema'
 import { useActionMenuLogic } from '../hooks/useActionMenuLogic'
 import { quickLogEmitter } from '../storage/QuickLogEvents';
@@ -54,9 +59,9 @@ const CareScreen: React.FC = () => {
         setQuickLogEntries(entries)
       // seed the markers array so even already‐saved entries show up
       const seededMarkers = entries.map(e => {
-        const t = new Date(e.timestamp)
+        const t = new Date(e.type === 'sleep' ? e.data.start : e.timestamp)
         const fraction = (t.getHours()*60 + t.getMinutes() + t.getSeconds()/60) / 1440
-        return { id: e.id, fraction, color: e.type, type: e.type }
+        return { id: e.id, fraction, color: colorMap[e.type], type: e.type }
       })
       setQuickLogMarkers(seededMarkers)
     })
@@ -71,10 +76,8 @@ const CareScreen: React.FC = () => {
       setQuickLogMarkers(existing =>
         existing.some(m => m.id === entry.id)
           ? existing
-          : [
-              ...existing,
-              { id: entry.id, fraction, color: entry.type, type: entry.type },
-            ]);
+          : [...existing, { id: entry.id, fraction, color: colorMap[entry.type], type: entry.type }]
+          );
             // and also put it into the entries list so the PastLogsView (if visible)
             // or any other consumer can pick it up immediately:
             setQuickLogEntries(existing => [entry, ...existing]);
@@ -115,6 +118,21 @@ const CareScreen: React.FC = () => {
     () => setShowLast24h(v => !v),
     []
   )
+
+  // Remove a log permanently
+  const handleDeleteLog = useCallback(async (id: string) => {
+    try {
+      // 1) delete from storage + emit 'deleted'
+      await deleteLogEntry(id);
+      // 2) remove from our local state so tracker & list update
+      setQuickLogEntries(prev => prev.filter(e => e.id !== id));
+      setQuickLogMarkers(prev => prev.filter(m => m.id !== id));
+      // 3) close the modal
+      setSelectedLog(null);
+      } catch (err) {
+        console.error('[CareScreen] deleteLog error:', err);
+      }
+    }, []);
 
   function handleGenerateFuture(hoursAhead: number) {
     const now = new Date()
@@ -192,6 +210,7 @@ const CareScreen: React.FC = () => {
         visible={!!selectedLog}
         entry={selectedLog!}
         onClose={() => setSelectedLog(null)}
+        onDelete={handleDeleteLog}
       />
     </CareLayout>
   )

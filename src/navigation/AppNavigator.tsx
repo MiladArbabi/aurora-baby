@@ -18,6 +18,8 @@ import WonderScreen from '../screens/WonderScreen'
 import ProfileSettingScreen from '../screens/ProfileSettingScreen'
 import WhisprScreen from '../screens/WhisprScreen'
 import LogDetailScreen from '../screens/LogDetailScreen'
+import PlayStoryScreen from 'screens/PlayStoryScreen'
+import CreateStoryScreen from 'screens/CreateStoryScreen'
 
 import { getChildProfile } from '../services/ChildProfileAccess'
 import { ChildProfile } from '../models/ChildProfile'
@@ -36,6 +38,8 @@ export type RootStackParamList = {
   ForestMap: undefined
   Whispr: undefined
   LogDetail: { id: string; type: 'sleep'|'feeding'|'diaper'|'mood'|'health'|'note' }
+  PlayStory: { storyId: string }
+  CreateStory: undefined;
 }
 
 const Stack = createStackNavigator<RootStackParamList>()
@@ -103,6 +107,8 @@ export default function AppNavigator() {
           <Stack.Screen name="ProfileSettings" component={ProfileSettingScreen} />
           <Stack.Screen name="Whispr" component={WhisprScreen} />
           <Stack.Screen name="LogDetail" component={LogDetailScreen} />
+          <Stack.Screen name="PlayStory" component={PlayStoryScreen} />
+          <Stack.Screen name="CreateStory" component={CreateStoryScreen} />
         </Stack.Navigator>
       )}
     </NavigationContainer>
