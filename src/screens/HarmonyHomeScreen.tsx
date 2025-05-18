@@ -1,6 +1,6 @@
 // src/screens/HarmonyHomeScreen.tsx
 import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, FlatList, Text, Image, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, FlatList, Text, Image, TouchableOpacity, Alert } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -10,13 +10,14 @@ import TopNav from '../components/common/TopNav';
 import { harmonySections } from '../data/harmonySections';
 import { StoryCardData } from '../types/HarmonyFlatList';
 import { Dimensions } from 'react-native';
+import { getUserStories, deleteUserStory } from '../services/UserStoriesService';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { width: screenWidth } = Dimensions.get('window');
-const CARD_WIDTH = screenWidth * 0.38; // ~38% of screen
-const CARD_IMAGE_HEIGHT = CARD_WIDTH * 0.5625; // 16:9 aspect ratio
-const CARD_MARGIN_HORIZONTAL = screenWidth * 0.025; // ~2.5%
+const CARD_WIDTH = screenWidth * 0.38;
+const CARD_IMAGE_HEIGHT = CARD_WIDTH * 0.5625;
+const CARD_MARGIN_HORIZONTAL = screenWidth * 0.025;
 
-// ✅ Added new types to support placeholders
 type PlaceholderCard = {
   id: string;
   title: '';
@@ -26,7 +27,6 @@ type PlaceholderCard = {
   isPlaceholder: true;
 };
 
-// ✅ Union type used throughout FlatList
 type CardWithPlaceholder = StoryCardData | PlaceholderCard;
 
 const Container = styled.View`
@@ -52,8 +52,7 @@ const SectionSubtitle = styled.Text`
 const StoryCard = styled.TouchableOpacity<{ cardColor?: 'lavender' | 'teal' | 'peach' }>`
   width: ${CARD_WIDTH}px;
   margin-horizontal: ${CARD_MARGIN_HORIZONTAL}px;
-  background-color: ${({ theme, cardColor }: 
-    { theme: DefaultTheme; cardColor?: 'lavender' | 'teal' | 'peach' }) =>
+  background-color: ${({ theme, cardColor }: { theme: DefaultTheme; cardColor?: 'lavender' | 'teal' | 'peach' }) =>
     cardColor === 'lavender' ? theme.colors.primary :
     cardColor === 'teal' ? theme.colors.accent :
     cardColor === 'peach' ? theme.colors.darkAccent :
@@ -82,16 +81,44 @@ type Props = StackScreenProps<RootStackParamList, 'Harmony'>;
 
 const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
   const theme = useTheme();
+  const [userStories, setUserStories] = useState<StoryCardData[]>([]);
+
+  useFocusEffect(
+    useCallback(() => {
+      (async () => {
+        const stories = await getUserStories();
+        setUserStories(stories);
+      })();
+    }, [])
+  );
 
   const renderStoryCard = (item: StoryCardData, sectionId: string) => (
     <StoryCard
       key={item.id}
       cardColor={item.cardColor}
+      onLongPress={
+        sectionId === 'user-created'
+          ? () => {
+              Alert.alert('Delete Story?', 'Are you sure?', [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Delete',
+                  style: 'destructive',
+                  onPress: async () => {
+                    await deleteUserStory(item.id);
+                    const stories = await getUserStories();
+                    setUserStories(stories);
+                  },
+                },
+              ]);
+            }
+          : undefined
+      }
       onPress={
         item.action
           ? item.action
           : () => {
-              if (sectionId === 'play-a-story') {
+              if (sectionId === 'play-a-story' || sectionId === 'user-created') {
                 navigation.navigate('PlayStory', { storyId: item.id });
               } else if (sectionId === 'create-a-story') {
                 navigation.navigate('CreateStory');
@@ -107,9 +134,7 @@ const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
       </View>
     </StoryCard>
   );
-  
 
-  // ✅ Ensures each list has minimum of 3 items (real + placeholders)
   const ensureMinimumCards = (cards: StoryCardData[], sectionId: string): CardWithPlaceholder[] => {
     const placeholdersNeeded = Math.max(0, 3 - cards.length);
     const placeholders: PlaceholderCard[] = Array.from({ length: placeholdersNeeded }).map((_, i) => ({
@@ -127,20 +152,37 @@ const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
     <View style={styles.screen}>
       <Container>
         <TopNav navigation={navigation} />
+
+        {userStories.length > 0 && (
+          <>
+            <SectionTitle>📝 Your Created Stories</SectionTitle>
+            <FlatList
+              data={ensureMinimumCards(userStories, 'user-created')}
+              keyExtractor={(item) => item.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 10 }}
+              renderItem={({ item }) =>
+                'isPlaceholder' in item && item.isPlaceholder ? (
+                  <View style={{ width: 160, marginHorizontal: 10, opacity: 0 }} />
+                ) : (
+                  renderStoryCard(item as StoryCardData, 'user-created')
+                )
+              }
+            />
+          </>
+        )}
+
         <FlatList
           data={harmonySections}
           keyExtractor={(section) => section.id}
-          contentContainerStyle={{
-            paddingBottom: theme.sizes.bottomNavHeight + 75,
-          }}
+          contentContainerStyle={{ paddingBottom: theme.sizes.bottomNavHeight + 75 }}
           renderItem={({ item: section }) => (
             <View>
               <SectionTitle>{section.title}</SectionTitle>
-              {section.subtitle && (
-                <SectionSubtitle>{section.subtitle}</SectionSubtitle>
-              )}
+              {section.subtitle && <SectionSubtitle>{section.subtitle}</SectionSubtitle>}
               <FlatList
-                data={ensureMinimumCards(section.data, section.id)} // ✅ apply min-card logic
+                data={ensureMinimumCards(section.data, section.id)}
                 keyExtractor={(item) => item.id}
                 horizontal
                 showsHorizontalScrollIndicator={false}
