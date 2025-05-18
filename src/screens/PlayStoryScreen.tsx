@@ -1,3 +1,4 @@
+// src/screens/PlayStoryScreen.tsx
 import React from 'react';
 import { Dimensions, View, TouchableOpacity, Text } from 'react-native';
 import styled, { useTheme, DefaultTheme } from 'styled-components/native';

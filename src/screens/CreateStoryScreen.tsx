@@ -7,9 +7,10 @@ import BottomNav from '../components/common/BottomNav';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { queryWhispr } from '../services/WhisprService';
+import { saveUserStory } from '../services/UserStoriesService';
+import { StoryCardData } from '../types/HarmonyFlatList';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-
 type Props = StackScreenProps<RootStackParamList, 'CreateStory'>;
 
 const Container = styled.View`
@@ -82,15 +83,18 @@ const BackButton = styled.TouchableOpacity`
 
 const CreateStoryScreen: React.FC<Props> = ({ navigation }) => {
   const theme = useTheme();
+  const storyIdRef = useRef(`custom-${Date.now()}`);
   const scrollRef = useRef<ScrollView>(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [storyPreview, setStoryPreview] = useState('');
   const [currentStep, setCurrentStep] = useState(0);
+  const [previewReady, setPreviewReady] = useState(false);
   const [storyConfig, setStoryConfig] = useState({
     concept: '',
     characters: [] as string[],
     language: '',
     mode: '',
+    title: ''
   });
 
   const steps = [
@@ -115,14 +119,14 @@ const CreateStoryScreen: React.FC<Props> = ({ navigation }) => {
     });
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep < steps.length - 1) {
       const nextStep = currentStep + 1;
       setCurrentStep(nextStep);
       scrollRef.current?.scrollTo({ x: nextStep * screenWidth, animated: true });
     } else {
       // Final step: trigger story preview
-      generateStoryPreview();
+      await generateStoryPreview();
     }
   };
 
@@ -135,17 +139,32 @@ const CreateStoryScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const generateStoryPreview = async () => {
-    setLoadingPreview(true);
-    try {
-      const prompt = `Create a short ${storyConfig.mode.toLowerCase()} story in ${storyConfig.language} with a ${storyConfig.concept.toLowerCase()} tone featuring ${storyConfig.characters.join(', ')}. Keep it suitable for toddlers.`;
-      const result = await queryWhispr(prompt);
-      setStoryPreview(result);
-    } catch (error) {
-      setStoryPreview('Sorry, something went wrong.');
-    } finally {
-      setLoadingPreview(false);
-    }
-  };
+  setLoadingPreview(true);
+  try {
+    const prompt = `Create a short ${storyConfig.mode.toLowerCase()} story in ${storyConfig.language} with a ${storyConfig.concept.toLowerCase()} tone featuring ${storyConfig.characters.join(', ')}. Keep it suitable for toddlers.`;
+    const result = await queryWhispr(prompt);
+    const title = `${storyConfig.characters[0]}'s ${storyConfig.concept} Tale`;
+    const newStory: StoryCardData = {
+      id: storyIdRef.current,
+      title,
+      thumbnail: 'local://custom_generated.png',
+      type: 'generated',
+      ctaLabel: 'Play',
+      cardColor: 'peach',
+      moodTags: [storyConfig.concept.toLowerCase()],
+    };
+
+    await saveUserStory(newStory);
+    setStoryPreview(result);
+    setPreviewReady(true);
+    setStoryConfig(prev => ({ ...prev, title }));
+
+  } catch (error) {
+    setStoryPreview('Sorry, something went wrong.');
+  } finally {
+    setLoadingPreview(false);
+  }
+};
 
   return (
     <Container>
@@ -185,16 +204,18 @@ const CreateStoryScreen: React.FC<Props> = ({ navigation }) => {
                 ))}
               </ScrollView>
               <NextButton onPress={handleNext}>
-                <NextButtonText>Next</NextButtonText>
-              </NextButton>
+              <NextButtonText>
+                {currentStep === steps.length - 1 ? 'Generate My Story' : 'Next'}
+              </NextButtonText>
+            </NextButton>
             </ParamBlock>
           </View>
         ))}
       </ScrollView>
 
-      {storyPreview !== '' && !loadingPreview && (
+      {previewReady && !loadingPreview && (
       <TouchableOpacity
-        onPress={() => console.log('Final story generation and navigation here')}
+        onPress={() => navigation.navigate('PlayStory', { storyId: storyIdRef.current })}
         style={{
           alignSelf: 'center',
           marginVertical: 20,
@@ -204,7 +225,7 @@ const CreateStoryScreen: React.FC<Props> = ({ navigation }) => {
         }}
       >
         <Text style={{ color: 'white', fontWeight: '600' }}>
-          Generate My Story
+          Go to My Story
         </Text>
       </TouchableOpacity>
     )}
