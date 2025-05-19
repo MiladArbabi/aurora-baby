@@ -89,19 +89,17 @@ const CreateStoryScreen: React.FC<Props> = ({ navigation }) => {
   const [storyPreview, setStoryPreview] = useState('');
   const [currentStep, setCurrentStep] = useState(0);
   const [previewReady, setPreviewReady] = useState(false);
+  const [titleOptions, setTitleOptions] = useState<string[]>([]);
   const [storyConfig, setStoryConfig] = useState({
     concept: '',
     characters: [] as string[],
-    language: '',
-    mode: '',
     title: ''
   });
 
   const steps = [
     { title: 'Concept', options: ['Soothing', 'Playful', 'Sing Along', 'Magical'], key: 'concept' },
     { title: 'Characters', options: ['Birk', 'Freya', 'Nordra', 'AXO', 'Swans', 'Moss Moles', 'Custom'], key: 'characters' },
-    { title: 'Language', options: ['English', 'Swedish', 'Spanish'], key: 'language' },
-    { title: 'Mode', options: ['Voice', 'Text', 'Animation'], key: 'mode' },
+    { title: 'Suggested Titles', options: [], key: 'title' }, // to be filled dynamically
   ];
 
   const handleSelect = (stepKey: string, value: string) => {
@@ -130,6 +128,21 @@ const CreateStoryScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+  const handleTitleSelectAndPreview = async (selectedTitle: string) => {
+    setStoryConfig(prev => ({ ...prev, title: selectedTitle }));
+    setLoadingPreview(true);
+    try {
+      const prompt = `Write a short toddler-friendly story titled "${selectedTitle}", featuring ${storyConfig.characters.join(', ')}. Make it gentle and imaginative.`;
+      const story = await queryWhispr(prompt);
+      setStoryPreview(story);
+      setPreviewReady(true);
+    } catch (err) {
+      setStoryPreview('Preview failed. Please try another title.');
+    } finally {
+      setLoadingPreview(false);
+    }
+  };
+
   const handleBack = () => {
     if (currentStep > 0) {
       const prevStep = currentStep - 1;
@@ -141,23 +154,16 @@ const CreateStoryScreen: React.FC<Props> = ({ navigation }) => {
   const generateStoryPreview = async () => {
   setLoadingPreview(true);
   try {
-    const prompt = `Create a short ${storyConfig.mode.toLowerCase()} story in ${storyConfig.language} with a ${storyConfig.concept.toLowerCase()} tone featuring ${storyConfig.characters.join(', ')}. Keep it suitable for toddlers.`;
+    const prompt = `Suggest 3 short, creative, toddler-friendly story titles based on a 
+    ${storyConfig.concept.toLowerCase()} concept featuring ${storyConfig.characters.join(', ')}.`;
     const result = await queryWhispr(prompt);
-    const title = `${storyConfig.characters[0]}'s ${storyConfig.concept} Tale`;
-    const newStory: StoryCardData = {
-      id: storyIdRef.current,
-      title,
-      thumbnail: 'local://custom_generated.png',
-      type: 'generated',
-      ctaLabel: 'Play',
-      cardColor: 'peach',
-      moodTags: [storyConfig.concept.toLowerCase()],
-    };
+    // Assume result is a \n-separated list or comma-separated titles
+    const titles = result.split('\n').filter(Boolean).map(t => t.trim()).slice(0, 3);
+    setTitleOptions(titles);
 
-    await saveUserStory(newStory);
-    setStoryPreview(result);
-    setPreviewReady(true);
-    setStoryConfig(prev => ({ ...prev, title }));
+    // We’ll wait for user to pick one title before saving
+    scrollRef.current?.scrollTo({ x: steps.length * screenWidth, animated: true });
+    setCurrentStep(steps.length); // show title suggestions
 
   } catch (error) {
     setStoryPreview('Sorry, something went wrong.');
@@ -176,7 +182,10 @@ const CreateStoryScreen: React.FC<Props> = ({ navigation }) => {
             ? 'Generating preview...'
             : storyPreview
               ? storyPreview
-              : `${storyConfig.concept || 'Pick a concept'}${storyConfig.characters.length ? ` with ${storyConfig.characters.join(', ')}` : ''}${storyConfig.language ? ` in ${storyConfig.language}` : ''}${storyConfig.mode ? ` as ${storyConfig.mode}` : ''}`}
+              : `${storyConfig.concept || 'Pick a concept'}${storyConfig.characters.length 
+              ? ` with ${storyConfig.characters.join(', ')}` 
+              : ''}`
+              }
         </PreviewText>
       </PreviewCard>
 
@@ -213,6 +222,20 @@ const CreateStoryScreen: React.FC<Props> = ({ navigation }) => {
         ))}
       </ScrollView>
 
+      {titleOptions.length > 0 && !storyPreview && (
+        <View style={{ paddingHorizontal: 20, marginTop: 20 }}>
+          <ParamTitle>Choose a Title:</ParamTitle>
+          {titleOptions.map((title) => (
+            <OptionButton
+              key={title}
+              onPress={() => handleTitleSelectAndPreview(title)}
+              style={{ marginVertical: 8 }}
+            >
+              <OptionText>{title}</OptionText>
+            </OptionButton>
+          ))}
+        </View>
+      )}
       {previewReady && !loadingPreview && (
       <TouchableOpacity
         onPress={() => navigation.navigate('PlayStory', { storyId: storyIdRef.current })}
@@ -224,6 +247,34 @@ const CreateStoryScreen: React.FC<Props> = ({ navigation }) => {
           borderRadius: 16,
         }}
       >
+
+      {previewReady && storyPreview && (
+        <TouchableOpacity
+          onPress={async () => {
+            const newStory: StoryCardData = {
+              id: storyIdRef.current,
+              title: storyConfig.title,
+              thumbnail: 'local://custom_generated.png',
+              type: 'generated',
+              ctaLabel: 'Play',
+              cardColor: 'peach',
+              moodTags: [storyConfig.concept.toLowerCase()],
+            };
+            await saveUserStory(newStory);
+            setPreviewReady(false); // disable further saves
+          }}
+          style={{
+            alignSelf: 'center',
+            marginTop: 16,
+            padding: 12,
+            backgroundColor: theme.colors.accent,
+            borderRadius: 16,
+          }}
+        >
+          <Text style={{ color: 'white', fontWeight: '600' }}>Generate My Story</Text>
+        </TouchableOpacity>
+      )}
+
         <Text style={{ color: 'white', fontWeight: '600' }}>
           Go to My Story
         </Text>
