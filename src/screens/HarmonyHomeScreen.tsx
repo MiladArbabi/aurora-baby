@@ -8,7 +8,7 @@ import { DefaultTheme } from 'styled-components/native';
 import BottomNav from '../components/common/BottomNav';
 import TopNav from '../components/common/TopNav';
 import { harmonySections } from '../data/harmonySections';
-import { StoryCardData } from '../types/HarmonyFlatList';
+import { StoryCardData, HarmonySection } from '../types/HarmonyFlatList';
 import { Dimensions } from 'react-native';
 import { getUserStories, deleteUserStory } from '../services/UserStoriesService';
 import { useFocusEffect } from '@react-navigation/native';
@@ -27,6 +27,7 @@ type PlaceholderCard = {
   isPlaceholder: true;
 };
 
+type Props = StackScreenProps<RootStackParamList, 'Harmony'>;
 type CardWithPlaceholder = StoryCardData | PlaceholderCard;
 
 const Container = styled.View`
@@ -77,7 +78,28 @@ const StoryTitle = styled.Text`
   margin-top: 4px;
 `;
 
-type Props = StackScreenProps<RootStackParamList, 'Harmony'>;
+function useUserStoriesSection(): HarmonySection | null {
+  const [userStories, setUserStories] = useState<StoryCardData[]>([]);
+
+  useFocusEffect(
+    useCallback(() => {
+      (async () => {
+        const stories = await getUserStories();
+        setUserStories(stories);
+      })();
+    }, [])
+  );
+
+  if (userStories.length === 0) return null;
+
+  return {
+    id: 'user-stories',
+    title: '🧡 Your Created Stories',
+    subtitle: 'Stories made by you',
+    type: 'personalized',
+    data: userStories,
+  };
+}
 
 const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
   const theme = useTheme();
@@ -148,33 +170,17 @@ const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
     return [...cards, ...placeholders];
   };
 
+  const userStoriesSection = useUserStoriesSection();
+  const sectionsToRender = userStoriesSection
+  ? [...harmonySections, userStoriesSection] // put it at the bottom
+  : harmonySections;
+
   return (
     <View style={styles.screen}>
       <Container>
-        <TopNav navigation={navigation} />
-
-        {userStories.length > 0 && (
-          <>
-            <SectionTitle>📝 Your Created Stories</SectionTitle>
-            <FlatList
-              data={ensureMinimumCards(userStories, 'user-created')}
-              keyExtractor={(item) => item.id}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 10 }}
-              renderItem={({ item }) =>
-                'isPlaceholder' in item && item.isPlaceholder ? (
-                  <View style={{ width: 160, marginHorizontal: 10, opacity: 0 }} />
-                ) : (
-                  renderStoryCard(item as StoryCardData, 'user-created')
-                )
-              }
-            />
-          </>
-        )}
-
+        <TopNav navigation={navigation} /> 
         <FlatList
-          data={harmonySections}
+          data={sectionsToRender}
           keyExtractor={(section) => section.id}
           contentContainerStyle={{ paddingBottom: theme.sizes.bottomNavHeight + 75 }}
           renderItem={({ item: section }) => (
