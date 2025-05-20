@@ -1,6 +1,6 @@
 // src/screens/HarmonyHomeScreen.tsx
 import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, FlatList, Text, Image, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, FlatList, Text, TouchableOpacity, Alert, RefreshControl } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -50,7 +50,9 @@ const SectionSubtitle = styled.Text`
   margin-bottom: 10px;
 `;
 
-const StoryCard = styled.TouchableOpacity<{ cardColor?: 'lavender' | 'teal' | 'peach' }>`
+const StoryCard = styled.TouchableOpacity
+.attrs({ accessible: true, accessibilityRole: 'button' })
+<{ cardColor?: 'lavender' | 'teal' | 'peach' }>`
   width: ${CARD_WIDTH}px;
   margin-horizontal: ${CARD_MARGIN_HORIZONTAL}px;
   background-color: ${({ theme, cardColor }: { theme: DefaultTheme; cardColor?: 'lavender' | 'teal' | 'peach' }) =>
@@ -93,7 +95,7 @@ function useUserStoriesSection(): HarmonySection | null {
   if (userStories.length === 0) return null;
 
   return {
-    id: 'user-stories',
+    id: 'user-created',
     title: '🧡 Your Created Stories',
     subtitle: 'Stories made by you',
     type: 'personalized',
@@ -104,6 +106,7 @@ function useUserStoriesSection(): HarmonySection | null {
 const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
   const theme = useTheme();
   const [userStories, setUserStories] = useState<StoryCardData[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -114,13 +117,26 @@ const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
     }, [])
   );
 
-  const renderStoryCard = (item: StoryCardData, sectionId: string) => (
+  const loadStories = useCallback(async () => {
+    const stories = await getUserStories();
+    setUserStories(stories);
+  }, []);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadStories();
+    setRefreshing(false);
+  }, [loadStories]);
+
+  const renderStoryCard = useCallback((item: StoryCardData, sectionId: string) => {
+    return (
     <StoryCard
       key={item.id}
+      accessibilityLabel={`${item.title}. ${sectionId === 'user-created' ? 'Your story.' : ''}`}
       cardColor={item.cardColor}
       onLongPress={
         sectionId === 'user-created'
-          ? () => {
+          ? () => 
               Alert.alert('Delete Story?', 'Are you sure?', [
                 { text: 'Cancel', style: 'cancel' },
                 {
@@ -132,16 +148,15 @@ const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
                     setUserStories(stories);
                   },
                 },
-              ]);
-            }
+              ])
           : undefined
       }
       onPress={
         item.action
           ? item.action
           : () => {
-            // any “play-a-story” or “user-stories” go to our PlayStoryScreen…
-              if (sectionId === 'play-a-story' || sectionId === 'user-stories') {
+            // any “play-a-story” or “user-created” go to our PlayStoryScreen…
+              if (sectionId === 'play-a-story' || sectionId === 'user-created') {
                 navigation.navigate('PlayStory', 
                   { 
                     storyId: item.id,
@@ -155,7 +170,7 @@ const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
               } else {
                 navigation.navigate('StoryPlayer', { storyId: item.id });
               }
-            }
+          }
       }
     >
       <StoryImage source={{ uri: item.thumbnail }} resizeMode="cover" />
@@ -163,7 +178,8 @@ const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
         <StoryTitle>{item.title}</StoryTitle>
       </View>
     </StoryCard>
-  );
+    );
+}, [navigation, theme]);
 
   const ensureMinimumCards = (cards: StoryCardData[], sectionId: string): CardWithPlaceholder[] => {
     const placeholdersNeeded = Math.max(0, 3 - cards.length);
@@ -183,6 +199,25 @@ const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
   ? [...harmonySections, userStoriesSection] // put it at the bottom
   : harmonySections;
 
+  if (userStoriesSection === null) {
+    return (
+      <Container>
+        <TopNav navigation={navigation}/>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ color: theme.colors.text, fontSize: 16 }}>
+            You haven’t created any stories yet.
+          </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('CreateStory')}>
+          <Text style={{ color: theme.colors.primary, marginTop: 8 }}>
+            Create your first story
+          </Text>
+          </TouchableOpacity>
+        </View>
+        <BottomNav navigation={navigation} activeScreen="Harmony"/>
+      </Container>
+    );
+  }
+
   return (
     <View style={styles.screen}>
       <Container>
@@ -191,16 +226,22 @@ const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
           data={sectionsToRender}
           keyExtractor={(section) => section.id}
           contentContainerStyle={{ paddingBottom: theme.sizes.bottomNavHeight + 75 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={theme.colors.primary}
+            />
+          }
           renderItem={({ item: section }) => (
             <View>
               <SectionTitle>{section.title}</SectionTitle>
               {section.subtitle && <SectionSubtitle>{section.subtitle}</SectionSubtitle>}
               <FlatList
                 data={ensureMinimumCards(section.data, section.id)}
-                keyExtractor={(item) => item.id}
+                keyExtractor={item => item.id}
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 10 }}
                 renderItem={({ item }) =>
                   'isPlaceholder' in item && item.isPlaceholder ? (
                     <View style={{ width: 160, marginHorizontal: 10, opacity: 0 }} />
