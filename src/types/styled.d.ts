@@ -24,6 +24,7 @@ declare module 'styled-components/native' {
       navBackground: string;
       iconActive: string;
       iconInactive: string;
+      error: string;
     };
     fonts: {
       regular: string;
