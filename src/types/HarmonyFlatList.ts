@@ -10,7 +10,7 @@ export interface HarmonySection {
   
   export interface StoryCardData {
     id: string
-    title: string
+    title?: string
     description?: string
     duration?: number // in minutes
     moodTags?: string[] // ['gentle', 'sleepy', 'funny']

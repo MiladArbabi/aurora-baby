@@ -5,7 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack'
 import { onAuthStateChanged, auth, checkAuthState } from '../services/firebase'
 import { User } from 'firebase/auth'
 
-import LoadingSpinner from '../components/common/LoadingSpinner'
+import LoadingSpinner from '../components/common/Spinner'
 import AuthScreen from '../screens/AuthScreen'
 import OnboardingNavigator from './OnboardingNavigator'
 import HomeScreen from '../screens/HomeScreen'
