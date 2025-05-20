@@ -12,6 +12,7 @@ import { StoryCardData, HarmonySection } from '../types/HarmonyFlatList';
 import { Dimensions } from 'react-native';
 import { getUserStories, deleteUserStory } from '../services/UserStoriesService';
 import { useFocusEffect } from '@react-navigation/native';
+import { Card } from 'components/common/Card';
 
 const { width: screenWidth } = Dimensions.get('window');
 const CARD_WIDTH = screenWidth * 0.38;
@@ -126,12 +127,23 @@ const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
     setRefreshing(false);
   }, [loadStories]);
 
+  const CARD_COLOR_MAP: Record<'lavender'|'teal'|'peach', keyof DefaultTheme['colors']> = {
+    lavender: 'primary',
+    teal:     'accent',
+    peach:    'darkAccent', 
+  };
+
   const renderStoryCard = useCallback((item: StoryCardData, sectionId: string) => {
     return (
-    <StoryCard
+    <Card
       key={item.id}
+      variant='common'
+      background={item.cardColor ?
+        theme.colors[ CARD_COLOR_MAP[item.cardColor] ]
+        : undefined
+      }
       accessibilityLabel={`${item.title}. ${sectionId === 'user-created' ? 'Your story.' : ''}`}
-      cardColor={item.cardColor}
+      style={{ marginHorizontal: CARD_MARGIN_HORIZONTAL }} // spacing
       onLongPress={
         sectionId === 'user-created'
           ? () => 
@@ -175,7 +187,7 @@ const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
       <View style={{ alignItems: 'center' }}>
         <StoryTitle>{item.title}</StoryTitle>
       </View>
-    </StoryCard>
+    </Card>
     );
 }, [navigation, theme]);
 
