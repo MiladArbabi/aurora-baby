@@ -2,13 +2,13 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet, ScrollView, SafeAreaView as RNSafeAreaView } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import { saveLastScreen } from '../services/LastScreenTracker';
-import BottomNav from '../components/common/BottomNav';
-import TopNav from '../components/common/TopNav';
-import { ReusableCarousel } from '../components/common/Carousel';
+import { RootStackParamList } from '../../navigation/AppNavigator';
+import { saveLastScreen } from '../../services/LastScreenTracker';
+import BottomNav from '../../components/common/BottomNav';
+import TopNav from '../../components/common/TopNav';
+import { ReusableCarousel } from '../../components/common/Carousel';
 import styled, { useTheme, DefaultTheme } from 'styled-components/native';
-import { mainCarouselItems, featureItems, categoryItems, gameItems } from '../data/homeSections';
+import { mainCarouselItems, featureItems, categoryItems, gameItems } from '../../data/homeSections';
 
 type Props = StackScreenProps<RootStackParamList, 'Home'>;
 

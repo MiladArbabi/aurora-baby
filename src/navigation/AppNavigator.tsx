@@ -19,6 +19,7 @@ import WhisprScreen from '../screens/whispr/WhisprScreen'
 import LogDetailScreen from '../screens/care/LogDetailScreen'
 import PlayStoryScreen from 'screens/harmony/PlayStoryScreen'
 import CreateStoryScreen from 'screens/harmony/CreateStoryScreen'
+import TextStoryScreen from 'screens/harmony/TextStoryScreen'
 
 import { getChildProfile } from '../services/ChildProfileAccess'
 import { ChildProfile } from '../models/ChildProfile'
@@ -39,6 +40,7 @@ export type RootStackParamList = {
   LogDetail: { id: string; type: 'sleep'|'feeding'|'diaper'|'mood'|'health'|'note' }
   PlayStory: { storyId: string; fullStory?: string; }
   CreateStory: undefined;
+  TextStory: { storyId: string; fullStory?: string };
 }
 
 const Stack = createStackNavigator<RootStackParamList>()
@@ -107,6 +109,7 @@ export default function AppNavigator() {
           <Stack.Screen name="LogDetail" component={LogDetailScreen} />
           <Stack.Screen name="PlayStory" component={PlayStoryScreen} />
           <Stack.Screen name="CreateStory" component={CreateStoryScreen} />
+          <Stack.Screen name="TextStory" component={TextStoryScreen} options={{ headerShown: false }} />
         </Stack.Navigator>
       )}
     </NavigationContainer>

@@ -9,17 +9,17 @@ import {
   StyleSheet,
   Dimensions,
 } from 'react-native'
-import { queryWhispr } from '../services/WhisprService'
+import { queryWhispr } from '../../services/WhisprService'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { RootStackParamList } from '../navigation/AppNavigator'
-import { speak } from '../services/TTSService'
+import { RootStackParamList } from '../../navigation/AppNavigator'
+import { speak } from '../../services/TTSService'
 
-import ChatHistoryModal from '../components/whispr/ChatHistoryModal'
-import WhisprVoiceLogo from '../assets/whispr/WhisprVoiceLogo.svg'
-import LayerIcon from '../assets/whispr/Layer'
-import Arrow from '../assets/whispr/Arrow'
+import ChatHistoryModal from '../../components/whispr/ChatHistoryModal'
+import WhisprVoiceLogo from '../../assets/whispr/WhisprVoiceLogo.svg'
+import LayerIcon from '../../assets/whispr/Layer'
+import Arrow from '../../assets/whispr/Arrow'
 
 type WhisprNavProp = StackNavigationProp<RootStackParamList, 'Whispr'>
 

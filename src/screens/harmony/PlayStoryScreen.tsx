@@ -155,7 +155,12 @@ const PlayStoryScreen: React.FC<Props> = ({ route, navigation }) => {
             <VoiceIcon fill={theme.colors.muted} />
             <Label>Voice</Label>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => console.log('Show Text')}>
+          <TouchableOpacity onPress={() => navigation.navigate('TextStory', {
+            storyId,
+            fullStory: storyText,
+              })
+            }
+          >
             <TextIcon fill={theme.colors.muted} />
             <Label>Text</Label>
           </TouchableOpacity>
