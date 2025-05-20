@@ -81,22 +81,22 @@ export const theme = {
   card: {
     // used by ReusableCarousel “main” (big hero card):
     large: {
-      widthFactor: 0.9,    // screenW * 0.9
+      widthFactor: 0.93,    // screenW * 0.9
       heightFactor: 0.55,  // screenH * 0.55
       borderRadius: 10,
     },
     // “feature” / common cards:
     common: {
-      widthFactor: 0.25,
+      widthFactor: 0.28,
       heightFactor: 0.2,
-      borderRadius: 5,
+      borderRadius: 10,
     },
     // category cards (a bit larger than common):
     // 👉 naming options: “medium”, “highlight”, “promo”
     medium: {
-      widthFactor: 0.4,
-      heightFactor: 0.4,
-      borderRadius: 8,
+      widthFactor: 0.44,
+      heightFactor: 0.33,
+      borderRadius: 10,
     },
     // game cards:
     game: {

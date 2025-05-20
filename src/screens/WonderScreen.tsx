@@ -17,6 +17,7 @@ import VRIcon from '../assets/wonderscreen/VRIcon'
 import type { WonderCardData } from '../types/WonderCardData'
 import { sizes } from '../styles/theme'
 
+
 export const WonderScreen = () => {
   const [selectedFilter, setSelectedFilter] = useState<'all'|'ar'|'vr'|'play'>('all')
   const theme = useTheme()
@@ -39,16 +40,16 @@ export const WonderScreen = () => {
       {/* Filters */}
       <View style={styles.iconRow}>
         <VRIcon
-          fill={ selectedFilter === 'vr' ? theme.colors.secondaryBackground : theme.colors.primary }
+          fill={ selectedFilter === 'vr' ? theme.colors.secondaryBackground : theme.colors.muted }
           onPress={() => onIconPress('vr')}
         />
         <GameIcon
-          fill={ selectedFilter === 'play' ? theme.colors.secondaryBackground : theme.colors.primary }
+          fill={ selectedFilter === 'play' ? theme.colors.secondaryBackground : theme.colors.muted }
           style={styles.iconSpacing}
           onPress={() => onIconPress('play')}
         />
         <ARIcon
-          fill={ selectedFilter === 'ar' ? theme.colors.secondaryBackground : theme.colors.primary }
+          fill={ selectedFilter === 'ar' ? theme.colors.secondaryBackground : theme.colors.muted }
           style={styles.iconSpacing}
           onPress={() => onIconPress('ar')}
         />
