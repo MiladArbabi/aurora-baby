@@ -105,17 +105,15 @@ function useUserStoriesSection(): HarmonySection | null {
 
 const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
   const theme = useTheme();
-  const [userStories, setUserStories] = useState<StoryCardData[]>([]);
+  const [userStories, setUserStories] = useState<StoryCardData[] | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  useFocusEffect(
-    useCallback(() => {
-      (async () => {
-        const stories = await getUserStories();
-        setUserStories(stories);
-      })();
-    }, [])
-  );
+  useFocusEffect(useCallback(() => {
+    (async () => {
+      const stories = await getUserStories();
+      setUserStories(stories);  // now either [] or [..]
+    })();
+  }, []));
 
   const loadStories = useCallback(async () => {
     const stories = await getUserStories();
@@ -199,7 +197,7 @@ const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
   ? [...harmonySections, userStoriesSection] // put it at the bottom
   : harmonySections;
 
-  if (userStoriesSection === null) {
+  if (userStories !== null && userStories.length === 0) {
     return (
       <Container>
         <TopNav navigation={navigation}/>
