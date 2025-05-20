@@ -5,6 +5,7 @@ import type { WonderCardData } from '../../types/WonderCardData'
 import ARIcon from '../../assets/wonderscreen/ARIcon'
 import VRIcon from '../../assets/wonderscreen/VRIcon'
 import GameIcon from '../../assets/wonderscreen/GameIcon'
+import { Card } from 'components/common/Card'
 
 export const WonderCard: React.FC<WonderCardData> = ({
   title,
@@ -31,7 +32,11 @@ export const WonderCard: React.FC<WonderCardData> = ({
   else if (features.includes('play')) IconComponent = GameIcon
 
   return (
-    <CardContainer style={{ backgroundColor: bgColor }}>
+    <Card 
+      variant="common"
+      background={bgColor}
+      style={{ marginRight: theme.spacing.medium }}
+    >
       {IconComponent && (
         <IconWrapper>
           <IconComponent
@@ -41,24 +46,13 @@ export const WonderCard: React.FC<WonderCardData> = ({
           />
         </IconWrapper>
       )}
-      <Thumbnail source={{ uri: thumbnail }} />
-      <Info>
-        <Title numberOfLines={1}>{title}</Title>
-        {ctaLabel && <CTA>{ctaLabel}</CTA>}
+      <Thumbnail source={{ uri: thumbnail }} resizeMode="cover" />
+      <Info style={{ alignItems: 'center' }} >
+        <Title>{title}</Title>
       </Info>
-    </CardContainer>
+    </Card>
   )
 }
-
-const CardContainer = styled(TouchableOpacity)`
-  position: relative;
-  width: 200px;
-  margin-right: 16px;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid ${({ theme }: { theme: DefaultTheme }) =>
-     theme.colors.border};
-`
 
 const IconWrapper = styled(View)`
   position: absolute;
