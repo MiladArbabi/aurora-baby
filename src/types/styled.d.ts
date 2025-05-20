@@ -60,6 +60,14 @@ declare module 'styled-components/native' {
       game: { w: number; h: number; r: number };
       stroke: number;
     };
+
+    card: {
+      large: { widthFactor: number; heightFactor: number; borderRadius: number };
+      common: { widthFactor: number; heightFactor: number; borderRadius: number };
+      medium: { widthFactor: number; heightFactor: number; borderRadius: number };
+      game: { widthFactor: number; heightFactor: number; borderRadius: number };
+    };
+    
     mode: string;
   }
 }
