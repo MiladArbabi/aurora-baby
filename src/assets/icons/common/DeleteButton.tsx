@@ -1,4 +1,4 @@
-//src/assets/icons/common/DeleteButton.tsx
+// src/assets/icons/common/DeleteButton.tsx
 import React from "react";
 import Svg, { Path, SvgProps } from "react-native-svg";
 

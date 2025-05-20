@@ -10,7 +10,6 @@ import AuthScreen from '../screens/AuthScreen'
 import OnboardingNavigator from './OnboardingNavigator'
 import HomeScreen from '../screens/HomeScreen'
 import HarmonyHomeScreen from '../screens/HarmonyHomeScreen'
-import StoryPlayer from 'screens/StoryPlayer'
 import CareScreen from '../screens/CareScreen'
 import PastLogsView from '../screens/PastLogsView'
 import InsightsScreen from '../screens/InsightsView'
@@ -38,7 +37,7 @@ export type RootStackParamList = {
   ForestMap: undefined
   Whispr: undefined
   LogDetail: { id: string; type: 'sleep'|'feeding'|'diaper'|'mood'|'health'|'note' }
-  PlayStory: { storyId: string }
+  PlayStory: { storyId: string; fullStory?: string; }
   CreateStory: undefined;
 }
 
@@ -99,7 +98,6 @@ export default function AppNavigator() {
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="Harmony" component={HarmonyHomeScreen} />
-          <Stack.Screen name="StoryPlayer" component={StoryPlayer} />
           <Stack.Screen name="Care" component={CareScreen} />
           <Stack.Screen name="PastLogs" component={PastLogsView} />
           <Stack.Screen name="Insights" component={InsightsScreen} />
