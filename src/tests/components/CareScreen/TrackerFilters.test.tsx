@@ -1,7 +1,7 @@
 // src/tests/components/CareScreen/TrackerFilters.test.tsx
 import React from 'react'
 import { render, fireEvent } from '@testing-library/react-native'
-import CareScreen from '../../../screens/CareScreen'
+import CareScreen from '../../../screens/care/CareScreen'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { PortalProvider } from '@gorhom/portal'
 import { ThemeProvider as RNETheme } from '@rneui/themed'

@@ -8,26 +8,26 @@ import {
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTheme } from 'styled-components/native'
-import { RootStackParamList } from '../navigation/AppNavigator'
-import CareLayout from '../components/carescreen/CareLayout'
-import MiniNavBar, { MiniTab } from '../components/carescreen/MiniNavBar'
+import { RootStackParamList } from '../../navigation/AppNavigator'
+import CareLayout from '../../components/carescreen/CareLayout'
+import MiniNavBar, { MiniTab } from '../../components/carescreen/MiniNavBar'
 
-import Tracker, { QuickMarker } from '../components/carescreen/Tracker'
-import { colorMap } from '../hooks/useTrackerData'
-import TrackerFilter from '../components/carescreen/TrackerFilter'
-import QuickLogMenu from '../components/carescreen/QuickLogMenu'
-import LogDetailModal from '../components/carescreen/LogDetailModal'
-import FutureLogsGenerator from '../components/carescreen/FutureLogsGenerator';
+import Tracker, { QuickMarker } from '../../components/carescreen/Tracker'
+import { colorMap } from '../../hooks/useTrackerData'
+import TrackerFilter from '../../components/carescreen/TrackerFilter'
+import QuickLogMenu from '../../components/carescreen/QuickLogMenu'
+import LogDetailModal from '../../components/carescreen/LogDetailModal'
+import FutureLogsGenerator from '../../components/carescreen/FutureLogsGenerator';
 import { 
   getLogsBetween, 
   getFutureEntries, 
   saveFutureEntries, 
   deleteLogEntry
-} from '../services/QuickLogAccess'
-import { QuickLogEntry } from '../models/QuickLogSchema'
-import { useActionMenuLogic } from '../hooks/useActionMenuLogic'
-import { quickLogEmitter } from '../storage/QuickLogEvents';
-import { generateAIQuickLogs } from '../services/LlamaLogGenerator'
+} from '../../services/QuickLogAccess'
+import { QuickLogEntry } from '../../models/QuickLogSchema'
+import { useActionMenuLogic } from '../../hooks/useActionMenuLogic'
+import { quickLogEmitter } from '../../storage/QuickLogEvents';
+import { generateAIQuickLogs } from '../../services/LlamaLogGenerator'
 
 type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>
 

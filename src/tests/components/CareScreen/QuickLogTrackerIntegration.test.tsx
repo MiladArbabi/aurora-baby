@@ -6,7 +6,7 @@ import { PortalProvider } from '@gorhom/portal'
 import { ThemeProvider as RNE } from '@rneui/themed'
 import { ThemeProvider as SC } from 'styled-components/native'
 import { NavigationContainer } from '@react-navigation/native'
-import CareScreen from '../../../screens/CareScreen'
+import CareScreen from '../../../screens/care/CareScreen'
 import { rneThemeBase, theme } from '../../../styles/theme'
 
 // Mock out QuickLogAccess so we start with no pre-existing logs

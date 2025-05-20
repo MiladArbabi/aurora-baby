@@ -2,7 +2,7 @@
 import React from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import { RouteProp, useRoute } from '@react-navigation/native'
-import { RootStackParamList } from '../navigation/AppNavigator'
+import { RootStackParamList } from '../../navigation/AppNavigator'
 
 type LogDetailRouteProp = RouteProp<RootStackParamList, 'LogDetail'>
 

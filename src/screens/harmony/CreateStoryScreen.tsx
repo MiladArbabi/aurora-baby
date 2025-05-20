@@ -2,14 +2,14 @@
 import React, { useRef, useState } from 'react';
 import { Dimensions, ScrollView, TouchableOpacity, View, Text } from 'react-native';
 import styled, { useTheme, DefaultTheme } from 'styled-components/native';
-import TopNav from '../components/common/TopNav';
-import BottomNav from '../components/common/BottomNav';
+import TopNav from '../../components/common/TopNav';
+import BottomNav from '../../components/common/BottomNav';
 import { StackScreenProps } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import { queryWhispr } from '../services/WhisprService';
-import Spinner from '../components/common/Spinner';
-import { saveUserStory } from '../services/UserStoriesService';
-import { StoryCardData } from '../types/HarmonyFlatList';
+import { RootStackParamList } from '../../navigation/AppNavigator';
+import { queryWhispr } from '../../services/WhisprService';
+import Spinner from '../../components/common/Spinner';
+import { saveUserStory } from '../../services/UserStoriesService';
+import { StoryCardData } from '../../types/HarmonyFlatList';
 import { string } from 'zod';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');

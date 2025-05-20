@@ -2,18 +2,18 @@
 import React from 'react';
 import { Dimensions, View, TouchableOpacity, Text, Alert } from 'react-native';
 import styled, { useTheme, DefaultTheme } from 'styled-components/native';
-import TopNav from '../components/common/TopNav';
-import BottomNav from '../components/common/BottomNav';
+import TopNav from '../../components/common/TopNav';
+import BottomNav from '../../components/common/BottomNav';
 import { StackScreenProps } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import { harmonySections } from '../data/harmonySections';
-import { getUserStories, deleteUserStory } from '../services/UserStoriesService';
-import { StoryCardData } from '../types/HarmonyFlatList';
-import BackButton from '../assets/icons/common/BackButton';
-import VoiceIcon from '../assets/harmonyscreen/VoiceIcon';
-import TextIcon from '../assets/harmonyscreen/TextIcon';
-import AnimationIcon from '../assets/harmonyscreen/AnimationIcon';
-import DeleteButton from '../assets/icons/common/DeleteButton';
+import { RootStackParamList } from '../../navigation/AppNavigator';
+import { harmonySections } from '../../data/harmonySections';
+import { getUserStories, deleteUserStory } from '../../services/UserStoriesService';
+import { StoryCardData } from '../../types/HarmonyFlatList';
+import BackButton from '../../assets/icons/common/BackButton';
+import VoiceIcon from '../../assets/harmonyscreen/VoiceIcon';
+import TextIcon from '../../assets/harmonyscreen/TextIcon';
+import AnimationIcon from '../../assets/harmonyscreen/AnimationIcon';
+import DeleteButton from '../../assets/icons/common/DeleteButton';
 
 type Props = StackScreenProps<RootStackParamList, 'PlayStory'>;
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -152,15 +152,15 @@ const PlayStoryScreen: React.FC<Props> = ({ route, navigation }) => {
 
         <IconRow>
           <TouchableOpacity onPress={() => console.log('Play Voice')}>
-            <VoiceIcon fill={theme.colors.primary} />
+            <VoiceIcon fill={theme.colors.muted} />
             <Label>Voice</Label>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => console.log('Show Text')}>
-            <TextIcon fill={theme.colors.primary} />
+            <TextIcon fill={theme.colors.muted} />
             <Label>Text</Label>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => console.log('Play Animation')}>
-            <AnimationIcon fill={theme.colors.primary} />
+            <AnimationIcon fill={theme.colors.muted} />
             <Label>Animation</Label>
           </TouchableOpacity>
         </IconRow>

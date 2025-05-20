@@ -2,11 +2,10 @@ import React, { useState } from 'react';
 import { View, Text, Alert, TextInput, Platform, ImageBackground } from 'react-native';
 import styled from 'styled-components/native';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import Button from '../components/common/Button';
-import { signInWithGoogle, signInWithEmail, signUpWithEmail } from '../services/firebase';
+import { signInWithGoogle, signInWithEmail, signUpWithEmail } from '../../services/firebase';
 import Constants from 'expo-constants';
 import { StackScreenProps } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/AppNavigator'; // Updated
+import { RootStackParamList } from '../../navigation/AppNavigator'; // Updated
 import { DefaultTheme } from 'styled-components/native';
 
 type AuthScreenProps = StackScreenProps<RootStackParamList, 'Auth'>; // Updated
@@ -45,7 +44,7 @@ const ButtonContainer = styled.View`
   justify-content: center;
 `;
 
-const SocialButton = styled(Button)`
+const SocialButton = styled.View`
   width: 325px;
   height: 55px;
   margin-bottom: 15px;
