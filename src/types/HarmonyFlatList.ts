@@ -21,5 +21,6 @@ export interface HarmonySection {
     badges?: string[] // ['New', 'Tailored', 'Trending']
     babyNameTag?: string // “For Freya” (personalization)
     cardColor?: 'lavender' | 'teal' | 'peach'
+    fullStory?: string
   }
   

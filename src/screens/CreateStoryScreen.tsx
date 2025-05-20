@@ -92,6 +92,7 @@ const CreateStoryScreen: React.FC<Props> = ({ navigation }) => {
   const scrollRef = useRef<ScrollView>(null);
   const [showPreviewButton, setShowPreviewButton] = useState(false);
   const [storyPreview, setStoryPreview] = useState('');
+  const [fullStory, setFullStory] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [showGoToStory, setShowGoToStory] = useState(false);
 
@@ -153,9 +154,22 @@ const CreateStoryScreen: React.FC<Props> = ({ navigation }) => {
     adventure at ${storyConfig.location}.`;
     try {
       const fullStory = await queryWhispr(prompt);
+      setFullStory(fullStory);
       const firstTenWords = fullStory.split(' ').slice(0, 10).join(' ') + '...';
       setStoryPreview(firstTenWords);
-      setShowGoToStory(true); 
+      setShowGoToStory(true);
+
+       //save in storage
+       await saveUserStory({
+        id: storyIdRef.current,
+        title: `${storyConfig.concept}…`,
+        thumbnail: 'local://custom.png',
+        type: 'generated',
+        ctaLabel: 'Play',
+        cardColor: 'peach',
+        moodTags: [storyConfig.concept.toLowerCase()],
+        fullStory,
+    });
     } catch (err) {
       setStoryPreview('Something went wrong.');
     } finally {
@@ -283,6 +297,7 @@ const CreateStoryScreen: React.FC<Props> = ({ navigation }) => {
             )}
           </ParamBlock>
         </View>
+
         {/* Step 3: Preview */}
         {(showPreviewButton || showGoToStory) && (
         <View style={{ width: screenWidth, alignItems: 'center' }}>
@@ -290,7 +305,11 @@ const CreateStoryScreen: React.FC<Props> = ({ navigation }) => {
             <Spinner size={75} />
           ) : showGoToStory ? (
             <TouchableOpacity
-              onPress={() => navigation.navigate('PlayStory', { storyId: storyIdRef.current })}
+              onPress={() => navigation.navigate('PlayStory', 
+                { storyId: storyIdRef.current,
+                  fullStory,
+                 })
+                }
               style={{
                 alignSelf: 'center',
                 marginTop: 24,
@@ -328,7 +347,7 @@ const CreateStoryScreen: React.FC<Props> = ({ navigation }) => {
       </BackButton>
       <BottomNav navigation={navigation} activeScreen="Harmony" />
     </Container>
-  );
-};
+    );
+  };
 
 export default CreateStoryScreen;

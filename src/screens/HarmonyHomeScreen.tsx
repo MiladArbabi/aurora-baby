@@ -140,10 +140,18 @@ const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
         item.action
           ? item.action
           : () => {
-              if (sectionId === 'play-a-story' || sectionId === 'user-created') {
-                navigation.navigate('PlayStory', { storyId: item.id });
-              } else if (sectionId === 'create-a-story') {
+            // any “play-a-story” or “user-stories” go to our PlayStoryScreen…
+              if (sectionId === 'play-a-story' || sectionId === 'user-stories') {
+                navigation.navigate('PlayStory', 
+                  { 
+                    storyId: item.id,
+                    fullStory: item.fullStory,
+                  });
+              } 
+              // create-a-story still goes to the builder…
+              else if (sectionId === 'create-a-story') {
                 navigation.navigate('CreateStory');
+                // everything else (other categories) uses the built-in StoryPlayer
               } else {
                 navigation.navigate('StoryPlayer', { storyId: item.id });
               }

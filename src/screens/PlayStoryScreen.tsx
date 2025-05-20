@@ -3,17 +3,18 @@ import React from 'react';
 import { Dimensions, View, TouchableOpacity, Text } from 'react-native';
 import styled, { useTheme, DefaultTheme } from 'styled-components/native';
 import TopNav from '../components/common/TopNav';
-import BottomNav from 'components/common/BottomNav';
+import BottomNav from '../components/common/BottomNav';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { harmonySections } from '../data/harmonySections';
-import BackButton from 'assets/icons/common/BackButton';
+import { getUserStories } from '../services/UserStoriesService';
+import { StoryCardData } from '../types/HarmonyFlatList';
+import BackButton from '../assets/icons/common/BackButton';
 import VoiceIcon from '../assets/harmonyscreen/VoiceIcon';
 import TextIcon from '../assets/harmonyscreen/TextIcon';
 import AnimationIcon from '../assets/harmonyscreen/AnimationIcon';
 
 type Props = StackScreenProps<RootStackParamList, 'PlayStory'>;
-
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const Container = styled.View`
@@ -65,39 +66,62 @@ const BackWrapper = styled.TouchableOpacity`
 `;
 
 const PlayStoryScreen: React.FC<Props> = ({ route, navigation }) => {
-  const { storyId } = route.params;
+  const { storyId, fullStory: routeFullStory } = route.params;
   const theme = useTheme();
 
-  const story = React.useMemo(() => {
-    for (const section of harmonySections) {
-      const match = section.data.find((item) => item.id === storyId);
-      if (match) return match;
+  // 1) load *all* user stories once
+  const [userStories, setUserStories] = React.useState<StoryCardData[]>([]);
+  React.useEffect(() => {
+    getUserStories().then(setUserStories);
+  }, []);
+
+  // 2) find ours (if any)
+  const userStory = React.useMemo(() =>
+    userStories.find(s => s.id === storyId) ?? null
+  , [userStories, storyId]);
+
+  // 3) find built-in as fallback
+  const builtIn = React.useMemo<StoryCardData | null>(() => {
+    for (const sec of harmonySections) {
+      const m = sec.data.find(i => i.id === storyId);
+      if (m) return m;
     }
     return null;
   }, [storyId]);
-  
+
+  // 4) pick the metadata to render
+  const story = userStory ?? builtIn;
+  // 5) pick its text: prefer route-param, else saved fullStory, else blank
+  const storyText = routeFullStory
+    ?? userStory?.fullStory
+    ?? '';
+
+  // 6) Guard
   if (!story) return <Text>Story not found</Text>;
 
-  return (
-    <Container>
+    return (
+      <Container>
         <TopNav navigation={navigation} />
         <Card>
-            <CardTitle>{story.title}</CardTitle>
+          <CardTitle>{story.title}</CardTitle>
+          <Text style={{ color: 'white', marginTop: 12 }}>
+            {storyText}
+          </Text>
         </Card>
         <IconRow>
-            <TouchableOpacity onPress={() => console.log('Play Voice')}>
-            <VoiceIcon fill={theme.colors.primary} />
-            <Label>Voice</Label>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => console.log('Show Text')}>
-            <TextIcon fill={theme.colors.primary} />
-            <Label>Text</Label>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => console.log('Play Animation')}>
-            <AnimationIcon fill={theme.colors.primary} />
-            <Label>Animation</Label>
-            </TouchableOpacity>
-        </IconRow>
+        <TouchableOpacity onPress={() => console.log('Play Voice')}>
+          <VoiceIcon fill={theme.colors.primary} />
+          <Label>Voice</Label>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => console.log('Show Text')}>
+          <TextIcon fill={theme.colors.primary} />
+          <Label>Text</Label>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => console.log('Play Animation')}>
+          <AnimationIcon fill={theme.colors.primary} />
+          <Label>Animation</Label>
+        </TouchableOpacity>
+      </IconRow>
         <BackWrapper onPress={() => navigation.goBack()}>
             <BackButton fill={theme.colors.text} />
         </BackWrapper>
