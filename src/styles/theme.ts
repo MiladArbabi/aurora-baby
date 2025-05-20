@@ -78,6 +78,33 @@ export const theme = {
   sizes,
   carousel,
   mode: 'light',
+  card: {
+    // used by ReusableCarousel “main” (big hero card):
+    large: {
+      widthFactor: 0.9,    // screenW * 0.9
+      heightFactor: 0.55,  // screenH * 0.55
+      borderRadius: 10,
+    },
+    // “feature” / common cards:
+    common: {
+      widthFactor: 0.25,
+      heightFactor: 0.2,
+      borderRadius: 5,
+    },
+    // category cards (a bit larger than common):
+    // 👉 naming options: “medium”, “highlight”, “promo”
+    medium: {
+      widthFactor: 0.4,
+      heightFactor: 0.4,
+      borderRadius: 8,
+    },
+    // game cards:
+    game: {
+      widthFactor: 0.2,
+      heightFactor: 0.1,
+      borderRadius: 10,
+    },
+  },
 } as const;
 
 export const rneThemeBase: Theme = {
