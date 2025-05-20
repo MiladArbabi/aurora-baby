@@ -153,31 +153,31 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => { // Updated
   };
 
   return (
-    <Container source={require('../assets/png/system/lightbackground.png')} resizeMode="cover" testID="auth-container">
+    <Container source={require('../../assets/png/system/lightbackground.png')} resizeMode="cover" testID="auth-container">
       <SkipButtonContainer testID="skip-button-container" onPress={() => console.log('Skip pressed')}>
         <SkipButtonText>SKIP</SkipButtonText>
       </SkipButtonContainer>
       <View>
-        <LogoImage source={require('../assets/png/system/colorlogo.png')} testID="logo-image" />
+        <LogoImage source={require('../../assets/png/system/colorlogo.png')} testID="logo-image" />
         <LogoText>Aurora Baby</LogoText>
         <Subtext>harmony, care and wonder</Subtext>
       </View>
       <ButtonContainer>
         <SocialButton testID="styled-button-facebook" onPress={() => {}}>
           <SocialButtonContent>
-            <SocialIcon source={require('../assets/png/auth/facebook-lightmode.png')} />
+            <SocialIcon source={require('../../assets/png/auth/facebook-lightmode.png')} />
             <Text style={{ color: '#E9DAFA', fontFamily: 'Edrosa', fontSize: 16 }}>CONTINUE WITH FACEBOOK</Text>
           </SocialButtonContent>
         </SocialButton>
         <SocialButton testID="styled-button-google" onPress={handleGoogleSignIn}>
           <SocialButtonContent>
-            <SocialIcon source={require('../assets/png/auth/google-lightmode.png')} />
+            <SocialIcon source={require('../../assets/png/auth/google-lightmode.png')} />
             <Text style={{ color: '#E9DAFA', fontFamily: 'Edrosa', fontSize: 16 }}>CONTINUE WITH GOOGLE</Text>
           </SocialButtonContent>
         </SocialButton>
         <SocialButton testID="styled-button-apple" onPress={() => {}}>
           <SocialButtonContent>
-            <SocialIcon source={require('../assets/png/auth/appleicon-lightmode.png')} />
+            <SocialIcon source={require('../../assets/png/auth/appleicon-lightmode.png')} />
             <Text style={{ color: '#E9DAFA', fontFamily: 'Edrosa', fontSize: 16 }}>CONTINUE WITH APPLE</Text>
           </SocialButtonContent>
         </SocialButton>

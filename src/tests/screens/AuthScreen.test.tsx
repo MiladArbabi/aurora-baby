@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import AuthScreen from '../../screens/AuthScreen';
+import AuthScreen from '../../screens/auth/AuthScreen';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
@@ -18,6 +18,9 @@ jest.mock('../../services/firebase', () => ({
   signInWithEmail: jest.fn(() => Promise.resolve({ email: 'test@example.com', uid: 'mock-uid', getIdToken: jest.fn().mockResolvedValue('mock-token') })),
   signUpWithEmail: jest.fn(() => Promise.resolve({ email: 'test@example.com', uid: 'mock-uid', getIdToken: jest.fn().mockResolvedValue('mock-token') })),
 }));
+
+jest.mock('../../assets/png/system/lightbackground.png', () => 'lightbackground-mock');
+jest.mock('../../assets/png/system/colorlogo.png', () => 'colorlogo-mock');
 
 const Stack = createStackNavigator<RootStackParamList>();
 
