@@ -6,7 +6,7 @@ import { ThemeProvider as StyledThemeProvider } from 'styled-components/native';
 import { useFonts } from 'expo-font';
 import AppNavigator from './src/navigation/AppNavigator';
 import { rneThemeBase, theme } from './src/styles/theme';
-import LoadingSpinner from './src/components/common/LoadingSpinner';
+import LoadingSpinner from './src/components/common/Spinner';
 import { LogBox } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import WhisprScreen from './src/screens/WhisprScreen';
