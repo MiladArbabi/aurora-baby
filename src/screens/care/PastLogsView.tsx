@@ -10,14 +10,14 @@ import {
   Dimensions,
 } from 'react-native'
 import { useTheme } from 'styled-components/native'
-import { QuickLogEntry } from '../models/QuickLogSchema'
-import { quickLogEmitter } from '../storage/QuickLogEvents';
-import { getLogsBetween, deleteLogEntry  } from '../services/QuickLogAccess'
+import { QuickLogEntry } from '../../models/QuickLogSchema'
+import { quickLogEmitter } from '../../storage/QuickLogEvents';
+import { getLogsBetween, deleteLogEntry  } from '../../services/QuickLogAccess'
 import CareLayout from 'components/carescreen/CareLayout'
-import { MiniTab } from '../components/carescreen/MiniNavBar'
+import { MiniTab } from '../../components/carescreen/MiniNavBar'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useNavigation } from '@react-navigation/native'
-import { RootStackParamList } from '../navigation/AppNavigator'
+import { RootStackParamList } from '../../navigation/AppNavigator'
 import LogDetailModal from 'components/carescreen/LogDetailModal'
 import { startOfToday } from 'date-fns';
 

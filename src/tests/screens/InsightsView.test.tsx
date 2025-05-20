@@ -4,7 +4,7 @@ import { render, fireEvent } from '@testing-library/react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import { ThemeProvider } from 'styled-components/native'
 import { theme } from '../../styles/theme'
-import InsightsView from '../../screens/InsightsView'
+import InsightsView from '../../screens/care/InsightsView'
 import { useInsightsData } from '../../hooks/useInsightsData'
 import { useChartSpecs }  from '../../hooks/useChartSpecs'
 

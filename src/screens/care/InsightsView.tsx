@@ -15,14 +15,14 @@ import { startOfDay, subDays, startOfWeek, subWeeks, addWeeks, addDays,
   startOfMonth, subMonths, addMonths } from 'date-fns'
 import Icon from 'react-native-vector-icons/Feather'
 
-import { RootStackParamList } from '../navigation/AppNavigator'
+import { RootStackParamList } from '../../navigation/AppNavigator'
 import CareLayout from 'components/carescreen/CareLayout'
 import { MiniTab } from 'components/carescreen/MiniNavBar'
 import CalendarGrid from 'components/common/CalendarGrid'
 
-import { useInsightsData } from '../hooks/useInsightsData'
-import { ChartCard, ChartSpec } from '../components/carescreen/ChartCard'
-import { useChartSpecs } from '../hooks/useChartSpecs'
+import { useInsightsData } from '../../hooks/useInsightsData'
+import { ChartCard, ChartSpec } from '../../components/carescreen/ChartCard'
+import { useChartSpecs } from '../../hooks/useChartSpecs'
 
 type InsightsNavProp = StackNavigationProp<RootStackParamList, 'Care'>
 

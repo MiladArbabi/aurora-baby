@@ -3,7 +3,7 @@ import React from 'react'
 import { render, fireEvent, waitFor } from '@testing-library/react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import { ThemeProvider } from 'styled-components/native'
-import PastLogsView from '../../screens/PastLogsView'
+import PastLogsView from '../../screens/care/PastLogsView'
 import * as QLAccess from '../../services/QuickLogAccess'
 import { theme } from '../../styles/theme'
 
