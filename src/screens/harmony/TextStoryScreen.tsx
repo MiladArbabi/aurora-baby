@@ -5,7 +5,8 @@ import TopNav from '../../components/common/TopNav';
 import BottomNav from '../../components/common/BottomNav';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
-import AuroraLogo from '../../assets/system/colorlogo'; // your SVG or PNG
+import AuroraLogo from '../../assets/system/colorlogo';
+import { prebuiltStoryPages } from '../../data/prebuiltStoryPages';
 
 type Props = StackScreenProps<RootStackParamList, 'TextStory'>;
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
@@ -42,17 +43,44 @@ export default function TextStoryScreen({ route, navigation }: Props) {
   const theme = useTheme();
   const { fullStory = '' } = route.params;
 
-  // 1) split story into pages by character
+  // 1) split story into pages on whole sentences
   const pages = React.useMemo(() => {
-    const raw = fullStory.trim();
-    const result: string[] = [];
-    let idx = 0;
-    while (idx < raw.length) {
-      result.push(raw.slice(idx, idx + PAGE_CHAR_LIMIT));
-      idx += PAGE_CHAR_LIMIT;
+    // 0) manual override for any prebuilt story
+    if (prebuiltStoryPages[route.params.storyId]) {
+        return prebuiltStoryPages[route.params.storyId];
     }
+
+    // trim leading/trailing whitespace first
+    const text = fullStory.trim();
+    if (!text) return []; 
+
+    // break into sentences (keeping punctuation)
+    const sentences = text
+    .split(/([.?!])\s+/)
+    .reduce<string[]>((acc, piece, i, arr) => {
+        if (/[.?!]/.test(piece) && i < arr.length - 1) {
+            // append punctuation + space to previous sentence
+            acc[acc.length - 1] += piece + ' ';
+        } else {
+            acc.push(piece);
+        }
+        return acc;
+    }, []);
+
+    const result: string[] = [];
+    let buffer = '';
+    for (const s of sentences) {
+        if (buffer.length + s.length > PAGE_CHAR_LIMIT) {
+            result.push(buffer.trim());
+            buffer = '';
+        }
+        buffer += s;
+    }
+    // leftover
+    if (buffer.trim()) result.push(buffer.trim());
+
     return result;
-  }, [fullStory]);
+}, [fullStory]);
 
   // 2) handle the logo spin
   const spinAnim = React.useRef(new Animated.Value(0)).current;

@@ -14,6 +14,7 @@ import VoiceIcon from '../../assets/harmonyscreen/VoiceIcon';
 import TextIcon from '../../assets/harmonyscreen/TextIcon';
 import AnimationIcon from '../../assets/harmonyscreen/AnimationIcon';
 import DeleteButton from '../../assets/icons/common/DeleteButton';
+import { HarmonySection } from '../../types/HarmonyFlatList';
 
 type Props = StackScreenProps<RootStackParamList, 'PlayStory'>;
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -155,14 +156,18 @@ const PlayStoryScreen: React.FC<Props> = ({ route, navigation }) => {
             <VoiceIcon fill={theme.colors.muted} />
             <Label>Voice</Label>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('TextStory', {
+          <TouchableOpacity 
+            disabled={!story?.fullStory}
+            onPress={() => navigation.navigate('TextStory', {
             storyId,
-            fullStory: storyText,
+            fullStory: story?.fullStory ?? '',
               })
             }
           >
             <TextIcon fill={theme.colors.muted} />
-            <Label>Text</Label>
+            <Label style={{ opacity: story?.fullStory ? 1 : 0.3 }}>
+              Text
+            </Label>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => console.log('Play Animation')}>
             <AnimationIcon fill={theme.colors.muted} />

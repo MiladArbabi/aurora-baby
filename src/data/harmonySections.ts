@@ -1,5 +1,6 @@
 // src/data/harmonySections.ts
 import { HarmonySection } from "types/HarmonyFlatList"
+import { prebuiltStoryContents } from "./prebuiltStoryContents";
 
 export const harmonySections: HarmonySection[] = [
   {
@@ -16,7 +17,8 @@ export const harmonySections: HarmonySection[] = [
         type: 'prebuilt',
         ctaLabel: 'Play',
         badges: ['New'],
-        cardColor: 'lavender'
+        cardColor: 'lavender',
+        fullStory: prebuiltStoryContents['birk-forest-journey'],
       },
       {
         id: 'freya-sings',
@@ -28,6 +30,7 @@ export const harmonySections: HarmonySection[] = [
         ctaLabel: 'Play',
         badges: ['Popular'],
         cardColor: 'lavender',
+        fullStory: prebuiltStoryContents['freya-sings'],
       },
       {
         id: 'nordra-arrives',
@@ -39,6 +42,7 @@ export const harmonySections: HarmonySection[] = [
         ctaLabel: 'Play',
         badges: ['Adventure'],
         cardColor: 'lavender',
+        fullStory: prebuiltStoryContents['nordra-arrives'],
       },
     ],
   },
