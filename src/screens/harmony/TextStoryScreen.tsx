@@ -174,7 +174,22 @@ export default function TextStoryScreen({ route, navigation }: Props) {
                     />
                 )}
                 <PageText>{item.text}</PageText>
-                    <Pagination>
+                {/* visual progress indicator */}
+                <View style={{ flexDirection: 'row', justifyContent: 'center', padding: 8 }}>
+                    {pages.map((_, i) => (
+                    <View
+                    key={i}
+                    style={{
+                        width: 8,
+                        height: 8,
+                        margin: 4,
+                        borderRadius: 4,
+                        backgroundColor: i === page ? theme.colors.primary : theme.colors.muted,
+                    }}
+                    />
+                    ))}
+                    </View>
+                    {/* <Pagination>
                         <NavButton
                         disabled={page === 0}
                         onPress={() => {
@@ -205,7 +220,7 @@ export default function TextStoryScreen({ route, navigation }: Props) {
                             height={50}
                         />
                     </NavButton>
-                </Pagination>
+                </Pagination> */}
             </PageContainer>
           )}
           />

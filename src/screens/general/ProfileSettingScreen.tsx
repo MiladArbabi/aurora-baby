@@ -4,12 +4,12 @@ import styled, { useTheme } from 'styled-components/native';
 import { useNavigation } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 import { DefaultTheme } from 'styled-components/native';
 import { getAuth, signOut } from 'firebase/auth';
 
-import { getChildProfile } from '../storage/ChildProfileStorage'
-import { getParentProfile } from '../storage/ParentProfileStorage'
+import { getChildProfile } from '../../storage/ChildProfileStorage'
+import { getParentProfile } from '../../storage/ParentProfileStorage'
 
 const Container = styled.View`
   flex: 1;

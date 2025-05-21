@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, act } from '@testing-library/react-native';
-import LogoScreen from '../../screens/LogoScreen';
+import LogoScreen from '../../screens/general/LogoScreen';
 import { StackNavigationProp } from '@react-navigation/stack';
 
 jest.useFakeTimers();
