@@ -1,15 +1,42 @@
 // src/data/prebuiltStoryPages.ts
-export const prebuiltStoryPages: Record<string, string[]> = {
+
+export interface StoryPage {
+    text: string;
+    // either a local require or a remote URL
+    image?: string;          
+    // or a Lottie JSON import
+    animation?: any;         
+  }
+
+export const prebuiltStoryPages: Record<string, StoryPage[]> = {
     'birk-forest-journey': [
-      "Once upon a time, in a whispering forest filled with ancient pines…",
-      "All the woodland creatures stirred beneath the emerald canopy…",
-      "And that is how Birk began his grand adventure."
-    ],
+        {
+          text: "Once upon a time, in a whispering forest filled with ancient pines…",
+          image: require('../assets/storyImages/Birk - Xesus Version - with tree.png'),
+        },
+        {
+          text: "All the woodland creatures stirred beneath the emerald canopy…",
+          image: require('../assets/storyImages/Birk - Xesus Version - with tree.png'),
+        },
+        {
+          text: "And that is how Birk began his grand adventure.",
+          image: require('../assets/storyImages/Birk - Xesus Version - with tree.png'),
+        },
+      ],
     'freya-sings': [
-      "High above the silver trees, Freya lifted her voice to the stars…",
-      "Each note drifted like a feather across the moonlit sky…",
-      "And the night itself held its breath…"
-    ],
+    {
+      text: "High above the silver trees, Freya lifted her voice to the stars…",
+      image: require('../assets/storyImages/Birk - Xesus Version - with tree.png'),
+    },
+    {
+      text: "Each note drifted like a feather across the moonlit sky…",
+      image: require('../assets/storyImages/Birk - Xesus Version - with tree.png'),
+    },
+    {
+      text: "And the night itself held its breath…",
+      image: require('../assets/storyImages/Birk - Xesus Version - with tree.png'),
+    },
+  ],
     // …etc for each prebuilt ID
   }
   
