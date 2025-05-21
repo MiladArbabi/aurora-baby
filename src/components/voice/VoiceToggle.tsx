@@ -36,7 +36,7 @@ export const VoiceToggle: React.FC<VoiceToggleProps> = ({
       accessibilityRole="button"
     >
       {isSpeaking ? (
-        <PauseIcon stroke={theme.colors.primary} width={32} height={32} />
+        <PauseIcon fill={theme.colors.primary} width={32} height={32} />
       ) : (
         <VoiceIcon fill={theme.colors.primary} width={32} height={32} />
       )}
