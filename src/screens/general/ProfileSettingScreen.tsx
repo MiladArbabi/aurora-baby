@@ -89,7 +89,7 @@ const ProfileSettingScreen: React.FC = () => {
   const theme = useTheme();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [name, setName] = useState('User Name');
-  const [avatar, setAvatar] = useState(require('../assets/png/icons/avatar.png'));
+  const [avatar, setAvatar] = useState(require('../../assets/png/icons/avatar.png'));
   const [childName, setChildName] = useState('Child Name');
   const [childBirthdate, setChildBirthdate] = useState('YYYY-MM-DD');
   const [colorMode, setColorMode] = useState<'light' | 'dark'>('light');
