@@ -20,6 +20,7 @@ import LogDetailScreen from '../screens/care/LogDetailScreen'
 import PlayStoryScreen from 'screens/harmony/PlayStoryScreen'
 import CreateStoryScreen from 'screens/harmony/CreateStoryScreen'
 import TextStoryScreen from 'screens/harmony/TextStoryScreen'
+import VoiceStorytellingScreen from 'screens/harmony/VoiceStorytellingScreen'
 
 import { getChildProfile } from '../services/ChildProfileAccess'
 import { ChildProfile } from '../models/ChildProfile'
@@ -41,6 +42,7 @@ export type RootStackParamList = {
   PlayStory: { storyId: string; fullStory?: string; }
   CreateStory: undefined;
   TextStory: { storyId: string; fullStory?: string };
+  VoiceStory: {}
 }
 
 const Stack = createStackNavigator<RootStackParamList>()
@@ -110,6 +112,7 @@ export default function AppNavigator() {
           <Stack.Screen name="PlayStory" component={PlayStoryScreen} />
           <Stack.Screen name="CreateStory" component={CreateStoryScreen} />
           <Stack.Screen name="TextStory" component={TextStoryScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="VoiceStory" component={VoiceStorytellingScreen} options={{ headerShown: false }} />
         </Stack.Navigator>
       )}
     </NavigationContainer>

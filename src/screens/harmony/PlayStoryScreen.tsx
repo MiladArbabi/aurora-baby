@@ -16,6 +16,11 @@ import AnimationIcon from '../../assets/harmonyscreen/AnimationIcon';
 import DeleteButton from '../../assets/icons/common/DeleteButton';
 import { HarmonySection } from '../../types/HarmonyFlatList';
 
+import { useVoice } from 'hooks/useVoice';
+import { VoiceToggle } from 'components/voice/VoiceToggle';
+import { VoiceSpeedControl } from 'components/harmonyscreen/VoiceSpeedControl';
+import { VoiceProgress } from 'components/voice/VoiceProgress';
+
 type Props = StackScreenProps<RootStackParamList, 'PlayStory'>;
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -77,6 +82,7 @@ const Label = styled.Text`
 const PlayStoryScreen: React.FC<Props> = ({ route, navigation }) => {
   const { storyId, fullStory: routeFullStory } = route.params;
   const theme = useTheme();
+  
   // 1) load *all* user stories once
   const [userStories, setUserStories] = React.useState<StoryCardData[]>([]);
   React.useEffect(() => {
@@ -152,7 +158,9 @@ const PlayStoryScreen: React.FC<Props> = ({ route, navigation }) => {
           </Card>
 
         <IconRow>
-          <TouchableOpacity onPress={() => console.log('Play Voice')}>
+          <TouchableOpacity onPress={() => 
+            navigation.navigate('VoiceStory', { 
+              storyId, fullStory: storyText })}>
             <VoiceIcon fill={theme.colors.muted} />
             <Label>Voice</Label>
           </TouchableOpacity>
