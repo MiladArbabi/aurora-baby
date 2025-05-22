@@ -1,0 +1,24 @@
+diff --git a/scripts/android/autolinking_implementation.gradle b/scripts/android/autolinking_implementation.gradle
+index abc123..def456 100644
+--- a/scripts/android/autolinking_implementation.gradle
++++ b/scripts/android/autolinking_implementation.gradle
+@@ -286,11 +286,11 @@ if (rootProject instanceof ProjectDescriptor) {
+    // Apply plugins for all app projects
+    gradle.afterProject { project ->
+      if (!project.plugins.hasPlugin('com.android.application')) {
+        return
+      }
+-      if (project.name != 'app') {
+-        apply plugin: 'com.android.library'
+-      }
+      for (module in modules) {
+        for (modulePlugin in module.plugins) {
+          println " ${Emojis.INFORMATION}  ${Colors.YELLOW}Applying gradle plugin${Colors.RESET} '${Colors.GREEN}${modulePlugin.id}${Colors.RESET}' (${module.name}@${module.version})"
+          project.plugins.apply(modulePlugin.id)
+        }
+      }
++      // Skip applying com.android.library to the :app project
++      if (project.name == 'app' || project.name == 'aurora-baby-mobile') {
++        return
++      }
+    }
