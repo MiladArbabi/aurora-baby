@@ -2,3 +2,13 @@ node_modules
 .expo/devices.json
 /models/*.gguf
 server/.env
+# Environment variables
+.env
+# Gradle caches
+android/.gradle
+android/build
+android/app/build
+# Keystores
+android/app/debug.keystore
+# Local configs
+*.local
