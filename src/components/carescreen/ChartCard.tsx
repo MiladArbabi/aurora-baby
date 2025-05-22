@@ -1,9 +1,9 @@
 //src/components/carescreen/ChartCard.tsx
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { 
+/* import { 
   LineChart, BarChart, Grid, AreaChart, StackedBarChart, PieChart, XAxis, YAxis 
-    } from 'react-native-svg-charts';
+    } from 'react-native-svg-charts'; */
 import * as shape from 'd3-shape';
 import { format, subDays, subWeeks, subMonths } from 'date-fns';
 import { useTheme } from 'styled-components/native';

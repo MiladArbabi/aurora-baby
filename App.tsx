@@ -9,7 +9,8 @@ import { rneThemeBase, theme } from './src/styles/theme';
 import LoadingSpinner from './src/components/common/Spinner';
 import { LogBox } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import WhisprScreen from './src/screens/WhisprScreen';
+import 'react-native-get-random-values';
+import 'react-native-url-polyfill';
 
 LogBox.ignoreLogs([
   'Text strings must be rendered within a <Text> component',
