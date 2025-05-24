@@ -1,5 +1,5 @@
 // src/screens/HarmonyHomeScreen.tsx
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, StyleSheet, FlatList, Text, TouchableOpacity, Alert, RefreshControl } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -13,11 +13,13 @@ import { Dimensions } from 'react-native';
 import { getUserStories, deleteUserStory } from '../../services/UserStoriesService';
 import { useFocusEffect } from '@react-navigation/native';
 import { Card } from 'components/common/Card';
+import { getRecommendedStories } from '../../services/UserStoriesService'
 
 const { width: screenWidth } = Dimensions.get('window');
 const CARD_WIDTH = screenWidth * 0.38;
 const CARD_IMAGE_HEIGHT = CARD_WIDTH * 0.5625;
 const CARD_MARGIN_HORIZONTAL = screenWidth * 0.025;
+
 
 type PlaceholderCard = {
   id: string;
@@ -30,6 +32,7 @@ type PlaceholderCard = {
 
 type Props = StackScreenProps<RootStackParamList, 'Harmony'>;
 type CardWithPlaceholder = StoryCardData | PlaceholderCard;
+const [recommended, setRecommended] = useState<StoryCardData[]>([])
 
 const Container = styled.View`
   flex: 1;
@@ -81,8 +84,16 @@ const StoryTitle = styled.Text`
   margin-top: 4px;
 `;
 
+
 function useUserStoriesSection(): HarmonySection | null {
   const [userStories, setUserStories] = useState<StoryCardData[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const recs = await getRecommendedStories()
+      setRecommended(recs)
+    })()
+  }, [])
 
   useFocusEffect(
     useCallback(() => {
@@ -92,7 +103,7 @@ function useUserStoriesSection(): HarmonySection | null {
       })();
     }, [])
   );
-
+  
   if (userStories.length === 0) return null;
 
   return {
@@ -131,6 +142,14 @@ const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
     lavender: 'primary',
     teal:     'accent',
     peach:    'darkAccent', 
+  };
+
+  const recommendedSection: HarmonySection = {
+    id: 'recommended',
+    title: '⭐ Recommended For You',
+    subtitle: 'Based on your baby’s favorite themes',
+    type: 'play',
+    data: recommended,
   };
 
   const renderStoryCard = useCallback((item: StoryCardData, sectionId: string) => {
@@ -204,10 +223,15 @@ const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
     return [...cards, ...placeholders];
   };
 
+ 
+
   const userStoriesSection = useUserStoriesSection();
-  const sectionsToRender = userStoriesSection
-  ? [...harmonySections, userStoriesSection] // put it at the bottom
-  : harmonySections;
+  const sectionsToRender = [
+    recommendedSection,
+    ...harmonySections,
+    ...(userStoriesSection ? [userStoriesSection] : []),
+  ];
+  
 
   if (userStories !== null && userStories.length === 0) {
     return (
