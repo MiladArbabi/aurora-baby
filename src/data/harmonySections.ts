@@ -1,5 +1,4 @@
-// src/data/harmonySections.ts
-import { HarmonySection } from "types/HarmonyFlatList"
+import { HarmonySection } from "types/HarmonyFlatList";
 import { prebuiltStoryContents } from "./prebuiltStoryContents";
 
 export const harmonySections: HarmonySection[] = [
@@ -11,6 +10,8 @@ export const harmonySections: HarmonySection[] = [
       {
         id: 'birk-forest-journey',
         title: 'Birk’s Forest Journey',
+        fullStory: prebuiltStoryContents['birk-forest-journey'],
+        animationAsset: require('../assets/videos/logo-animation.mp4'),
         duration: 4,
         moodTags: ['adventure', 'calming'],
         thumbnail: 'https://cdn.aurora-baby.com/stories/birk.png',
@@ -18,11 +19,14 @@ export const harmonySections: HarmonySection[] = [
         ctaLabel: 'Play',
         badges: ['New'],
         cardColor: 'lavender',
-        fullStory: prebuiltStoryContents['birk-forest-journey'],
+        tags: ['adventure', 'forest', 'friends'],
+        ageRange: [2, 4],
+        favoritesCount: 42,
       },
       {
         id: 'freya-sings',
         title: 'Freya Sings to the Stars',
+        fullStory: prebuiltStoryContents['freya-sings'],
         duration: 3,
         moodTags: ['gentle', 'musical'],
         thumbnail: 'https://cdn.aurora-baby.com/stories/freya.png',
@@ -30,11 +34,14 @@ export const harmonySections: HarmonySection[] = [
         ctaLabel: 'Play',
         badges: ['Popular'],
         cardColor: 'lavender',
-        fullStory: prebuiltStoryContents['freya-sings'],
+        tags: ['musical', 'calm', 'night'],
+        ageRange: [1, 3],
+        favoritesCount: 58,
       },
       {
         id: 'nordra-arrives',
         title: 'Nordra’s Ride',
+        fullStory: prebuiltStoryContents['nordra-arrives'],
         duration: 5,
         moodTags: ['journey', 'wonder'],
         thumbnail: 'local://nordra_arrives.png',
@@ -42,10 +49,13 @@ export const harmonySections: HarmonySection[] = [
         ctaLabel: 'Play',
         badges: ['Adventure'],
         cardColor: 'lavender',
-        fullStory: prebuiltStoryContents['nordra-arrives'],
+        tags: ['journey', 'wonder', 'exploration'],
+        ageRange: [3, 6],
+        favoritesCount: 37,
       },
     ],
   },
+
   {
     id: 'create-a-story',
     title: '✍️ Create a Story',
@@ -58,7 +68,9 @@ export const harmonySections: HarmonySection[] = [
         thumbnail: 'local://create_blank.png',
         type: 'template',
         ctaLabel: 'Create',
-        cardColor: 'teal'
+        cardColor: 'teal',
+        fullStory: '',
+        tags: [],
       },
       {
         id: 'prompt-bedtime',
@@ -67,7 +79,9 @@ export const harmonySections: HarmonySection[] = [
         thumbnail: 'local://prompt_forest.png',
         type: 'prompt',
         ctaLabel: 'Start',
-        cardColor: 'teal'
+        cardColor: 'teal',
+        fullStory: '',
+        tags: ['bedtime', 'forest'],
       },
       {
         id: 'story-builder-bubbles',
@@ -76,7 +90,9 @@ export const harmonySections: HarmonySection[] = [
         thumbnail: 'local://story_bubble.png',
         type: 'generated',
         ctaLabel: 'Build',
-        cardColor: 'teal'
+        cardColor: 'teal',
+        fullStory: '',
+        tags: [],
       },
       {
         id: 'ai-guide',
@@ -85,10 +101,13 @@ export const harmonySections: HarmonySection[] = [
         thumbnail: 'local://ai_prompt.png',
         type: 'generated',
         ctaLabel: 'Generate',
-        cardColor: 'teal'
+        cardColor: 'teal',
+        fullStory: '',
+        tags: [],
       },
     ],
   },
+
   {
     id: 'personalized-stories',
     title: '🧠 Just for Your Baby',
@@ -105,7 +124,9 @@ export const harmonySections: HarmonySection[] = [
         ctaLabel: 'Play',
         babyNameTag: 'For Freya',
         badges: ['Tailored'],
-        cardColor: 'peach'
+        cardColor: 'peach',
+        fullStory: '',
+        tags: ['sleepy', 'calm'],
       },
       {
         id: 'birk-slumber',
@@ -116,7 +137,9 @@ export const harmonySections: HarmonySection[] = [
         type: 'personalized',
         ctaLabel: 'Play',
         babyNameTag: 'For Freya',
-        cardColor: 'peach'
+        cardColor: 'peach',
+        fullStory: '',
+        tags: ['sleepy'],
       },
       {
         id: 'stars-overhead',
@@ -127,7 +150,9 @@ export const harmonySections: HarmonySection[] = [
         type: 'personalized',
         ctaLabel: 'Play',
         babyNameTag: 'For Freya',
-        cardColor: 'peach'
+        cardColor: 'peach',
+        fullStory: '',
+        tags: ['gentle', 'sleepy'],
       },
       {
         id: 'morning-magic',
@@ -140,9 +165,12 @@ export const harmonySections: HarmonySection[] = [
         babyNameTag: 'For Freya',
         cardColor: 'peach',
         badges: ['New'],
+        fullStory: '',
+        tags: ['happy', 'morning'],
       },
     ],
   },
+
   {
     id: 'category-bedtime',
     title: '🌙 Bedtime Forests',
@@ -156,7 +184,11 @@ export const harmonySections: HarmonySection[] = [
         thumbnail: 'local://moss_moles.png',
         type: 'prebuilt',
         ctaLabel: 'Play',
-        cardColor: 'lavender'
+        cardColor: 'lavender',
+        fullStory: '',
+        tags: ['bedtime', 'nature'],
+        ageRange: [1, 3],
+        favoritesCount: 15,
       },
       {
         id: 'glowing-cave',
@@ -166,7 +198,11 @@ export const harmonySections: HarmonySection[] = [
         thumbnail: 'local://glowing_cave.png',
         type: 'prebuilt',
         ctaLabel: 'Play',
-        cardColor: 'lavender'
+        cardColor: 'lavender',
+        fullStory: '',
+        tags: ['adventure', 'magical'],
+        ageRange: [2, 5],
+        favoritesCount: 22,
       },
       {
         id: 'northern-lullaby',
@@ -176,7 +212,11 @@ export const harmonySections: HarmonySection[] = [
         thumbnail: 'local://northern_lullaby.png',
         type: 'prebuilt',
         ctaLabel: 'Play',
-        cardColor: 'lavender'
+        cardColor: 'lavender',
+        fullStory: '',
+        tags: ['music', 'soothing'],
+        ageRange: [1, 4],
+        favoritesCount: 30,
       },
     ],
   },
