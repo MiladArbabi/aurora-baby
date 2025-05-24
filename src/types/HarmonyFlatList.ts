@@ -10,9 +10,12 @@ export interface HarmonySection {
   
   export interface StoryCardData {
     id: string
-    title?: string
+    title: string
     description?: string
     duration?: number // in minutes
+    tags: string[]; 
+    ageRange?: [number, number];
+    favoritesCount?: number;
     moodTags?: string[] // ['gentle', 'sleepy', 'funny']
     thumbnail: string // URI or local asset
     type: 'prebuilt' | 'template' | 'prompt' | 'generated' | 'personalized'
@@ -21,6 +24,8 @@ export interface HarmonySection {
     badges?: string[] // ['New', 'Tailored', 'Trending']
     babyNameTag?: string // “For Freya” (personalization)
     cardColor?: 'lavender' | 'teal' | 'peach'
-    fullStory?: string
+    fullStory: string
+    animationAsset?: any; 
+
   }
   
