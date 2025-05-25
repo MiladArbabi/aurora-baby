@@ -1,5 +1,5 @@
 // src/screens/PlayStoryScreen.tsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Dimensions, View, TouchableOpacity, Text, Alert } from 'react-native';
 import styled, { useTheme, DefaultTheme } from 'styled-components/native';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -10,6 +10,7 @@ import { RootStackParamList } from '../../navigation/AppNavigator';
 import { harmonySections } from '../../data/harmonySections';
 import { getUserStories, deleteUserStory } from '../../services/UserStoriesService';
 import { StoryCardData, HarmonySection } from '../../types/HarmonyFlatList';
+import { logEvent } from '../../utils/analytics';
 
 import BackButton from '../../assets/icons/common/BackButton';
 import VoiceIcon from '../../assets/harmonyscreen/playstoryscreen/VoiceIcon';
@@ -117,6 +118,14 @@ const PlayStoryScreen: React.FC<Props> = ({ route, navigation }) => {
       </Container>
     );
   }
+ 
+    useEffect(() => {
+      // 🔔 Track that the user started playing the story
+      logEvent('story_played', {
+        storyId,
+        source: route.params.fromPreview ? 'preview' : 'library',
+      });
+    }, [storyId, route.params.fromPreview]);
 
   const onDelete = () => {
     Alert.alert(
@@ -129,6 +138,11 @@ const PlayStoryScreen: React.FC<Props> = ({ route, navigation }) => {
           style: "destructive",
           onPress: async () => {
             await deleteUserStory(storyId);
+             // Track that the user deleted the story
+             logEvent('story_deleted', {
+              storyId,
+              source: route.params.fromPreview ? 'preview' : 'library',
+             });
             navigation.goBack();
           }
         }
