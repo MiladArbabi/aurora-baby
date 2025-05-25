@@ -32,7 +32,6 @@ type PlaceholderCard = {
 
 type Props = StackScreenProps<RootStackParamList, 'Harmony'>;
 type CardWithPlaceholder = StoryCardData | PlaceholderCard;
-const [recommended, setRecommended] = useState<StoryCardData[]>([])
 
 const Container = styled.View`
   flex: 1;
@@ -88,13 +87,6 @@ const StoryTitle = styled.Text`
 function useUserStoriesSection(): HarmonySection | null {
   const [userStories, setUserStories] = useState<StoryCardData[]>([]);
 
-  useEffect(() => {
-    (async () => {
-      const recs = await getRecommendedStories()
-      setRecommended(recs)
-    })()
-  }, [])
-
   useFocusEffect(
     useCallback(() => {
       (async () => {
@@ -119,7 +111,15 @@ const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
   const theme = useTheme();
   const [userStories, setUserStories] = useState<StoryCardData[] | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [recommended, setRecommended] = useState<StoryCardData[]>([])
 
+  useEffect(() => {
+    (async () => {
+      const recs = await getRecommendedStories()
+      setRecommended(recs)
+    })()
+  }, [])
+  
   useFocusEffect(useCallback(() => {
     (async () => {
       const stories = await getUserStories();
