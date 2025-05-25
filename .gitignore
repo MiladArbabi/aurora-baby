@@ -12,3 +12,6 @@ android/app/build
 android/app/debug.keystore
 # Local configs
 *.local
+
+/models/.quantize-venv/
+/models/*.gguf

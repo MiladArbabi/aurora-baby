@@ -62,8 +62,8 @@ const ControlRow = styled.View`
   flex-direction: row;
   justify-content: space-around;
   align-items: center;
-  margin-bottom: 20px; 
-  padding-horizontal: 20px; 
+  margin-vertical: 20px; 
+  padding-horizontal: 30px; 
 `;
 
 const ControlButton = styled.TouchableOpacity`
@@ -121,9 +121,22 @@ const AnimatedIconButton: React.FC<AnimButtonProps> = ({
 }
 
 const VoiceStorytellingScreen: React.FC<Props> = ({ route, navigation }) => {
-  const { storyId, fullStory, title } = route.params;
+  const { storyId, fullStory, title } = route.params ?? {};
   const theme = useTheme();
   const { speak, pause, stop, isSpeaking, isPaused } = useTTS();
+
+  if (!storyId || !fullStory || !title) {
+
+    return (
+      <Container>
+        <TopNav navigation={navigation} />
+        <Card>
+          <CardTitle>Story not found</CardTitle>
+          <StoryText>Missing or invalid story data. Please return and try again.</StoryText>
+        </Card>
+      </Container>
+    );
+  }
 
   return (
     <Container>
@@ -136,7 +149,6 @@ const VoiceStorytellingScreen: React.FC<Props> = ({ route, navigation }) => {
         <StoryText>{fullStory}</StoryText>
       </Card>
       <ControlRow>
-
         <AnimatedIconButton onPress={pause} disabled={!isSpeaking || isPaused}>
           <PauseIcon fill={theme.colors.primary} />
         </AnimatedIconButton>
@@ -152,7 +164,8 @@ const VoiceStorytellingScreen: React.FC<Props> = ({ route, navigation }) => {
           <StopIcon fill={theme.colors.primary} />
         </AnimatedIconButton>
       </ControlRow>
-    </Container>
+      <BottomNav navigation={navigation} activeScreen="Harmony" />
+      </Container>
   );
 };
 

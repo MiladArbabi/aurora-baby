@@ -2,19 +2,20 @@
 import React from 'react';
 import { Dimensions, View, TouchableOpacity, Text, Alert } from 'react-native';
 import styled, { useTheme, DefaultTheme } from 'styled-components/native';
+import { StackScreenProps } from '@react-navigation/stack';
+
 import TopNav from '../../components/common/TopNav';
 import BottomNav from '../../components/common/BottomNav';
-import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { harmonySections } from '../../data/harmonySections';
 import { getUserStories, deleteUserStory } from '../../services/UserStoriesService';
-import { StoryCardData } from '../../types/HarmonyFlatList';
+import { StoryCardData, HarmonySection } from '../../types/HarmonyFlatList';
+
 import BackButton from '../../assets/icons/common/BackButton';
-import VoiceIcon from '../../assets/harmonyscreen/VoiceIcon';
-import TextIcon from '../../assets/harmonyscreen/TextIcon';
-import AnimationIcon from '../../assets/harmonyscreen/AnimationIcon';
+import VoiceIcon from '../../assets/harmonyscreen/playstoryscreen/VoiceIcon';
+import TextIcon from '../../assets/harmonyscreen/playstoryscreen/TextIcon';
+import AnimationIcon from '../../assets/harmonyscreen/playstoryscreen/AnimationIcon';
 import DeleteButton from '../../assets/icons/common/DeleteButton';
-import { HarmonySection } from '../../types/HarmonyFlatList';
 
 type Props = StackScreenProps<RootStackParamList, 'PlayStory'>;
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -100,6 +101,7 @@ const PlayStoryScreen: React.FC<Props> = ({ route, navigation }) => {
   // 4) pick the metadata to render
   const story = userStory ?? builtIn;
   const storyText = routeFullStory ?? userStory?.fullStory ?? '';
+  const storyTitle = story?.title ?? '';
 
   // 5) Guard
   if (!story) {
@@ -152,7 +154,15 @@ const PlayStoryScreen: React.FC<Props> = ({ route, navigation }) => {
           </Card>
 
         <IconRow>
-          <TouchableOpacity onPress={() => console.log('Play Voice')}>
+          <TouchableOpacity 
+          onPress={() => 
+            navigation.navigate('VoiceStorytelling', {
+              storyId,
+              title: story.title,
+              fullStory: storyText,
+            })
+          }
+          >
             <VoiceIcon fill={theme.colors.muted} />
             <Label>Voice</Label>
           </TouchableOpacity>
@@ -169,11 +179,20 @@ const PlayStoryScreen: React.FC<Props> = ({ route, navigation }) => {
               Text
             </Label>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => console.log('Play Animation')}>
+          <TouchableOpacity
+            disabled={!story?.animationAsset}
+            onPress={() => navigation.navigate('AnimatedStory', {
+              storyId,
+              fullStory: storyText,
+              animationAsset: story.animationAsset ?? require('../../assets/videos/logo-animation.mp4'),
+            })}
+          >
             <AnimationIcon fill={theme.colors.muted} />
-            <Label>Animation</Label>
+            <Label style={{ opacity: story?.animationAsset ? 1 : 0.3 }}>
+              Animation
+            </Label>
           </TouchableOpacity>
-        </IconRow>
+                  </IconRow>
         
         <BottomNav navigation={navigation} activeScreen="Harmony" />
     </Container>

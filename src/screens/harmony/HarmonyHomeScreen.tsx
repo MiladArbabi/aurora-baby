@@ -1,4 +1,4 @@
-// src/screens/HarmonyHomeScreen.tsx
+// src/screens/harmony/HarmonyHomeScreen.tsx
 import React, { useState, useCallback, useEffect } from 'react';
 import { View, StyleSheet, FlatList, Text, TouchableOpacity, Alert, RefreshControl } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';

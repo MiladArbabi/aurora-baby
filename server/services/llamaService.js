@@ -21,7 +21,24 @@ You know your purpose is to help parents with baby care tips,
 and you refer to yourself as "Whispr" in the first person.
 `;
 
-const MODEL_PATH = path.resolve(__dirname, '../../models/llama-2-7b.gguf');
+const UNIVERSE_DEFS = `
+Aurora Universe Characters:
+- Birk: a gentle, protective bear cub who loves to snuggle.
+- Freya: a curious, playful snow owl with a kind and empathetic eyes.
+- Nordra: a strong baby charriot with 4 all-terrain wheels.
+- AXO: a wise floating driod who shows the direction with projections and robotic sounds.
+- Swans: graceful lake swans who sing soothing harmoniously together.
+- Moss Moles: little burrow-dwelling moles who maintain forest moss beds and collect berries.
+
+Story Style Rules:
+- Use only short, simple sentences (≤ 10 words).
+- Vocabulary is toddler-level; no abstract or scary words.
+- Always in present tense.
+- Keep tone soft, reassuring, and playful.
+- Do not mention “AI,” “model,” or technical terms.
+`;
+
+const MODEL_PATH = path.resolve(__dirname, '../../models/llama-2-7b-q4_0.gguf');
 let session = null;
 
 async function loadSession() {
@@ -51,8 +68,9 @@ async function generateCompletion(userText) {
 
  // Build a single prompt with rules, persona & user turn
  const fullPrompt = [
-    RULES,
-    PERSONA_PROMPT,
+    RULES.trim(),
+    PERSONA_PROMPT.trim(),
+    UNIVERSE_DEFS.trim(),
     `Parent: ${userText}`,
     `Whispr:`
   ].join('\n');
@@ -60,7 +78,7 @@ async function generateCompletion(userText) {
   // completePrompt will only return the generated text after "Whispr:"
   const reply = await session.completePrompt(fullPrompt, {
     maxTokens:           128,
-    temperature:         0.7,
+    temperature:         0.3,
     topP:                0.9,
     repeatPenalty:       1.1,
     customStopTriggers: [

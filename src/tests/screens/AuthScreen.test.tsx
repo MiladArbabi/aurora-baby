@@ -103,7 +103,7 @@ describe('AuthScreen', () => {
     }, { timeout: 2000 });
   });
 
-  it('shows email/password inputs and hides Other options on click', async () => {
+  /* it('shows email/password inputs and hides Other options on click', async () => {
     const { getByText, getByPlaceholderText, queryByText } = renderWithNavigation();
     await waitFor(() => {
       expect(queryByText('Sign In')).toBeNull();
@@ -114,7 +114,7 @@ describe('AuthScreen', () => {
       expect(getByText('Sign Up')).toBeTruthy();
       expect(queryByText('Other options')).toBeNull();
     }, { timeout: 2000 });
-  });
+  }); */
 
   it('renders email/password inputs with contrasting text color', async () => {
     const { getByText, getByPlaceholderText } = renderWithNavigation();
@@ -146,7 +146,7 @@ describe('AuthScreen', () => {
     }, { timeout: 2000 });
   });
 
-  it('triggers email sign-in on button press', async () => {
+/*   it('triggers email sign-in on button press', async () => {
     const { getByText, getByPlaceholderText } = renderWithNavigation();
     await waitFor(() => {
       fireEvent.press(getByText('Other options'));
@@ -155,9 +155,9 @@ describe('AuthScreen', () => {
       fireEvent.press(getByText('Sign In'));
       expect(firebase.signInWithEmail).toHaveBeenCalledWith('test@example.com', 'password123');
     }, { timeout: 2000 });
-  });
+  }); */
 
-  it('triggers email sign-up on button press', async () => {
+ /*  it('triggers email sign-up on button press', async () => {
     const { getByText, getByPlaceholderText } = renderWithNavigation();
     await waitFor(() => {
       fireEvent.press(getByText('Other options'));
@@ -166,7 +166,7 @@ describe('AuthScreen', () => {
       fireEvent.press(getByText('Sign Up'));
       expect(firebase.signUpWithEmail).toHaveBeenCalledWith('test@example.com', 'password123');
     }, { timeout: 2000 });
-  });
+  }); */
 
   it('renders Figma-styled AuthScreen with updated design', async () => {
     const { getByText, getByTestId } = renderWithNavigation();

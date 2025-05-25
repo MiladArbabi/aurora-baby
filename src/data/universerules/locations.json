@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Location",
+  "description": "A place or environment within the Aurora Universe.",
+  "type": "object",
+  "properties": {
+    "locationId": {
+      "type": "string",
+      "description": "Unique identifier (UUID or slug)."
+    },
+    "name": {
+      "type": "string",
+      "description": "Official name of the location."
+    },
+    "type": {
+      "type": "string",
+      "enum": ["planet", "spaceStation", "city", "sector", "wildSector", "glade", "clearing", "hiddenCave", "floatingIsland", "other"],
+      "description": "Category of this location."
+    },
+    "sectorCode": {
+      "type": "string",
+      "description": "Grid or sector designation (e.g. 'R-12-Delta')."
+    },
+    "coordinates": {
+      "type": "object",
+      "description": "3D positional data in the star map.",
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "z": { "type": "number" }
+      },
+      "required": ["x", "y", "z"]
+    },
+    "climate": {
+      "type": "string",
+      "description": "Typical weather or atmospheric conditions."
+    },
+    "biome": {
+      "type": "string",
+      "description": "Ecological classification (e.g., 'desert', 'ice', 'jungle')."
+    },
+    "landmarks": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Significant geographic or artificial landmarks."
+    },
+    "description": {
+      "type": "string",
+      "description": "Narrative description or notes."
+    },
+    "auroraLayer": {
+      "type": "string",
+      "enum": ["surface", "sky", "underwater", "subsurface"],
+      "description": "Which consciousness layer this location belongs to."
+    },
+    "themeColor": {
+      "type": "string",
+      "description": "Visual theme or dominant color for artistic rendering (e.g. 'aurora green', 'lavender')."
+    },
+    "inhabitants": {
+      "type": "array",
+      "description": "Common creatures or characters found here.",
+      "items": { "type": "string" }
+    }
+  },
+  "required": ["locationId", "name", "type"]
+}
