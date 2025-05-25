@@ -39,7 +39,7 @@ const id = `gen-${hashCode(prompt)}`;
   console.log(`[StoryGen] CACHE MISS for prompt: "${prompt}", generating…`);
   const fullStory = await queryWhispr(prompt);
 
-  // --- SAFETY CHECK (#239) ---
+  // --- SAFETY CHECK ---
   // simple keyword filter; expand list as needed
   const banned = ['violence','sex','drugs','gore','hate'];
   const lower = fullStory.toLowerCase();
@@ -51,10 +51,23 @@ const id = `gen-${hashCode(prompt)}`;
     const fallback = all[Math.floor(Math.random()*all.length)];
     return fallback;
   }
+
+    // Let the AI give us a short, child-friendly title
+    let storyTitle = prompt.slice(0, 20) + '…';
+    try {
+      const titlePrompt = 
+        `Provide a concise, playful title (max 5 words) for this story:\n\n${fullStory}`;
+      const rawTitle = await queryWhispr(titlePrompt);
+      storyTitle = rawTitle.split('\n')[0].trim();  // take first line
+      console.log(`[StoryGen] Generated title: "${storyTitle}"`);
+    } catch (err) {
+      console.warn('[StoryGen] title generation failed, using default:', err);
+    }
+    
   // 3) Construct a StoryCardData and cache it
   const card: StoryCardData = {
     id,
-    title: prompt.slice(0, 20) + '…',
+    title: storyTitle,
     thumbnail: 'local://custom.png',
     type: 'generated',
     ctaLabel: 'Play',
@@ -63,7 +76,7 @@ const id = `gen-${hashCode(prompt)}`;
     fullStory,
     tags: []
   };
-  
+
     try {
     await saveUserStory(card);
   } catch (err) {
