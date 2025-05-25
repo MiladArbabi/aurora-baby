@@ -1,4 +1,4 @@
-//server/routes/whisprRoute.js
+// server/routes/whisprRoute.js
 require('dotenv').config();
 const router = require('express').Router();
 
@@ -30,6 +30,17 @@ router.post('/', async (req, res) => {
       err.status ?? err.code,
       err.error?.message ?? err.message
     );
+    // --- OFFLINE FALLBACK #240 ---
+    try {
+        // pull in our prebuilt stories
+        const { harmonySections } = require('../../src/data/harmonySections');
+        const allStories = harmonySections.flatMap(sec => sec.data);
+        const pick = allStories[Math.floor(Math.random() * allStories.length)];
+        console.log('[WhisprRoute] offline fallback story:', pick.id);
+        return res.json({ reply: pick.fullStory });
+      } catch (fallbackErr) {
+        console.error('➤ WhisprRoute fallback error:', fallbackErr);
+      }
     return res
       .status(err.status || 500)
       .json({ error: 'Internal server error', detail: err.error?.message });
