@@ -1,5 +1,4 @@
 // src/services/StoryGenerationService.ts
-
 import { queryWhispr } from './WhisprService';
 import { getUserStories, saveUserStory } from './UserStoriesService';
 import { StoryCardData } from '../types/HarmonyFlatList';
@@ -7,6 +6,7 @@ import { harmonySections } from '../data/harmonySections';
 import itemSchema    from '../data/universerules/itemList.json';
 import factionSchema from '../data/universerules/factionList.json';
 import locationSchema from '../data/universerules/locationList.json';
+import { logEvent } from '../utils/analytics';
 
 /** Minimal shape of each JSON-Schema `properties` entry. **/
 interface SchemaProp {
@@ -113,6 +113,13 @@ export async function generateOrGetStory(prompt: string): Promise<StoryCardData>
 
   // 2) Generate new story
   console.log(`[StoryGen] CACHE MISS for prompt="${prompt}", calling AI…`);
+
+   // Track generate request
+   logEvent('story_generate_request', {
+    promptHash: storyId,
+    wasCached: !!(await getUserStories()).find(s => s.id === storyId),
+  });
+
   const metadata = buildMetadataPrompt();
   const aiPrompt = `${metadata}\n\n### Prompt:\n${prompt}\n\nStory:`;
   const fullStory = await queryWhispr(aiPrompt);

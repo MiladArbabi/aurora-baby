@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import { onAuthStateChanged, auth, checkAuthState } from '../services/firebase'
 import { User } from 'firebase/auth'
+import { initRemoteConfig } from '../services/RemoteConfigService';
 
 import LoadingSpinner from '../components/common/Spinner'
 import AuthScreen from '../screens/auth/AuthScreen'
@@ -40,7 +41,11 @@ export type RootStackParamList = {
   ForestMap: undefined
   Whispr: undefined
   LogDetail: { id: string; type: 'sleep'|'feeding'|'diaper'|'mood'|'health'|'note' }
-  PlayStory: { storyId: string; fullStory?: string; }
+  PlayStory: { 
+    storyId: string; 
+    fullStory?: string;
+    fromPreview?: boolean; 
+   }
   CreateStory: undefined;
   TextStory: { storyId: string; fullStory?: string };
   VoiceStorytelling: { storyId: string; fullStory: string; title: string };
@@ -53,6 +58,10 @@ export default function AppNavigator() {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<ChildProfile | null | undefined>(undefined)
   const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    initRemoteConfig();
+  }, []);
 
   // 1) Initialize auth
   useEffect(() => {

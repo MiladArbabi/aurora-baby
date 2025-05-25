@@ -5,10 +5,12 @@ import styled, { useTheme, DefaultTheme } from 'styled-components/native';
 import TopNav from '../../components/common/TopNav';
 import BottomNav from '../../components/common/BottomNav';
 import { StackScreenProps } from '@react-navigation/stack';
+
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import AuroraLogo from '../../assets/system/colorlogo';
 import { StoryPage, prebuiltStoryPages } from '../../data/prebuiltStoryPages';
 import LottieView from 'lottie-react-native';
+import { paginateStory } from '../../utils/storyPagination';
 import PrevIcon from '../../assets/icons/common/PrevIcon';
 import NextIcon from '../../assets/icons/common/NextIcon'; 
 
@@ -57,43 +59,11 @@ export default function TextStoryScreen({ route, navigation }: Props) {
   const listRef = useRef<FlatList<any>>(null);
   const { fullStory = '' } = route.params;
 
-  // 1) split story into pages on whole sentences
-  const pages: StoryPage[] = React.useMemo(() => {
-    // 0) manual override for any prebuilt story
-    const manual = prebuiltStoryPages[route.params.storyId];
-    if (manual) return manual;
-
-    // trim leading/trailing whitespace first
-    const text = fullStory.trim();
-    if (!text) return []; 
-
-    // break into sentences (keeping punctuation)
-    const sentences = text
-    .split(/([.?!])\s+/)
-    .reduce<string[]>((acc, piece, i, arr) => {
-        if (/[.?!]/.test(piece) && i < arr.length - 1) {
-            // append punctuation + space to previous sentence
-            acc[acc.length - 1] += piece + ' ';
-        } else {
-            acc.push(piece);
-        }
-        return acc;
-    }, []);
-
-    const result: string[] = [];
-    let buffer = '';
-    for (const s of sentences) {
-        if (buffer.length + s.length > PAGE_CHAR_LIMIT) {
-            result.push(buffer.trim());
-            buffer = '';
-        }
-        buffer += s;
-    }
-    // leftover
-    if (buffer.trim()) result.push(buffer.trim());
-
-    return result.map(str => ({ text: str }));;
-}, [fullStory, route.params.storyId]);
+  // 1) paginate (manual override or auto-split)
+  const pages: StoryPage[] = React.useMemo(() => 
+    paginateStory(fullStory, route.params.storyId, PAGE_CHAR_LIMIT),
+    [fullStory, route.params.storyId]
+);
 
   // 2) handle the logo spin
   const spinAnim = React.useRef(new Animated.Value(0)).current;

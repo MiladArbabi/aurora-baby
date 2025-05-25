@@ -9,6 +9,8 @@ import { RootStackParamList } from '../../navigation/AppNavigator';
 import Spinner from '../../components/common/Spinner';
 import { generateOrGetStory } from '../../services/StoryGenerationService';
 import { StoryCardData } from '../../types/HarmonyFlatList';
+import { logEvent } from '../../utils/analytics';
+import { isFeatureEnabled } from '../../services/RemoteConfigService';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 type Props = StackScreenProps<RootStackParamList, 'CreateStory'>;
@@ -93,6 +95,8 @@ const CreateStoryScreen: React.FC<Props> = ({ navigation }) => {
   const [fullStory, setFullStory] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [showGoToStory, setShowGoToStory] = useState(false);
+  
+  const advancedTone = isFeatureEnabled('advanced_tone_selector');
 
   // Story configuration object
   const [storyConfig, setStoryConfig] = useState({
@@ -105,7 +109,10 @@ const CreateStoryScreen: React.FC<Props> = ({ navigation }) => {
   // All steps for the story builder
   const steps = [
         { title: 'Length', options: ['Short', 'Medium', 'Long'], key: 'length' },
-        { title: 'Tone',   options: ['Soothing', 'Playful', 'Sing Along', 'Magical'], key: 'concept' },
+        // only include Tone when the flag is true
+        ...(advancedTone
+          ? [{ title: 'Tone', options:['Soothing','Playful','Sing Along','Magical'], key: 'concept' }]
+          : []),
         { title: 'Characters', options: ['Birk', 'Freya', 'Nordra', 'AXO', 'Swans', 'Moss Moles', 'Custom'], key: 'characters' },
         { title: 'Location', options: ['Silver Nest', 'Berry Hollow', 'Misty Lake'], key: 'location' },
       ];
@@ -160,12 +167,16 @@ const handlePreviewGeneration = React.useCallback(async () => {
   const prompt = `Write a ${storyConfig.length.toLowerCase()}, gentle, toddler-friendly story ` +
                  `about ${storyConfig.characters.join(' and ')} ` +
                  `in a ${storyConfig.concept.toLowerCase()} adventure at ${storyConfig.location}.`;
+ 
   try {
     const card = await generateOrGetStory(prompt);
     setFullStory(card.fullStory);
     setStoryPreview(card.fullStory.split(' ').slice(0, 10).join(' ') + '…');
     setShowGoToStory(true);
     storyIdRef.current = card.id;
+
+    logEvent('story_preview_shown', { storyId: card.id });
+    
   } catch (err) {
     console.error(err);
     setStoryPreview('Something went wrong.');
@@ -277,6 +288,7 @@ return (
                 navigation.navigate('PlayStory', {
                   storyId: storyIdRef.current,
                   fullStory,
+                  fromPreview: true,
                 })
               }
               style={{
