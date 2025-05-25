@@ -13,7 +13,7 @@ export default function ChildProfileScreen({ navigation }: Props) {
 
   const onNext = async () => {
     await saveChildProfile({ id: Date.now().toString(), name: name.trim(), dob })
-    navigation.navigate('Done')
+    navigation.navigate('Themes')
   }
 
   return (

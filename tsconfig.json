@@ -8,6 +8,7 @@
     "lib": ["esnext", "dom"],
     "skipLibCheck": true,
     "baseUrl": ".",
+    "resolveJsonModule": true,
     "types": ["jest", "node", "styled-components-react-native"],
     "typeRoots": ["./node_modules/@types", "./src/types"],
     "paths": {

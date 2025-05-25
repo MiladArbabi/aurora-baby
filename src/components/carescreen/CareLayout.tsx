@@ -6,7 +6,6 @@ import TopNav from '../common/TopNav'
 import MiniNavBar, { MiniTab } from '../carescreen/MiniNavBar'
 import ActionButtons from '../common/ActionButtons'
 import BottomNav from '../common/BottomNav'
-import { useActionMenuLogic } from '../../hooks/useActionMenuLogic'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RootStackParamList } from '../../navigation/AppNavigator'
@@ -26,7 +25,6 @@ interface Props {
 export default function CareLayout({ activeTab, onNavigate, children, bgColor }: Props) {
     const navigation = useNavigation<CareNavProp>()
     const theme = useTheme()
-    const { quickLogMenuVisible, openQuickLog, closeQuickLog } = useActionMenuLogic()
     const [quickLogEntries, setQuickLogEntries] = useState<QuickLogEntry[]>([])
 
   // fetch the last 24h / today’s logs
@@ -60,21 +58,6 @@ export default function CareLayout({ activeTab, onNavigate, children, bgColor }:
       <View style={styles.nav}><MiniNavBar activeTab={activeTab} onNavigate={onNavigate} /></View>
 
       <View style={styles.body}>{children}</View>
-
-      <View style={styles.actions}>
-        <ActionButtons
-          onQuickLogPress={openQuickLog}
-          recentLogs={quickLogEntries}
-          onNewAiLog={handleNewAiLog}
-        />
-      </View>
-
-      {quickLogMenuVisible && (
-        <QuickLogMenu
-        onClose={closeQuickLog}
-        onLogged={handleLogged}
-        />
-      )}
 
       <View style={styles.bottom}><BottomNav navigation={navigation} activeScreen="Care" /></View>
     </SafeAreaView>

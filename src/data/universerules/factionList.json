@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Faction",
+  "description": "Defines a political or social organization in the Aurora Universe.",
+  "type": "object",
+  "properties": {
+    "factionId": {
+      "type": "string",
+      "description": "Unique identifier (UUID or slug)."
+    },
+    "name": {
+      "type": "string",
+      "description": "Official name of the faction."
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief overview of the faction's history and purpose."
+    },
+    "alignment": {
+      "type": "string",
+      "description": "General stance or moral alignment (e.g., 'republican', 'corporate', 'rebel')."
+    },
+    "goals": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Key objectives or long-term aims."
+    },
+    "values": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Core values or principles (e.g., 'Harmony', 'Wonder', 'Care')."
+    },
+    "storyRole": {
+      "type": "string",
+      "description": "Narrative role or function (e.g., 'mentor', 'antagonist', 'guardian')."
+    },
+    "associatedAnimals": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Animals symbolically or spiritually linked to the faction."
+    },
+    "hierarchy": {
+      "type": "array",
+      "description": "Ordered list of ranks or positions within the faction.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "rankName": { "type": "string" },
+          "level": { "type": "integer", "minimum": 0 }
+        },
+        "required": ["rankName", "level"]
+      }
+    },
+    "territories": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of Location IDs under control or influence."
+    },
+    "keyMembers": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Character IDs of prominent figures."
+    },
+    "resources": {
+      "type": "object",
+      "description": "Aggregate resources or assets (e.g., credits, ships).",
+      "patternProperties": {
+        "^[a-zA-Z0-9_]+$": { "type": ["integer", "number", "string"] }
+      }
+    }
+  },
+  "required": ["factionId", "name", "alignment"]
+}

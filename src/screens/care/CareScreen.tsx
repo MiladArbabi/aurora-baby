@@ -25,7 +25,6 @@ import {
   deleteLogEntry
 } from '../../services/QuickLogAccess'
 import { QuickLogEntry } from '../../models/QuickLogSchema'
-import { useActionMenuLogic } from '../../hooks/useActionMenuLogic'
 import { quickLogEmitter } from '../../storage/QuickLogEvents';
 import { generateAIQuickLogs } from '../../services/LlamaLogGenerator'
 
@@ -34,13 +33,6 @@ type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>
 const CareScreen: React.FC = () => {
   const navigation = useNavigation<CareNavProp>()
   const theme = useTheme()
-  const {
-    quickLogMenuVisible,
-    openQuickLog,
-    closeQuickLog,
-    activeTab,
-    setActiveTab,
-  } = useActionMenuLogic()
 
   const [quickLogMarkers, setQuickLogMarkers] = useState<QuickMarker[]>([])
   const [quickLogEntries, setQuickLogEntries] = useState<QuickLogEntry[]>([])
@@ -153,7 +145,6 @@ const CareScreen: React.FC = () => {
   const handleNavigate = (tab: MiniTab) => {
     if (tab === 'cards') navigation.navigate('PastLogs')
     else if (tab === 'graph') navigation.navigate('Insights')
-    else setActiveTab('tracker')
   }
 
   const logLayout = (name: string) => (e: LayoutChangeEvent) => {
@@ -168,44 +159,20 @@ const CareScreen: React.FC = () => {
     >
         {/* Filter (tracker only) */}
       <View style={[styles.row, { flex: 1 }]} onLayout={logLayout('Filter')}>
-        {activeTab === 'tracker' && (
           <TrackerFilter
             showLast24h={showLast24h}
             onToggle={handleToggleFilter}
           />
-        )}
       </View>
-
-      {/* Future‐logs dropdown */}
-      {activeTab === 'tracker' && (
-        <FutureLogsGenerator
-          onGenerate={handleGenerateFuture}
-          options={[
-            { label: 'Next 24 hours', value: 24 },
-            { label: 'Next week',    value: 168 },
-          ]}
-          buttonLabel="Plan ahead"
-        />
-      )}
 
       {/* Content */}
       <View style={[
         styles.row, { flex: 5 }]} 
         onLayout={logLayout('Content')}
         >
-        {activeTab === 'tracker' && (
-          <Tracker
-            onSegmentPress={handleSegmentPress}
-            onMarkerPress={handleMarkerPress}
-            quickMarkers={quickLogMarkers}
-            showLast24h={showLast24h}
-          />
-        )}
         </View>
-      {/* Overlays */}
-      {quickLogMenuVisible && (
-        <QuickLogMenu onClose={closeQuickLog} onLogged={handleLogged} />
-      )}
+
+
       <LogDetailModal
         visible={!!selectedLog}
         entry={selectedLog!}

@@ -1,4 +1,4 @@
-// src/screens/CreateStoryScreen.tsx
+// src/screens/harmony/CreateStoryScreen.tsx
 import React, { useRef, useState, useCallback } from 'react';
 import { Dimensions, ScrollView, TouchableOpacity, View, Text } from 'react-native';
 import styled, { useTheme, DefaultTheme } from 'styled-components/native';

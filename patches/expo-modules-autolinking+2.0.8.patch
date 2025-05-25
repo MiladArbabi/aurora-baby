@@ -1,0 +1,31 @@
+diff --git a/node_modules/expo-modules-autolinking/scripts/android/autolinking_implementation.gradle b/node_modules/expo-modules-autolinking/scripts/android/autolinking_implementation.gradle
+index 98c404e..b8e7d72 100644
+--- a/node_modules/expo-modules-autolinking/scripts/android/autolinking_implementation.gradle
++++ b/node_modules/expo-modules-autolinking/scripts/android/autolinking_implementation.gradle
+@@ -324,16 +324,20 @@ if (rootProject instanceof ProjectDescriptor) {
+ 
+     // Apply plugins for all app projects
+     gradle.afterProject { project ->
+-      if (!project.plugins.hasPlugin('com.android.application')) {
++    if (!project.plugins.hasPlugin('com.android.application')) {
+         return
+-      }
+-      for (module in modules) {
++    }
++    // Skip applying com.android.library to the :app project
++    if (project.name == 'app' || project.name == 'aurora-baby-mobile') {
++        return
++    }
++    for (module in modules) {
+         for (modulePlugin in module.plugins) {
+-          println " ${Emojis.INFORMATION}  ${Colors.YELLOW}Applying gradle plugin${Colors.RESET} '${Colors.GREEN}${modulePlugin.id}${Colors.RESET}' (${module.name}@${module.version})"
+-          project.plugins.apply(modulePlugin.id)
++            println " ${Emojis.INFORMATION}  ${Colors.YELLOW}Applying gradle plugin${Colors.RESET} '${Colors.GREEN}${modulePlugin.id}${Colors.RESET}' (${module.name}@${module.version})"
++            project.plugins.apply(modulePlugin.id)
+         }
+-      }
+     }
++}
+ 
+     // Save the manager in the shared context, so that we can later use it in `build.gradle`.
+     gradle.ext.expoAutolinkingManager = manager

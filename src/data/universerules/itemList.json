@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Faction",
+  "description": "Defines a political, social, or ecological group in the Aurora Universe.",
+  "type": "object",
+  "properties": {
+    "factionId": {
+      "type": "string",
+      "description": "Unique identifier (UUID or slug)."
+    },
+    "name": {
+      "type": "string",
+      "description": "Official name of the faction."
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief overview of the faction's history and purpose."
+    },
+    "alignment": {
+      "type": "string",
+      "description": "Moral or thematic alignment (e.g., 'guardian', 'corrupted', 'neutral')."
+    },
+    "goals": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Key objectives or long-term aims."
+    },
+    "values": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Guiding principles or virtues (e.g. Harmony, Resilience, Innovation)."
+    },
+    "hierarchy": {
+      "type": "array",
+      "description": "Ordered list of roles in the group.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "rankName": { "type": "string" },
+          "level": { "type": "integer", "minimum": 0 }
+        },
+        "required": ["rankName", "level"]
+      }
+    },
+    "territories": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of Location IDs under influence."
+    },
+    "keyMembers": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Character IDs of key figures."
+    },
+    "associatedAnimals": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Names of symbolic animals or beings (e.g. swan, mole, salmon)."
+    },
+    "resources": {
+      "type": "object",
+      "description": "Aggregate resources like light, song, tech, moss.",
+      "patternProperties": {
+        "^[a-zA-Z0-9_]+$": { "type": ["integer", "number", "string"] }
+      }
+    },
+    "storyRole": {
+      "type": "string",
+      "description": "Narrative function in Aurora universe (e.g., mentor, antagonist, guardian)."
+    }
+  },
+  "required": ["factionId", "name", "alignment"]
+}

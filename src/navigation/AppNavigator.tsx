@@ -21,6 +21,7 @@ import PlayStoryScreen from 'screens/harmony/PlayStoryScreen'
 import CreateStoryScreen from 'screens/harmony/CreateStoryScreen'
 import TextStoryScreen from 'screens/harmony/TextStoryScreen'
 import VoiceStorytellingScreen from '../screens/harmony/VoiceStorytellingScreen';
+import AnimatedStoryScreen from '../screens/harmony/AnimatedStoryScreen';
 
 import { getChildProfile } from '../services/ChildProfileAccess'
 import { ChildProfile } from '../models/ChildProfile'
@@ -43,6 +44,7 @@ export type RootStackParamList = {
   CreateStory: undefined;
   TextStory: { storyId: string; fullStory?: string };
   VoiceStorytelling: { storyId: string; fullStory: string; title: string };
+  AnimatedStory: { storyId: string; animationAsset: any; fullStory: string };
 }
 
 const Stack = createStackNavigator<RootStackParamList>()
@@ -101,7 +103,7 @@ export default function AppNavigator() {
         // fully onboarded → main app
         <Stack.Navigator 
         screenOptions={{ headerShown: false }}
-        initialRouteName="VoiceStorytelling"
+        initialRouteName="Home"
         >
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="Harmony" component={HarmonyHomeScreen} />
@@ -115,12 +117,13 @@ export default function AppNavigator() {
           <Stack.Screen name="PlayStory" component={PlayStoryScreen} />
           <Stack.Screen name="CreateStory" component={CreateStoryScreen} />
           <Stack.Screen name="TextStory" component={TextStoryScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="VoiceStorytelling" component={VoiceStorytellingScreen} options={{ headerShown: false, title: 'Listen' }}
+          <Stack.Screen name="VoiceStorytelling" component={VoiceStorytellingScreen} options={{ headerShown: false, title: 'Listen' }} 
           initialParams={{
             storyId: 'birk-forest-journey',
             fullStory: 'Once upon a time, in a beautiful forest…. There were two guardians of the Forest... Birk and Freya!',
             title: 'Birk’s Forest Journey'
           }} />
+          <Stack.Screen name="AnimatedStory" component={AnimatedStoryScreen} options={{ headerShown: false }} />
         </Stack.Navigator>
       )}
     </NavigationContainer>

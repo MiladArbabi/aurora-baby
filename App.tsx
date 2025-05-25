@@ -1,24 +1,18 @@
-// App.tsx
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider } from '@rneui/themed';
 import { ThemeProvider as StyledThemeProvider } from 'styled-components/native';
 import { useFonts } from 'expo-font';
-import AppNavigator from './src/navigation/AppNavigator';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { rneThemeBase, theme } from './src/styles/theme';
 import LoadingSpinner from './src/components/common/Spinner';
-import { LogBox } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import AppNavigator from './src/navigation/AppNavigator';
 import 'react-native-get-random-values';
 import 'react-native-url-polyfill';
 
-LogBox.ignoreLogs([
-  'Text strings must be rendered within a <Text> component',
-]);
-
-const App = () => {
+const App: React.FC = () => {
   const [fontsLoaded] = useFonts({
-    'Edrosa': require('./src/assets/fonts/Edrosa.otf'),
+    Edrosa: require('./src/assets/fonts/Edrosa.otf'),
   });
 
   if (!fontsLoaded) {
