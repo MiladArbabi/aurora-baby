@@ -1,3 +1,4 @@
+// src/data/prebuiltStoryContents.ts
 // maps each prebuilt story ID → its full text
 export const prebuiltStoryContents: Record<string, string> = {
     'birk-forest-journey': `
