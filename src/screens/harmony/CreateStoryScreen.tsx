@@ -1,16 +1,14 @@
 // src/screens/CreateStoryScreen.tsx
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import { Dimensions, ScrollView, TouchableOpacity, View, Text } from 'react-native';
 import styled, { useTheme, DefaultTheme } from 'styled-components/native';
 import TopNav from '../../components/common/TopNav';
 import BottomNav from '../../components/common/BottomNav';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
-import { queryWhispr } from '../../services/WhisprService';
 import Spinner from '../../components/common/Spinner';
-import { saveUserStory } from '../../services/UserStoriesService';
+import { generateOrGetStory } from '../../services/StoryGenerationService';
 import { StoryCardData } from '../../types/HarmonyFlatList';
-import { string } from 'zod';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 type Props = StackScreenProps<RootStackParamList, 'CreateStory'>;
@@ -98,6 +96,7 @@ const CreateStoryScreen: React.FC<Props> = ({ navigation }) => {
 
   // Story configuration object
   const [storyConfig, setStoryConfig] = useState({
+    length: '',
     concept: '',
     characters: [] as string[],
     location: '',
@@ -105,211 +104,181 @@ const CreateStoryScreen: React.FC<Props> = ({ navigation }) => {
 
   // All steps for the story builder
   const steps = [
-  { title: 'Concept', options: ['Soothing', 'Playful', 'Sing Along', 'Magical'], key: 'concept' },
-  { title: 'Characters', options: ['Birk', 'Freya', 'Nordra', 'AXO', 'Swans', 'Moss Moles', 'Custom'], key: 'characters' },
-  {
-    title: 'Location',
-    options: [
-      'Silver Nest',
-      'Berry Hollow',
-      'Misty Lake',
-    ],
-    key: 'location'
-  },
-];
+        { title: 'Length', options: ['Short', 'Medium', 'Long'], key: 'length' },
+        { title: 'Tone',   options: ['Soothing', 'Playful', 'Sing Along', 'Magical'], key: 'concept' },
+        { title: 'Characters', options: ['Birk', 'Freya', 'Nordra', 'AXO', 'Swans', 'Moss Moles', 'Custom'], key: 'characters' },
+        { title: 'Location', options: ['Silver Nest', 'Berry Hollow', 'Misty Lake'], key: 'location' },
+      ];
 
-  // Step navigation logic
-  const handleBack = () => {
-    if (currentStep > 0) {
-      const prevStep = currentStep - 1;
-      setCurrentStep(prevStep);
-      scrollRef.current?.scrollTo({ x: prevStep * screenWidth, animated: true });
-    }
-  };
-
-  // Single-value selection for concept/location
-  const handleSelect = (stepKey: string, value: string) => {
-    setStoryConfig(prev => ({
-      ...prev,
-      [stepKey]: value,
-    }));
-  };  
-
-  const handleNext = () => {
-    const next = currentStep + 1;
-  
-    if (next <= steps.length) {
-      setCurrentStep(next);
-      scrollRef.current?.scrollTo({ x: next * screenWidth, animated: true });
-      setShowPreviewButton(next === steps.length); // safe toggle
-    }
-  }    
-
-  const handlePreviewGeneration = async () => {
-    setLoading(true);
-    const prompt = 
-    `Write a gentle, toddler-friendly story about 
-    ${storyConfig.characters.join(' and ')} 
-    in a ${storyConfig.concept.toLowerCase()} 
-    adventure at ${storyConfig.location}.`;
-    try {
-      const fullStory = await queryWhispr(prompt);
-      setFullStory(fullStory);
-      const firstTenWords = fullStory.split(' ').slice(0, 10).join(' ') + '...';
-      setStoryPreview(firstTenWords);
-      setShowGoToStory(true);
-
-       //save in storage
-       await saveUserStory({
-        id: storyIdRef.current,
-        title: `${storyConfig.concept}…`,
-        thumbnail: 'local://custom.png',
-        type: 'generated',
-        ctaLabel: 'Play',
-        cardColor: 'peach',
-        moodTags: [storyConfig.concept.toLowerCase()],
-        fullStory,
-    });
-    } catch (err) {
-      setStoryPreview('Something went wrong.');
-    } finally {
-      setLoading(false);
-      setShowPreviewButton(false);
-    }
+//States
+// 1) Go back one step
+const handleBack = React.useCallback(() => {
+  if (currentStep > 0) {
+    const prev = currentStep - 1;
+    setCurrentStep(prev);
+    scrollRef.current?.scrollTo({ x: prev * screenWidth, animated: true });
+    setShowPreviewButton(false);
   }
-  
+}, [currentStep]);
+
+// 2) Select a single‐value parameter (length, tone/concept, or location)
+const handleSelect = React.useCallback(
+  (key: 'length' | 'concept' | 'location', value: string) => {
+    setStoryConfig(prev => ({ ...prev, [key]: value }));
+  },
+  []
+);
+
+// 3) Toggle characters (multi‐select, max 2)
+const handleToggleCharacter = React.useCallback((option: string) => {
+  setStoryConfig(prev => {
+    const has = prev.characters.includes(option);
+    if (has) {
+      return { ...prev, characters: prev.characters.filter(c => c !== option) };
+    }
+    if (prev.characters.length < 2) {
+      return { ...prev, characters: [...prev.characters, option] };
+    }
+    return prev;
+  });
+}, []);
+
+// 4) Advance to the next step
+const handleNext = React.useCallback(() => {
+  const next = currentStep + 1;
+  if (next <= steps.length) {
+    setCurrentStep(next);
+    scrollRef.current?.scrollTo({ x: next * screenWidth, animated: true });
+    setShowPreviewButton(next === steps.length);
+  }
+}, [currentStep, steps.length]);
+
+// 5) Generate (or fetch cached) preview from AI
+const handlePreviewGeneration = React.useCallback(async () => {
+  setLoading(true);
+  // build prompt using all chosen params
+  const prompt = `Write a ${storyConfig.length.toLowerCase()}, gentle, toddler-friendly story ` +
+                 `about ${storyConfig.characters.join(' and ')} ` +
+                 `in a ${storyConfig.concept.toLowerCase()} adventure at ${storyConfig.location}.`;
+  try {
+    const card = await generateOrGetStory(prompt);
+    setFullStory(card.fullStory);
+    setStoryPreview(card.fullStory.split(' ').slice(0, 10).join(' ') + '…');
+    setShowGoToStory(true);
+    storyIdRef.current = card.id;
+  } catch (err) {
+    console.error(err);
+    setStoryPreview('Something went wrong.');
+  } finally {
+    setLoading(false);
+    setShowPreviewButton(false);
+  }
+}, [storyConfig]);
+
+const renderStep = React.useCallback((stepIndex: number) => {
+  const { title, options, key } = steps[stepIndex] as {
+    title: string;
+    options: string[];
+    key: 'length' | 'concept' | 'characters' | 'location';
+  };
+  const isMulti = key === 'characters';
+
   return (
-    <Container>
-      <TopNav navigation={navigation} />
-      {/* Live story preview based on current config */}
-      <PreviewCard>
+    <View key={key} style={{ width: screenWidth }}>
+      <ParamBlock>
+        <ParamTitle>{title}</ParamTitle>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {options.map(option => {
+            const selected = isMulti
+              ? storyConfig.characters.includes(option)
+              : (storyConfig as any)[key] === option;
+            const disabled =
+              isMulti &&
+              !selected &&
+              storyConfig.characters.length >= 2;
+
+            return (
+              <OptionButton
+                key={option}
+                selected={selected}
+                disabled={disabled}
+                onPress={() =>
+                  isMulti
+                    ? handleToggleCharacter(option)
+                    : handleSelect(key as any, option)
+                }
+              >
+                <OptionText selected={selected}>
+                  {option}
+                </OptionText>
+              </OptionButton>
+            );
+          })}
+        </ScrollView>
+        {(
+          (isMulti && storyConfig.characters.length > 0) ||
+          (!isMulti && !!(storyConfig as any)[key])
+        ) && (
+          <NextButton onPress={handleNext}>
+            <NextButtonText>Next</NextButtonText>
+          </NextButton>
+        )}
+      </ParamBlock>
+    </View>
+  );
+}, [
+  steps,
+  storyConfig,
+  handleSelect,
+  handleToggleCharacter,
+  handleNext,
+]);
+  
+return (
+  <Container>
+    <TopNav navigation={navigation} />
+
+    {/* Preview Card */}
+    <PreviewCard>
       <PreviewText>
-      {loading
-        ? 'Generating story preview...'
-        : storyPreview
-        ? storyPreview
-        : storyConfig.concept && storyConfig.characters.length && storyConfig.location
+        {loading
+          ? 'Generating story preview...'
+          : storyPreview
+          ? storyPreview
+          : storyConfig.length &&
+            storyConfig.concept &&
+            storyConfig.characters.length > 0 &&
+            storyConfig.location
           ? `${storyConfig.characters.join(' & ')} in a ${storyConfig.concept.toLowerCase()} tale at ${storyConfig.location}.`
           : 'Choose your story parameters'}
       </PreviewText>
-      </PreviewCard>
+    </PreviewCard>
 
-      {/* Horizontal scroll between steps */}
-      <ScrollView
-        horizontal
-        pagingEnabled
-        scrollEnabled={false}
-        showsHorizontalScrollIndicator={false}
-        ref={scrollRef}
-        style={{ width: screenWidth }}
-      >
-        {/* Step 0: Concept */}
-        <View style={{ width: screenWidth }}>
-          <ParamBlock>
-            <ParamTitle>Concept</ParamTitle>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {steps[0].options.map(option => (
-                <OptionButton
-                  key={option}
-                  onPress={() => handleSelect('concept', option)}
-                  selected={storyConfig.concept === option}
-                >
-                  <OptionText selected={storyConfig.concept === option}>
-                    {option}
-                  </OptionText>
-                </OptionButton>
-              ))}
-            </ScrollView>
-            {storyConfig.concept && (
-              <NextButton onPress={() => handleNext()}>
-                <NextButtonText>Next</NextButtonText>
-              </NextButton>
-            )}
-          </ParamBlock>
-        </View>
+    {/* Steps Scroll */}
+    <ScrollView
+      horizontal
+      pagingEnabled
+      scrollEnabled={false}
+      showsHorizontalScrollIndicator={false}
+      ref={scrollRef}
+      style={{ width: screenWidth }}
+    >
+      {/* render each of the 4 steps */}
+      {steps.map((_, idx) => renderStep(idx))}
 
-        {/* Step 1: Characters (max 2) */}
-        <View style={{ width: screenWidth }}>
-          <ParamBlock>
-            <ParamTitle>Characters</ParamTitle>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {steps[1].options.map(option => (
-                <OptionButton
-                  key={option}
-                  disabled={
-                    !storyConfig.characters.includes(option) && storyConfig.characters.length >= 2
-                  }
-                  onPress={() => {
-                    setStoryConfig(prev => {
-                      const alreadySelected = prev.characters.includes(option);
-                      if (alreadySelected) {
-                        return {
-                          ...prev,
-                          characters: prev.characters.filter(c => c !== option),
-                        };
-                      } else if (prev.characters.length < 2) {
-                        return {
-                          ...prev,
-                          characters: [...prev.characters, option],
-                        };
-                      } else {
-                        return prev; // Do nothing if already 2 selected
-                      }
-                    });
-                  }}
-                  selected={storyConfig.characters.includes(option)}
-                >
-                  <OptionText selected={storyConfig.characters.includes(option)}>
-                    {option}
-                  </OptionText>
-                </OptionButton>
-              ))}
-            </ScrollView>
-            {storyConfig.characters.length > 0 && (
-              <NextButton onPress={handleNext}>
-                <NextButtonText>Next</NextButtonText>
-              </NextButton>
-            )}
-          </ParamBlock>
-        </View>
-        
-        {/* Step 2: Location */}
-        <View style={{ width: screenWidth }}>
-          <ParamBlock>
-            <ParamTitle>Location</ParamTitle>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {steps[2].options.map(option => (
-                <OptionButton
-                  key={option}
-                  onPress={() => handleSelect('location', option)}
-                  selected={storyConfig.location === option}
-                >
-                  <OptionText selected={storyConfig.location === option}>
-                    {option}
-                  </OptionText>
-                </OptionButton>
-              ))}
-            </ScrollView>
-            {storyConfig.location && (
-              <NextButton onPress={handleNext}>
-                <NextButtonText>Next</NextButtonText>
-              </NextButton>
-            )}
-          </ParamBlock>
-        </View>
-
-        {/* Step 3: Preview */}
-        {(showPreviewButton || showGoToStory) && (
+      {/* Preview / Go to Story */}
+      {(showPreviewButton || showGoToStory) && (
         <View style={{ width: screenWidth, alignItems: 'center' }}>
           {loading ? (
             <Spinner size={75} />
           ) : showGoToStory ? (
             <TouchableOpacity
-              onPress={() => navigation.navigate('PlayStory', 
-                { storyId: storyIdRef.current,
+              onPress={() =>
+                navigation.navigate('PlayStory', {
+                  storyId: storyIdRef.current,
                   fullStory,
-                 })
-                }
+                })
+              }
               style={{
                 alignSelf: 'center',
                 marginTop: 24,
@@ -340,14 +309,14 @@ const CreateStoryScreen: React.FC<Props> = ({ navigation }) => {
           )}
         </View>
       )}
-      </ScrollView>
-      {/* Back navigation */}
-      <BackButton onPress={handleBack}>
-        <Text style={{ color: theme.colors.primary }}>← Back</Text>
-      </BackButton>
-      <BottomNav navigation={navigation} activeScreen="Harmony" />
-    </Container>
-    );
-  };
+    </ScrollView>
+
+    {/* Back & Bottom Nav */}
+    <BackButton onPress={handleBack}>
+      <Text style={{ color: theme.colors.primary }}>← Back</Text>
+    </BackButton>
+    <BottomNav navigation={navigation} activeScreen="Harmony" />
+  </Container>
+)};
 
 export default CreateStoryScreen;
