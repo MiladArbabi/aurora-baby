@@ -2,6 +2,7 @@
 import { queryWhispr } from './WhisprService';
 import { getUserStories, saveUserStory } from './UserStoriesService';
 import { StoryCardData } from '../types/HarmonyFlatList';
+import { harmonySections } from '../data/harmonySections'; 
 
 /** Simple string→number hash */
 function hashCode(str: string): string {
@@ -38,6 +39,18 @@ const id = `gen-${hashCode(prompt)}`;
   console.log(`[StoryGen] CACHE MISS for prompt: "${prompt}", generating…`);
   const fullStory = await queryWhispr(prompt);
 
+  // --- SAFETY CHECK (#239) ---
+  // simple keyword filter; expand list as needed
+  const banned = ['violence','sex','drugs','gore','hate'];
+  const lower = fullStory.toLowerCase();
+  const found = banned.filter(k => lower.includes(k));
+  if (found.length) {
+    console.warn(`[StoryGen] unsafe content detected (${found.join(', ')}), using fallback.`);
+    // pick a random safe prebuilt story
+    const all = harmonySections.flatMap(sec => sec.data);
+    const fallback = all[Math.floor(Math.random()*all.length)];
+    return fallback;
+  }
   // 3) Construct a StoryCardData and cache it
   const card: StoryCardData = {
     id,
