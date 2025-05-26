@@ -88,4 +88,30 @@ ${promptText}
   return reply.trim();
 }
 
-module.exports = { generateStoryCompletion };
+async function generateStoryTitle(storyText) {
+  // re-use loadSession if you like, or just push it through the same session
+  const titlePrompt = `
+  ${UNIVERSE_DEFS.trim()}
+  
+  ### Your task:
+  Give a very short (≤5 words), child-friendly title for the story below.
+  
+  ### Story:
+  ${storyText}
+  
+  ### Title:
+  `.trim();
+
+  const raw = await session.completePrompt(titlePrompt, {
+    maxTokens:  32,
+    temperature: 0.3,
+    topP:        0.9,
+    repeatPenalty: 1.1,
+    customStopTriggers: ['\n'],
+    trimWhitespaceSuffix: true,
+  });
+
+  return raw.split('\n')[0].trim();
+}
+
+module.exports = { generateStoryCompletion, generateStoryTitle };

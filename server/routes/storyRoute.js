@@ -1,7 +1,7 @@
 // server/routes/storyRoute.js
 require('dotenv').config();
 const router = require('express').Router();
-const { generateStoryCompletion } = require('../services/llamaService');
+const { generateStoryCompletion, generateStoryTitle } = require('../services/llamaService');
 
 router.post('/', async (req, res) => {
   const { prompt } = req.body;
@@ -11,7 +11,8 @@ router.post('/', async (req, res) => {
   try {
     // Inject only the universe/pagination rules + child-friendly tone
     const storyText = await generateStoryCompletion(prompt);
-    return res.json({ story: storyText });
+    const title = await generateStoryTitle(storyText);
+    return res.json({ title, story: storyText });
   } catch (err) {
     console.error('StoryRoute error', err);
     return res.status(500).json({ error: err.message });

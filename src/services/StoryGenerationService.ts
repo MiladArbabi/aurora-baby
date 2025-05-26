@@ -1,5 +1,5 @@
 // src/services/StoryGenerationService.ts
-import { queryStory } from './StoryService';
+import { queryStory, GeneratedStory } from './StoryService';
 import { getUserStories, saveUserStory } from './UserStoriesService';
 import { StoryCardData } from '../types/HarmonyFlatList';
 import { harmonySections } from '../data/harmonySections';
@@ -14,7 +14,6 @@ interface SchemaProp {
 }
 
 /** Configuration & constants **/
- 
 const BANNED_KEYWORDS = ['violence', 'sex', 'drugs', 'gore', 'hate'] as const;
 type BannedKeyword = typeof BANNED_KEYWORDS[number];
 
@@ -72,44 +71,24 @@ function containsBannedContent(text: string): boolean {
 }
 
 /**
- * Ask Whispr for a concise, child-friendly title.
- * Falls back to a truncated version of the prompt on error.
- */
-async function generateTitle(fullStory: string, defaultTitle: string): Promise<string> {
-  const titlePrompt = [
-    buildMetadataPrompt(),
-    '',
-    'Here is a story:',
-    fullStory,
-    '',
-    'Now give it a very short, child-friendly title (max 5 words):',
-  ].join('\n');
-
-  try {
-    const raw = await queryStory(titlePrompt);
-    return raw.split('\n')[0].trim() || defaultTitle;
-  } catch (err) {
-    console.warn('[StoryGen] title generation failed, using default:', err);
-    return defaultTitle;
-  }
-}
-
-/**
  * Main entrypoint: generate or fetch a cached story card.
  * @param prompt the user’s story prompt
  */
-export async function generateOrGetStory(prompt: string): Promise<StoryCardData> {
+export async function generateOrGetStory(
+  prompt: string
+): Promise<StoryCardData> {
   const storyId = `gen-${hashCode(prompt)}`;
-
-  // 1) Attempt to load from cache
   let existing: StoryCardData[] = [];
-  try { existing = await getUserStories(); }
-  catch (err) { console.warn('[StoryGen] cache load failed:', err); }
+  
+  // 1) Try to load from cache
   const cached = existing.find(s => s.id === storyId);
   if (cached) {
     console.log(`[StoryGen] CACHE HIT for prompt="${prompt}" → id=${storyId}`);
     return cached;
   }
+
+  try { existing = await getUserStories(); }
+  catch (err) { console.warn('[StoryGen] cache load failed:', err); }
 
   // 2) Generate new story
   console.log(`[StoryGen] CACHE MISS for prompt="${prompt}", calling AI…`);
@@ -121,7 +100,7 @@ export async function generateOrGetStory(prompt: string): Promise<StoryCardData>
   });
 
   // We now let the server stitch in the universe‐rules for us
-  const fullStory = await queryStory(prompt);
+  const { story: fullStory, title } = await queryStory(prompt);
 
   // 3) Safety guard
   if (containsBannedContent(fullStory)) {
@@ -130,20 +109,16 @@ export async function generateOrGetStory(prompt: string): Promise<StoryCardData>
     return fallbackStories[Math.floor(Math.random() * fallbackStories.length)];
   }
 
-  // 4) Generate a fitting title
-  const defaultTitle = prompt.slice(0, 20) + '…';
-  const title = await generateTitle(fullStory, defaultTitle);
-
   // 5) Build the card and cache it
   const card: StoryCardData = {
     id: storyId,
     title,
+    fullStory,
     thumbnail: 'local://custom.png',
     type: 'generated',
     ctaLabel: 'Play',
     cardColor: 'peach',
     moodTags: [],
-    fullStory,
     tags: [],
   };
   try { await saveUserStory(card); }

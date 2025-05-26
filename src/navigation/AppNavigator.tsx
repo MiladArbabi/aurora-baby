@@ -43,6 +43,7 @@ export type RootStackParamList = {
   LogDetail: { id: string; type: 'sleep'|'feeding'|'diaper'|'mood'|'health'|'note' }
   PlayStory: { 
     storyId: string; 
+    title?:    string;
     fullStory?: string;
     fromPreview?: boolean; 
    }
