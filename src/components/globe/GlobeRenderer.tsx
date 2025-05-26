@@ -1,11 +1,15 @@
-// src/components/globe/GlobeRenderer.tsx
-
 import React from 'react';
-import { View, StyleSheet, Text, ViewStyle } from 'react-native';
+import { StyleSheet, ViewStyle } from 'react-native';
+import Svg, { Circle } from 'react-native-svg';
+import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated';
+import { PanGestureHandler, PinchGestureHandler } from 'react-native-gesture-handler';
+import type {
+  PanGestureHandlerGestureEvent,
+  PinchGestureHandlerGestureEvent,
+} from 'react-native-gesture-handler';
 import { RegionMap } from '../../data/RegionMapSchema';
 import { useRegionState } from '../../context/RegionContext';
 import { RegionHitArea } from './RegionHitArea';
-import Svg, { Circle } from 'react-native-svg';
 
 interface Props {
   onRegionPress: (key: string) => void;
@@ -13,51 +17,60 @@ interface Props {
 
 export const GlobeRenderer: React.FC<Props> = ({ onRegionPress }) => {
   const regionState = useRegionState();
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const scaleValue = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+      { scale: scaleValue.value },
+    ],
+  }));
+
+  const onPanGestureEvent = (event: PanGestureHandlerGestureEvent) => {
+    const { translationX, translationY } = event.nativeEvent;
+    translateX.value = translationX;
+    translateY.value = translationY;
+  };
+
+  const onPinchGestureEvent = (event: PinchGestureHandlerGestureEvent) => {
+    scaleValue.value = event.nativeEvent.scale;
+  };
 
   return (
-    <View style={styles.container}>
-      {/* Placeholder globe background */}
-      <Svg width="100%" height="100%" viewBox="0 0 200 200" style={styles.globe}>
-        <Circle cx="100" cy="100" r="80" fill="#E0F7FA" />
-      </Svg>
-
-      {/* Render a hit area for each region */}
-      {Object.values(RegionMap).map(region => {
-        // cast styles so TS knows we’re indexing dynamically
-        const hitStyles = (styles as { [key: string]: ViewStyle })[
-          `hit_${region.key}`
-        ];
-        return (
-          <RegionHitArea
-            key={region.key}
-            region={region}
-            onPress={onRegionPress}
-            style={hitStyles}
-          />
-        );
-      })}
-    </View>
+    <PanGestureHandler onGestureEvent={onPanGestureEvent}>
+      <Animated.View style={[styles.container, animatedStyle]}>
+        <PinchGestureHandler onGestureEvent={onPinchGestureEvent}>
+          <Animated.View style={StyleSheet.absoluteFill}>
+            <Svg width="100%" height="100%" viewBox="0 0 200 200">
+              <Circle cx="100" cy="100" r="80" fill="#E0F7FA" />
+            </Svg>
+            {Object.values(RegionMap).map(region => {
+              const hitStyles = (styles as Record<string, ViewStyle>)[
+                `hit_${region.key}`
+              ];
+              return (
+                <RegionHitArea
+                  key={region.key}
+                  region={region}
+                  onPress={onRegionPress}
+                  style={hitStyles}
+                />
+              );
+            })}
+          </Animated.View>
+        </PinchGestureHandler>
+      </Animated.View>
+    </PanGestureHandler>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  globe: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  globeText: {
-    fontSize: 120,
-  },
-  // Temporary dummy hit-area placements for our stub 'dreamSky'
-  hit_dreamSky: {
-    top: 120,
-    left: 140,
-    width: 60,
-    height: 60,
-  },
-  // add more 'hit_<regionKey>' entries as we add regions
+  container: { flex: 1 },
+  // Temporary dummy hit-area for 'dreamSky'
+  hit_dreamSky: { top: 120, left: 140, width: 60, height: 60 },
 });
+
+export default GlobeRenderer;
