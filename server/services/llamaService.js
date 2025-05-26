@@ -1,5 +1,4 @@
 // server/services/llamaService.js
-
 const fs   = require('fs');
 const path = require('path');
 
@@ -42,55 +41,51 @@ const MODEL_PATH = path.resolve(__dirname, '../../models/llama-2-7b-q4_0.gguf');
 let session = null;
 
 async function loadSession() {
-    if (session) return;
-    if (!fs.existsSync(MODEL_PATH)) {
-      throw new Error(`Model file not found at ${MODEL_PATH}`);
-    }
-    const { getLlama, LlamaChatSession } = await import('node-llama-cpp');
-    const llama = await getLlama();
-    const model = await llama.loadModel({
-      modelPath: MODEL_PATH,
-      backend:  'auto',
-      n_ctx:     1024,
-      n_threads: 4,
-    });
-    const context = await model.createContext();
-    session = new LlamaChatSession({ contextSequence: context.getSequence() });
+  if (session) return;
+  if (!fs.existsSync(MODEL_PATH)) {
+    throw new Error(`Model file not found at ${MODEL_PATH}`);
   }
 
-/**
- * Ask Whispr a question and get just her answer.
- * @param {string} userText – the parent’s question
- * @returns {Promise<string>}
- */
-async function generateCompletion(userText) {
+  const { getLlama, LlamaChatSession } = await import('node-llama-cpp'); 
+  const llama = await getLlama();
+  const model = await llama.loadModel({
+    modelPath: MODEL_PATH,
+    backend:  'auto',
+    n_ctx:     1024,
+    n_threads: 4,
+  });
+  const context = await model.createContext();
+  session = new LlamaChatSession({ contextSequence: context.getSequence() });
+}
+
+async function generateStoryCompletion(promptText) {
+  // ensure the model is loaded (or error out if absent)
   await loadSession();
 
- // Build a single prompt with rules, persona & user turn
- const fullPrompt = [
-    RULES.trim(),
-    PERSONA_PROMPT.trim(),
-    UNIVERSE_DEFS.trim(),
-    `Parent: ${userText}`,
-    `Whispr:`
-  ].join('\n');
+  // build your single, clear prompt:
+  const fullPrompt = `
+${UNIVERSE_DEFS.trim()}
 
-  // completePrompt will only return the generated text after "Whispr:"
+### Your task:
+Write a child-friendly story based on the prompt below.
+
+### Prompt:
+${promptText}
+
+### Story:
+`.trim();
+
+  // now actually invoke Llama:
   const reply = await session.completePrompt(fullPrompt, {
-    maxTokens:           128,
-    temperature:         0.3,
+    maxTokens:           512,    // plenty of room for a short story
+    temperature:         0.7,    // creative but not random
     topP:                0.9,
     repeatPenalty:       1.1,
-    customStopTriggers: [
-      '\nParent:',      // stop when the next user turn begins
-      '\nWhispr:',      // stop if model restarts its own marker
-      '### Machine',     // stop any rubric headers
-      'You are Whispr', // prevent persona echo
-    ],
+    customStopTriggers:  ['###'], // stop if the model echoes the next section header
     trimWhitespaceSuffix: true,
   });
 
   return reply.trim();
 }
 
-module.exports = { generateCompletion };
+module.exports = { generateStoryCompletion };
