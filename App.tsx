@@ -4,6 +4,7 @@ import { ThemeProvider } from '@rneui/themed';
 import { ThemeProvider as StyledThemeProvider } from 'styled-components/native';
 import { useFonts } from 'expo-font';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { RegionProvider } from './src/context/RegionContext';
 import { rneThemeBase, theme } from './src/styles/theme';
 import LoadingSpinner from './src/components/common/Spinner';
 import AppNavigator from './src/navigation/AppNavigator';
@@ -23,7 +24,9 @@ const App: React.FC = () => {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider theme={rneThemeBase as any}>
         <StyledThemeProvider theme={theme}>
+        <RegionProvider>
           <AppNavigator />
+          </RegionProvider>
           <StatusBar style="auto" />
         </StyledThemeProvider>
       </ThemeProvider>
