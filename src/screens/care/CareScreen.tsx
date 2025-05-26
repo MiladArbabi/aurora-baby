@@ -183,11 +183,13 @@ const CareScreen: React.FC = () => {
       </View>
 
       {/* Content */}
-      <View style={[
-        styles.row, { flex: 5 }]} 
-        onLayout={logLayout('Content')}
-        >
-        </View>
+      <Tracker  
+        markers={quickLogMarkers}
+        entries={quickLogEntries}
+        onMarkerPress={handleMarkerPress}
+        onSegmentPress={handleSegmentPress}
+        onLayout={logLayout('Tracker')}
+      />
 
 
       <LogDetailModal
