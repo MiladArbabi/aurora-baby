@@ -1,5 +1,4 @@
 // src/context/RegionContext.tsx
-
 import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
 import { RegionMap, RegionMeta } from '../data/RegionMapSchema';
 import { categorizeLogToSPECT } from '../services/SpectMapper';
@@ -12,8 +11,9 @@ export interface RegionStateItem {
 }
 export type RegionState = Record<string, RegionStateItem>;
 
-// Initialize all regions locked + zero bloom
-const initialRegionState: RegionState = Object.keys(RegionMap).reduce(
+/** Initial all‐locked, zero bloom state */
+export const initialRegionState: RegionState = 
+Object.keys(RegionMap).reduce(
   (acc, key) => ({
     ...acc,
     [key]: { unlocked: false, bloomLevel: 0 },
@@ -21,12 +21,15 @@ const initialRegionState: RegionState = Object.keys(RegionMap).reduce(
   {} as RegionState
 );
 
-type Action =
+export type Action =
   | { type: 'LOG_RECEIVED'; log: QuickLogEntry }
   | { type: 'RESET' };
 
-function regionReducer(state: RegionState, action: Action): RegionState {
-  switch (action.type) {
+  /** Reducer driving RegionState from `LOG_RECEIVED` and `RESET` actions */
+  export function regionReducer(
+    state: RegionState, action: Action): 
+    RegionState {  
+    switch (action.type) {
     case 'LOG_RECEIVED': {
       const spect = categorizeLogToSPECT(action.log);
       if (!spect) return state;
