@@ -1,5 +1,5 @@
 // src/services/StoryGenerationService.ts
-import { queryWhispr } from './WhisprService';
+import { queryStory } from './StoryService';
 import { getUserStories, saveUserStory } from './UserStoriesService';
 import { StoryCardData } from '../types/HarmonyFlatList';
 import { harmonySections } from '../data/harmonySections';
@@ -86,7 +86,7 @@ async function generateTitle(fullStory: string, defaultTitle: string): Promise<s
   ].join('\n');
 
   try {
-    const raw = await queryWhispr(titlePrompt);
+    const raw = await queryStory(titlePrompt);
     return raw.split('\n')[0].trim() || defaultTitle;
   } catch (err) {
     console.warn('[StoryGen] title generation failed, using default:', err);
@@ -120,9 +120,8 @@ export async function generateOrGetStory(prompt: string): Promise<StoryCardData>
     wasCached: !!(await getUserStories()).find(s => s.id === storyId),
   });
 
-  const metadata = buildMetadataPrompt();
-  const aiPrompt = `${metadata}\n\n### Prompt:\n${prompt}\n\nStory:`;
-  const fullStory = await queryWhispr(aiPrompt);
+  // We now let the server stitch in the universe‐rules for us
+  const fullStory = await queryStory(prompt);
 
   // 3) Safety guard
   if (containsBannedContent(fullStory)) {
