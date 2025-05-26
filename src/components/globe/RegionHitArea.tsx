@@ -15,6 +15,8 @@ export const RegionHitArea: React.FC<Props> = ({ region, onPress, style }) => {
   // In a real SVG globe we'd map region.svgPaths → hit regions.
   return (
     <TouchableOpacity
+    testID={`region-hit-${region.key}`} 
+    accessible={true}
       style={[styles.hitArea, style]}
       onPress={() => onPress(region.key)}
       activeOpacity={0.6}

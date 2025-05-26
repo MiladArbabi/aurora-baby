@@ -1,3 +1,5 @@
+// src/components/globe/RegionHitArea.tsx
+
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { RegionHitArea } from '../../../src/components/globe/RegionHitArea';
@@ -14,11 +16,11 @@ const dummyRegion: RegionMeta = {
 describe('RegionHitArea', () => {
   it('renders touchable and calls onPress with correct key', () => {
     const onPress = jest.fn();
-    const { getByA11yLabel } = render(
+    const { getByTestId } = render(
       <RegionHitArea region={dummyRegion} onPress={onPress} />
     );
 
-    const touchable = getByA11yLabel('Go to Foo Region');
+    const touchable = getByTestId('region-hit-foo');
     fireEvent.press(touchable);
     expect(onPress).toHaveBeenCalledWith('foo');
   });

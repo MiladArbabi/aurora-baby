@@ -5,6 +5,7 @@ import { View, StyleSheet, Text, ViewStyle } from 'react-native';
 import { RegionMap } from '../../data/RegionMapSchema';
 import { useRegionState } from '../../context/RegionContext';
 import { RegionHitArea } from './RegionHitArea';
+import Svg, { Circle } from 'react-native-svg';
 
 interface Props {
   onRegionPress: (key: string) => void;
@@ -16,9 +17,9 @@ export const GlobeRenderer: React.FC<Props> = ({ onRegionPress }) => {
   return (
     <View style={styles.container}>
       {/* Placeholder globe background */}
-      <View style={styles.globe}>
-        <Text style={styles.globeText}>🌐</Text>
-      </View>
+      <Svg width="100%" height="100%" viewBox="0 0 200 200" style={styles.globe}>
+        <Circle cx="100" cy="100" r="80" fill="#E0F7FA" />
+      </Svg>
 
       {/* Render a hit area for each region */}
       {Object.values(RegionMap).map(region => {
