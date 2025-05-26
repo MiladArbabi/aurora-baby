@@ -10,7 +10,8 @@
     "test": "jest --watch",
     "test:reset": "npx jest --clearCache && npx jest --verbose",
     "dev": "nodemon server/server.js",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "perf:globe": "node scripts/measureGlobeRender.js"
   },
   "dependencies": {
     "@expo/metro-runtime": "~4.0.1",
