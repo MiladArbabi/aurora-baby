@@ -180,27 +180,22 @@ const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
               ])
           : undefined
       }
-      onPress={
-        item.action
-          ? item.action
-          : () => {
-            // any “play-a-story” or “user-created” go to our PlayStoryScreen…
-              if (sectionId === 'play-a-story' || sectionId === 'user-created') {
-                navigation.navigate('PlayStory', 
-                  { 
-                    storyId: item.id,
-                    fullStory: item.fullStory,
-                  });
-              } 
-              // create-a-story still goes to the builder…
-              else if (sectionId === 'create-a-story') {
-                navigation.navigate('CreateStory');
-                // everything else (other categories) uses the built-in StoryPlayer
-              } else {
-                navigation.navigate('StoryPlayer', { storyId: item.id });
-              }
-          }
-      }
+      onPress={() => {
+        // all “play” sections (including user‐created and recommended) land in PlayStory
+        if (sectionId === 'play-a-story' || sectionId === 'user-created' || sectionId === 'recommended') {
+          navigation.navigate('PlayStory', {
+            storyId:   item.id,
+            fullStory: item.fullStory,
+            title:     item.title,
+            fromPreview: false,
+          });
+        }
+        else if (sectionId === 'create-a-story') {
+          navigation.navigate('CreateStory');
+        } else {
+          navigation.navigate('StoryPlayer', { storyId: item.id });
+        }
+      }}
     >
       <StoryImage source={{ uri: item.thumbnail }} resizeMode="cover" />
       <View style={{ alignItems: 'center' }}>
