@@ -41,9 +41,9 @@ export const GlobeRenderer: React.FC<Props> = ({ onRegionPress }) => {
 
   return (
     <PanGestureHandler onGestureEvent={onPanGestureEvent}>
-      <Animated.View style={[styles.container, animatedStyle]}>
-        <PinchGestureHandler onGestureEvent={onPinchGestureEvent}>
-          <Animated.View style={StyleSheet.absoluteFill}>
+      <Animated.View testID="pan-view" style={[styles.container, animatedStyle]}>
+    <PinchGestureHandler onGestureEvent={onPinchGestureEvent}>
+        <Animated.View testID="pinch-view" style={StyleSheet.absoluteFill}>
             <Svg width="100%" height="100%" viewBox="0 0 200 200">
               <Circle cx="100" cy="100" r="80" fill="#E0F7FA" />
             </Svg>
