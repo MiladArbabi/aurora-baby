@@ -17,6 +17,7 @@ import { colorMap } from '../../hooks/useTrackerData'
 import TrackerFilter from '../../components/carescreen/TrackerFilter'
 import QuickLogMenu from '../../components/carescreen/QuickLogMenu'
 import LogDetailModal from '../../components/carescreen/LogDetailModal'
+
 import FutureLogsGenerator from '../../components/carescreen/FutureLogsGenerator';
 import { 
   getLogsBetween, 
@@ -26,6 +27,7 @@ import {
 } from '../../services/QuickLogAccess'
 import { QuickLogEntry } from '../../models/QuickLogSchema'
 import { quickLogEmitter } from '../../storage/QuickLogEvents';
+import { useRegionDispatch } from '../../context/RegionContext';
 import { generateAIQuickLogs } from '../../services/LlamaLogGenerator'
 
 type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>
@@ -40,6 +42,8 @@ const CareScreen: React.FC = () => {
   const [futureEntries, setFutureEntries] = useState<QuickLogEntry[]>([])
   const [showLast24h, setShowLast24h] = useState(false)
 
+  const regionDispatch = useRegionDispatch();
+  
   // fetch logs when filter changes
   useEffect(() => {
     const now = new Date()
@@ -49,6 +53,10 @@ const CareScreen: React.FC = () => {
     getLogsBetween(start.toISOString(), now.toISOString())
       .then(entries => {
         setQuickLogEntries(entries)
+      
+        // seed the globe state from existing logs
+      entries.forEach(e => regionDispatch({ type: 'LOG_RECEIVED', log: e }));
+      
       // seed the markers array so even already‐saved entries show up
       const seededMarkers = entries.map(e => {
         const t = new Date(e.type === 'sleep' ? e.data.start : e.timestamp)
@@ -64,15 +72,24 @@ const CareScreen: React.FC = () => {
     try {
       const t = new Date(entry.timestamp)
       const fraction =
-        (t.getHours() * 60 + t.getMinutes() + t.getSeconds() / 60) / 1440
+        (t.getHours() * 60 + t.getMinutes() + t.getSeconds() / 60) / 1440;
+      
+      // Add the new entry to the markers array
+      // If it already exists, don't add it again
+      // This is to prevent duplicates in the markers
       setQuickLogMarkers(existing =>
         existing.some(m => m.id === entry.id)
           ? existing
           : [...existing, { id: entry.id, fraction, color: colorMap[entry.type], type: entry.type }]
           );
-            // and also put it into the entries list so the PastLogsView (if visible)
-            // or any other consumer can pick it up immediately:
-            setQuickLogEntries(existing => [entry, ...existing]);
+      
+      // and also put it into the entries list so the PastLogsView (if visible)
+      // or any other consumer can pick it up immediately:
+      setQuickLogEntries(existing => [entry, ...existing]);
+      
+      // Inform globe about this new log
+            regionDispatch({ type: 'LOG_RECEIVED', log: entry });
+
     } catch (err) {
       console.error('[CareScreen] handleLogged error:', err)
     }

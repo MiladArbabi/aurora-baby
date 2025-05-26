@@ -71,3 +71,13 @@ export const useRegionState = (): RegionState => {
   if (!ctx) throw new Error('useRegionState must be inside a RegionProvider');
   return ctx.state;
 };
+
+/** Hook for screens/components to send log events into the globe model */
+export const useRegionDispatch = (): React.Dispatch<
+  | { type: 'LOG_RECEIVED'; log: import('../models/QuickLogSchema').QuickLogEntry }
+  | { type: 'RESET' }
+> => {
+  const ctx = useContext(RegionContext);
+  if (!ctx) throw new Error('useRegionDispatch must be inside a RegionProvider');
+  return ctx.dispatch;
+};
