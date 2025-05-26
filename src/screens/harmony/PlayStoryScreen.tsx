@@ -78,7 +78,11 @@ const Label = styled.Text`
 `;
 
 export const PlayStoryScreen: React.FC<Props> = ({ route, navigation }) => {
-  const { storyId, fullStory: routeFullStory } = route.params;
+  const { 
+    storyId, 
+    fullStory: routeFullStory,
+    title:      routeTitle = ''
+   } = route.params;
   const theme = useTheme();
 
    // (1) Load all user stories
@@ -101,7 +105,7 @@ export const PlayStoryScreen: React.FC<Props> = ({ route, navigation }) => {
   }, [storyId])
   const story = userStory ?? builtIn
   const storyText = routeFullStory ?? userStory?.fullStory ?? ''
-  const storyTitle = story?.title ?? ''
+  const storyTitle = routeTitle || story?.title || '';
 
   // (3) Track “story_played” *before* any early return, always called
   useEffect(() => {

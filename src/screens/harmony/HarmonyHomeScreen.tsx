@@ -185,8 +185,8 @@ const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
         if (sectionId === 'play-a-story' || sectionId === 'user-created' || sectionId === 'recommended') {
           navigation.navigate('PlayStory', {
             storyId:   item.id,
-            fullStory: item.fullStory,
             title:     item.title,
+            fullStory: item.fullStory,
             fromPreview: false,
           });
         }
@@ -218,8 +218,6 @@ const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
     return [...cards, ...placeholders];
   };
 
- 
-
   const userStoriesSection = useUserStoriesSection();
   const sectionsToRender = [
     recommendedSection,
@@ -227,7 +225,6 @@ const HarmonyHomeScreen: React.FC<Props> = ({ navigation }) => {
     ...(userStoriesSection ? [userStoriesSection] : []),
   ];
   
-
   if (userStories !== null && userStories.length === 0) {
     return (
       <Container>

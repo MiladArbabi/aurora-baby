@@ -100,7 +100,7 @@ export async function generateOrGetStory(
   });
 
   // We now let the server stitch in the universe‐rules for us
-  const { story: fullStory, title } = await queryStory(prompt);
+  const { story: fullStory, title: rawTitle } = await queryStory(prompt);
 
   // 3) Safety guard
   if (containsBannedContent(fullStory)) {
@@ -109,18 +109,23 @@ export async function generateOrGetStory(
     return fallbackStories[Math.floor(Math.random() * fallbackStories.length)];
   }
 
-  // 5) Build the card and cache it
+  // 4) Build the card and cache it
+  // normalize to Title Case
+  const title = rawTitle
+  .toLowerCase()
+  .split(' ')
+  .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+  .join(' ');
+
   const card: StoryCardData = {
-    id: storyId,
+    id: storyId,  
     title,
     fullStory,
-    thumbnail: 'local://custom.png',
+    thumbnail: '',
     type: 'generated',
-    ctaLabel: 'Play',
-    cardColor: 'peach',
-    moodTags: [],
     tags: [],
-  };
+  }
+  
   try { await saveUserStory(card); }
   catch (err) { console.warn('[StoryGen] cache save failed:', err); }
 
