@@ -10,13 +10,15 @@ import LoadingSpinner from '../components/common/Spinner'
 import AuthScreen from '../screens/auth/AuthScreen'
 import OnboardingNavigator from './OnboardingNavigator'
 import HomeScreen from '../screens/home/HomeScreen'
-import HarmonyHomeScreen from '../screens/harmony/HarmonyHomeScreen'
+import HarmonyGlobeScreen from '../screens/harmony/HarmonyGlobeScreen'
 import CareScreen from '../screens/care/CareScreen'
 import PastLogsView from '../screens/care/PastLogsView'
 import InsightsScreen from '../screens/care/InsightsView'
 import WonderScreen from '../screens/wonder/WonderScreen'
 import ProfileSettingScreen from '../screens/ProfileSettingScreen'
 import WhisprScreen from '../screens/whispr/WhisprScreen'
+import StoryWorldScreen from '../screens/harmony/StoryWorldScreen';
+
 import LogDetailScreen from '../screens/care/LogDetailScreen'
 import PlayStoryScreen from 'screens/harmony/PlayStoryScreen'
 import CreateStoryScreen from 'screens/harmony/CreateStoryScreen'
@@ -31,6 +33,7 @@ export type RootStackParamList = {
   Auth: undefined
   Home: undefined
   Harmony: undefined
+  StoryWorld: { regionKey: string } 
   StoryPlayer: { storyId: string }
   StoryViewer: { storyId: string; mode: 'soothing' | 'choice' | 'daily' }
   Care: undefined
@@ -116,7 +119,7 @@ export default function AppNavigator() {
         initialRouteName="Home"
         >
           <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen name="Harmony" component={HarmonyHomeScreen} />
+          <Stack.Screen name="Harmony" component={HarmonyGlobeScreen} />
           <Stack.Screen name="Care" component={CareScreen} />
           <Stack.Screen name="PastLogs" component={PastLogsView} />
           <Stack.Screen name="Insights" component={InsightsScreen} />
@@ -127,13 +130,9 @@ export default function AppNavigator() {
           <Stack.Screen name="PlayStory" component={PlayStoryScreen} />
           <Stack.Screen name="CreateStory" component={CreateStoryScreen} />
           <Stack.Screen name="TextStory" component={TextStoryScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="VoiceStorytelling" component={VoiceStorytellingScreen} options={{ headerShown: false, title: 'Listen' }} 
-          initialParams={{
-            storyId: 'birk-forest-journey',
-            fullStory: 'Once upon a time, in a beautiful forest…. There were two guardians of the Forest... Birk and Freya!',
-            title: 'Birk’s Forest Journey'
-          }} />
+          <Stack.Screen name="VoiceStorytelling" component={VoiceStorytellingScreen} options={{ headerShown: false, title: 'Listen' }} />
           <Stack.Screen name="AnimatedStory" component={AnimatedStoryScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="StoryWorld" component={StoryWorldScreen} />
         </Stack.Navigator>
       )}
     </NavigationContainer>
