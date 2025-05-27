@@ -8,10 +8,9 @@ import { useTTS } from '../../hooks/useTTS';
 import TopNav from '../../components/common/TopNav';
 import BottomNav from '../../components/common/BottomNav';
 import BackButton from '../../assets/icons/common/BackButton';
-import PlayIcon from 'assets/harmonyscreen/voice/PlayIcon';
-import PauseIcon from 'assets/harmonyscreen/voice/PauseIcon';
-import StopIcon from 'assets/harmonyscreen/voice/StopIcon';
-import { Stop } from 'react-native-svg';
+import PlayIcon from '../../assets/harmonyscreen/voice/PlayIcon';
+import PauseIcon from '../../assets/harmonyscreen/voice/PauseIcon';
+import StopIcon from '../../assets/harmonyscreen/voice/StopIcon';
 
 type Props = StackScreenProps<RootStackParamList, 'VoiceStorytelling'>;
 

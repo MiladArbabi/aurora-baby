@@ -8,11 +8,11 @@ import styled, { useTheme, DefaultTheme } from 'styled-components/native';
 import { Audio } from 'expo-av';
 import * as Speech from 'expo-speech';
 
-import TopNav from 'components/common/TopNav';
-import BottomNav from 'components/common/BottomNav';
-import AnimationIcon from 'assets/harmonyscreen/playstoryscreen/AnimationIcon';
-import VoiceIcon from 'assets/harmonyscreen/playstoryscreen/VoiceIcon';
-import TextIcon from 'assets/harmonyscreen/playstoryscreen/TextIcon';
+import TopNav from '../../components/common/TopNav';
+import BottomNav from '../../components/common/BottomNav';
+import AnimationIcon from '../../assets/harmonyscreen/playstoryscreen/AnimationIcon';
+import VoiceIcon from '../../assets/harmonyscreen/playstoryscreen/VoiceIcon';
+import TextIcon from '../../assets/harmonyscreen/playstoryscreen/TextIcon';
 import TestAnimation from '../../components/test_files/TestAnimation';
 
 type Props = StackScreenProps<RootStackParamList, 'AnimatedStory'>;

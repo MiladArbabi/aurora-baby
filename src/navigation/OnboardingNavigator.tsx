@@ -2,9 +2,9 @@
 import { createStackNavigator } from '@react-navigation/stack'
 import WelcomeScreen from '../screens/onboarding/WelcomeScreen'
 import ChildProfileScreen from '../screens/onboarding/ChildProfileScreen'
-import ParentInfoScreen from 'screens/onboarding/ParentInfoScreen'
+import ParentInfoScreen from '../screens/onboarding/ParentInfoScreen'
 import OnboardingFinished from '../screens/onboarding/OnboardingFinished'
-import ThemePreferencesScreen from 'screens/onboarding/ThemePreferencesScreen'
+import ThemePreferencesScreen from '../screens/onboarding/ThemePreferencesScreen'
 
 // <— The param list that drives type-safety for this flow:
 export type OnboardingParamList = {

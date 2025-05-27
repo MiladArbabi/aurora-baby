@@ -20,9 +20,9 @@ import WhisprScreen from '../screens/whispr/WhisprScreen'
 import StoryWorldScreen from '../screens/harmony/StoryWorldScreen';
 
 import LogDetailScreen from '../screens/care/LogDetailScreen'
-import PlayStoryScreen from 'screens/harmony/PlayStoryScreen'
-import CreateStoryScreen from 'screens/harmony/CreateStoryScreen'
-import TextStoryScreen from 'screens/harmony/TextStoryScreen'
+import PlayStoryScreen from '../screens/harmony/PlayStoryScreen'
+import CreateStoryScreen from '../screens/harmony/CreateStoryScreen'
+import TextStoryScreen from '../screens/harmony/TextStoryScreen'
 import VoiceStorytellingScreen from '../screens/harmony/VoiceStorytellingScreen';
 import AnimatedStoryScreen from '../screens/harmony/AnimatedStoryScreen';
 
