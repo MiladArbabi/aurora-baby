@@ -17,7 +17,9 @@
   },
   "include": [
     "src/**/*",
-    "jest/**/*.js"
-, "src/assets/whispr/.tsx", "src/services/LlamaService.ts"  ],
+    "jest/**/*.js",
+    "src/types",
+    "src/assets/whispr/.tsx", 
+    "src/services/LlamaService.ts"  ],
   "exclude": ["node_modules", "**/node_modules/*"]
 }

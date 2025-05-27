@@ -5,7 +5,7 @@ import type { WonderCardData } from '../../types/WonderCardData'
 import ARIcon from '../../assets/wonderscreen/ARIcon'
 import VRIcon from '../../assets/wonderscreen/VRIcon'
 import GameIcon from '../../assets/wonderscreen/GameIcon'
-import { Card } from 'components/common/Card'
+import { Card } from '../../components/common/Card'
 
 export const WonderCard: React.FC<WonderCardData> = ({
   title,

@@ -1,0 +1,40 @@
+
+> aurora-baby-mobile@1.0.0 analyze-bundle
+> react-native bundle --platform ios --entry-file index.js --bundle-output dist/main.jsbundle --dev false && source-map-explorer dist/main.jsbundle
+
+                Welcome to Metro v0.81.5
+              Fast - Scalable - Integrated
+
+
+ WARN  Watchman `watch-project` returned a warning: Recrawled this watch 1 time, most recently because:
+MustScanSubDirs UserDroppedTo resolve, please review the information on
+https://facebook.github.io/watchman/docs/troubleshooting.html#recrawl
+To clear this warning, run:
+`watchman watch-del '/Users/miladarbabi/Codes/projects/aurora-baby' ; watchman watch-project '/Users/miladarbabi/Codes/projects/aurora-baby'`
+
+ WARN  Watchman `query` returned a warning: Recrawled this watch 1 time, most recently because:
+MustScanSubDirs UserDroppedTo resolve, please review the information on
+https://facebook.github.io/watchman/docs/troubleshooting.html#recrawl
+To clear this warning, run:
+`watchman watch-del '/Users/miladarbabi/Codes/projects/aurora-baby' ; watchman watch-project '/Users/miladarbabi/Codes/projects/aurora-baby'`
+
+Error: Unable to resolve module screens/harmony/PlayStoryScreen from /Users/miladarbabi/Codes/projects/aurora-baby/src/navigation/AppNavigator.tsx: screens/harmony/PlayStoryScreen could not be found within the project or in these directories:
+  node_modules
+[0m [90m 21 |[39m
+ [90m 22 |[39m [36mimport[39m [33mLogDetailScreen[39m [36mfrom[39m [32m'../screens/care/LogDetailScreen'[39m
+[31m[1m>[22m[39m[90m 23 |[39m [36mimport[39m [33mPlayStoryScreen[39m [36mfrom[39m [32m'screens/harmony/PlayStoryScreen'[39m
+ [90m    |[39m                              [31m[1m^[22m[39m
+ [90m 24 |[39m [36mimport[39m [33mCreateStoryScreen[39m [36mfrom[39m [32m'screens/harmony/CreateStoryScreen'[39m
+ [90m 25 |[39m [36mimport[39m [33mTextStoryScreen[39m [36mfrom[39m [32m'screens/harmony/TextStoryScreen'[39m
+ [90m 26 |[39m [36mimport[39m [33mVoiceStorytellingScreen[39m [36mfrom[39m [32m'../screens/harmony/VoiceStorytellingScreen'[39m[33m;[39m[0m
+    at ModuleResolver.resolveDependency (/Users/miladarbabi/Codes/projects/aurora-baby/node_modules/@react-native/community-cli-plugin/node_modules/metro/src/node-haste/DependencyGraph/ModuleResolution.js:150:15)
+    at DependencyGraph.resolveDependency (/Users/miladarbabi/Codes/projects/aurora-baby/node_modules/@react-native/community-cli-plugin/node_modules/metro/src/node-haste/DependencyGraph.js:248:43)
+    at /Users/miladarbabi/Codes/projects/aurora-baby/node_modules/@react-native/community-cli-plugin/node_modules/metro/src/lib/transformHelpers.js:165:21
+    at resolveDependencies (/Users/miladarbabi/Codes/projects/aurora-baby/node_modules/@react-native/community-cli-plugin/node_modules/metro/src/DeltaBundler/buildSubgraph.js:42:25)
+    at visit (/Users/miladarbabi/Codes/projects/aurora-baby/node_modules/@react-native/community-cli-plugin/node_modules/metro/src/DeltaBundler/buildSubgraph.js:83:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Promise.all (index 11)
+    at async visit (/Users/miladarbabi/Codes/projects/aurora-baby/node_modules/@react-native/community-cli-plugin/node_modules/metro/src/DeltaBundler/buildSubgraph.js:92:5)
+    at async Promise.all (index 4)
+    at async visit (/Users/miladarbabi/Codes/projects/aurora-baby/node_modules/@react-native/community-cli-plugin/node_modules/metro/src/DeltaBundler/buildSubgraph.js:92:5)
+info Run CLI with --verbose flag for more details.

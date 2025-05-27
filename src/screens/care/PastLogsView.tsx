@@ -13,13 +13,13 @@ import { useTheme } from 'styled-components/native'
 import { QuickLogEntry } from '../../models/QuickLogSchema'
 import { quickLogEmitter } from '../../storage/QuickLogEvents';
 import { getLogsBetween, deleteLogEntry  } from '../../services/QuickLogAccess'
-import CareLayout from 'components/carescreen/CareLayout'
+import CareLayout from '../../components/carescreen/CareLayout'
 import { MiniTab } from '../../components/carescreen/MiniNavBar'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useNavigation } from '@react-navigation/native'
 import { RootStackParamList } from '../../navigation/AppNavigator'
-import LogDetailModal from 'components/carescreen/LogDetailModal'
-import { startOfToday } from 'date-fns';
+import LogDetailModal from '../../components/carescreen/LogDetailModal'
+import { endOfToday, startOfDay, startOfToday } from 'date-fns';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window')
 const CARD_WIDTH = SCREEN_WIDTH * 0.9
@@ -112,9 +112,9 @@ export default function PastLogsView() {
     ),[]
   )
 
-  async function handleGenerateFuture(hoursAhead: number) {
+/*   async function handleGenerateFuture(hoursAhead: number) {
     // 1) Grab recent logs & baby profile
-    const recent = await getLogsBetween(past)
+    const recent = await getLogsBetween(startOfDay, endOfToday)
     const profile = await getBabyProfile(recent[0]?.babyId) 
   
     // 2) Ask your AI endpoint for recommendations
@@ -124,7 +124,7 @@ export default function PastLogsView() {
     await saveFutureEntries(suggestions)
     // 4) Update your local state so the pills insert dashed strokes immediately
     setEntries(es => [...suggestions, ...es])
-  }
+  } */
 
   const handleNavigate = (tab: MiniTab) => {
     if (tab==='cards') return
@@ -150,13 +150,13 @@ export default function PastLogsView() {
               <View style={[styles.pillRow, { backgroundColor: theme.colors.background,}]}>
               <TouchableOpacity
                 style={styles.pill}
-                onPress={() => handleGenerateFuture(24)}
+                /* onPress={() => handleGenerateFuture(24)} */
                 >
                   <Text style={styles.pillText}>Fill next-day logs</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                 style={styles.pill}
-                onPress={() => handleGenerateFuture(168)}
+               /*  onPress={() => handleGenerateFuture(168)} */
                 >
                   <Text style={styles.pillText}>Fill next-week logs</Text>
                 </TouchableOpacity>

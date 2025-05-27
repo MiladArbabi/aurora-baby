@@ -1,19 +1,25 @@
 import React from 'react';
 import { StyleSheet, ViewStyle } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
+import Svg, { Circle, G, Path } from 'react-native-svg';
 import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated';
 import { PanGestureHandler, PinchGestureHandler } from 'react-native-gesture-handler';
-import type {
-  PanGestureHandlerGestureEvent,
-  PinchGestureHandlerGestureEvent,
-} from 'react-native-gesture-handler';
+import type { PanGestureHandlerGestureEvent, PinchGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 import { RegionMap } from '../../data/RegionMapSchema';
 import { useRegionState } from '../../context/RegionContext';
 import { RegionHitArea } from './RegionHitArea';
-
+import { landFeatures, sphereFeature } from '../../data/world-110m';
+import { geoMercator, geoPath } from 'd3-geo';
+// 
 interface Props {
   onRegionPress: (key: string) => void;
 }
+
+const PROJECTION = geoMercator()
+  .scale(80)            // tweak to fit 200×200 viewBox
+  .translate([100,100]); 
+
+const PATH_GENERATOR = geoPath().projection(PROJECTION);
+
 
 export const GlobeRenderer: React.FC<Props> = ({ onRegionPress }) => {
   const regionState = useRegionState();
@@ -41,16 +47,28 @@ export const GlobeRenderer: React.FC<Props> = ({ onRegionPress }) => {
 
   return (
     <PanGestureHandler onGestureEvent={onPanGestureEvent}>
-      <Animated.View testID="pan-view" style={[styles.container, animatedStyle]}>
-    <PinchGestureHandler onGestureEvent={onPinchGestureEvent}>
-        <Animated.View testID="pinch-view" style={StyleSheet.absoluteFill}>
+      <Animated.View style={[styles.container, animatedStyle]}>
+        <PinchGestureHandler onGestureEvent={onPinchGestureEvent}>
+          <Animated.View style={StyleSheet.absoluteFill}>
             <Svg width="100%" height="100%" viewBox="0 0 200 200">
-              <Circle cx="100" cy="100" r="80" fill="#E0F7FA" />
+              {/* Ocean */}
+              <Path d={PATH_GENERATOR(sphereFeature as any)!} fill="#a3d5f7" />
+              {/* Landmasses */}
+              <G>
+                {(landFeatures as any).features.map((f: any, i: number) => (
+                  <Path
+                    key={i}
+                    d={PATH_GENERATOR(f)!}
+                    fill="#8bc34a"
+                    stroke="#45632e"
+                    strokeWidth={0.5}
+                  />
+                ))}
+              </G>
             </Svg>
+            {/* hit‐areas */}
             {Object.values(RegionMap).map(region => {
-              const hitStyles = (styles as Record<string, ViewStyle>)[
-                `hit_${region.key}`
-              ];
+              const hitStyles = (styles as Record<string,ViewStyle>)[`hit_${region.key}`];
               return (
                 <RegionHitArea
                   key={region.key}
@@ -69,7 +87,6 @@ export const GlobeRenderer: React.FC<Props> = ({ onRegionPress }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  // Temporary dummy hit-area for 'dreamSky'
   hit_dreamSky: { top: 120, left: 140, width: 60, height: 60 },
 });
 
