@@ -2,16 +2,18 @@
 
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { GlobeRenderer } from '../../components/globe/GlobeRenderer';
-import BottomNav from '../../components/common/BottomNav';
 import type { StackScreenProps } from '@react-navigation/stack';
 import type { RootStackParamList } from '../../navigation/AppNavigator';
+import TopNav from '../../components/common/TopNav';
+import BottomNav from '../../components/common/BottomNav';
+import GlobeRenderer from '../../components/globe/GlobeRenderer';
 
 type Props = StackScreenProps<RootStackParamList, 'Harmony'>;
 
 const HarmonyGlobeScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <View style={styles.screen}>
+      <TopNav navigation={navigation}/>
       <GlobeRenderer
         onRegionPress={regionKey =>
           navigation.navigate('StoryWorld', { regionKey })
