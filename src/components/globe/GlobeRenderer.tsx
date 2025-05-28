@@ -1,6 +1,6 @@
 // src/components/globe/GlobeRenderer.tsx
 
-import React, { useCallback, useState } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
 import Svg, { Circle, G, Path } from 'react-native-svg';
 import Animated, {
@@ -31,6 +31,7 @@ interface Props {
 const GlobeRenderer: React.FC<Props> = ({ onRegionPress }) => {
   // 1) shared values for rotation & zoom
   const [tick, setTick] = useState(0);
+  const [dragging, setDragging] = useState(false);
   const rotLon = useSharedValue(0);
   const rotLat = useSharedValue(0);
   const startLon = useSharedValue(0);
@@ -60,6 +61,7 @@ const GlobeRenderer: React.FC<Props> = ({ onRegionPress }) => {
   const panGesture = Gesture.Pan()
   .onBegin(() => {
           // remember where we started dragging
+          runOnJS(setDragging)(true);
           startLon.value = rotLon.value;
           startLat.value = rotLat.value;
         })
@@ -69,22 +71,37 @@ const GlobeRenderer: React.FC<Props> = ({ onRegionPress }) => {
       rotLat.value = startLat.value - e.translationY * 0.2;   
     })
     .onEnd(e => {
+      runOnJS(setDragging)(false);
       rotLon.value = withDecay({ velocity: e.velocityX * 0.2, deceleration: 0.99 });
       rotLat.value = withDecay({ velocity: -e.velocityY * 0.2, deceleration: 0.99 });
     });
 
   // 6) Pinch gesture → zoom + decay
   const pinchGesture = Gesture.Pinch()
+    .onStart(() => {
+      runOnJS(setDragging)(true);
+    })  
     .onUpdate(e => {
       scale.value *= e.scale;
     })
     .onEnd(e => {
+      runOnJS(setDragging)(false);
       scale.value = withDecay({ velocity: e.velocity, deceleration: 0.99 });
     });
 
   // 7) Allow pan *or* pinch
   const gesture = Gesture.Race(panGesture, pinchGesture);
 
+  // 8) When user isn’t touching, spin slowly (2°/sec = 0.2° every 100ms)
+  useEffect(() => {
+    if (!dragging) {
+      const id = setInterval(() => {
+        // bump longitude
+        rotLon.value += 0.5;
+      }, 100);
+      return () => clearInterval(id);
+    }
+  }, [dragging, rotLon]);
   return (
     <GestureDetector gesture={gesture}>
       <Animated.View style={[styles.container, animatedStyle]}>
