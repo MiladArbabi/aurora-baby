@@ -1,6 +1,6 @@
-// src/components/globe/GlobeRenderer.tsx
+// …imports…
 import React, { useEffect, useCallback, useState, useMemo } from 'react';
-import { StyleSheet, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import Svg, { Circle, G, Path } from 'react-native-svg';
 import Animated, {
   useSharedValue,
@@ -9,55 +9,59 @@ import Animated, {
   withDecay,
   runOnJS,
 } from 'react-native-reanimated';
-import { landFeatures } from '../../data/world-110m';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { geoOrthographic, geoPath } from 'd3-geo';
+import { geoOrthographic, geoPath, geoDistance } from 'd3-geo';
+import { landFeatures } from '../../data/world-110m';
 import { Globe2DProps } from '../../types/globe';
+import { isFrontHemisphere } from '../../utils/globeUtils'
 
-//Icon Size
 const ICON_SIZE = 20;
-
-// Projection & path generator factory
-function makeProjection(viewBoxSize: number) {
-  return geoOrthographic()
-    .scale(viewBoxSize * 0.4)
-    .translate([viewBoxSize / 2, viewBoxSize / 2])
-    .clipAngle(90);
-}
 
 const GlobeRenderer2D: React.FC<Globe2DProps> = ({
   regions,
   onRegionPress,
-  initialRotation = [0, 0],
-  initialScale = 1,
-  autoRotateSpeed = 2, // degrees per second
-  viewBoxSize,
+  initialRotation=[0,0],
+  initialScale=1,
+  autoRotateSpeed=2,
+  viewBoxSize
 }) => {
   const [tick, setTick] = useState(0);
   const [lastLon, setLastLon] = useState(initialRotation[0]);
+  const [lastLat, setLastLat] = useState(initialRotation[1]);
   const [dragging, setDragging] = useState(false);
 
   const rotLon = useSharedValue(initialRotation[0]);
   const rotLat = useSharedValue(initialRotation[1]);
-  const scale = useSharedValue(initialScale);
+  const scale  = useSharedValue(initialScale);
   const startLon = useSharedValue(initialRotation[0]);
   const startLat = useSharedValue(initialRotation[1]);
 
-  //Memoize projection & path so they survive re-renders
-  const PROJECTION = useMemo(() => makeProjection(viewBoxSize), [viewBoxSize]);
-  const PATH       = useMemo(() => geoPath().projection(PROJECTION as any), [PROJECTION]);
+  function makeProjection(viewBoxSize: number, clipAngleDeg = 90) {
+    return geoOrthographic()
+      .scale(viewBoxSize * 0.4)
+      .translate([viewBoxSize/2, viewBoxSize/2])
+      .clipAngle(clipAngleDeg);
+  }
 
-  // On mount, rotate to your initialRotation
+  // in your component:
+  const PROJECTION = useMemo(
+    () => makeProjection(viewBoxSize, /* pass clipAngleDeg here */ 90),
+    [viewBoxSize]
+  );
+  
+  const PATH = useMemo(() => geoPath().projection(PROJECTION as any), [PROJECTION]);
+
+  // initialize
   useEffect(() => {
     PROJECTION.rotate(initialRotation);
-    // force one render so that first frame shows correctly
-    setTick(t => t + 1);
+    setTick(t => t+1);
   }, [PROJECTION, initialRotation]);
 
-  // sync projection
+  // sync D3 projection on rotation change
   const rotateJS = useCallback((lon: number, lat: number) => {
     PROJECTION.rotate([lon, lat]);
     setLastLon(lon);
+    setLastLat(lat);          // ← new!
     setTick(t => t + 1);
   }, [PROJECTION]);
 
@@ -70,10 +74,9 @@ const GlobeRenderer2D: React.FC<Globe2DProps> = ({
     transform: [{ scale: scale.value }],
   }));
 
-  // gestures
+  // pan/pinch…
   const pan = Gesture.Pan()
   .onBegin(() => {
-    // mark dragging and capture our “current” rotation as the drag base
     runOnJS(setDragging)(true);
     startLon.value = rotLon.value;
     startLat.value = rotLat.value;
@@ -88,14 +91,13 @@ const GlobeRenderer2D: React.FC<Globe2DProps> = ({
     rotLat.value = withDecay({ velocity: -e.velocityY * 0.2, deceleration: 0.99 });
   });
 
-  const pinch = Gesture.Pinch()
+const pinch = Gesture.Pinch()
   .onBegin(() => {
     runOnJS(setDragging)(true);
-    // capture current scale too (if you use it inside pinch logic)
-    // startScale.value = scale.value; // optional, if you have startScale
+    // optionally: capture scale → startScale.value = scale.value;
   })
   .onUpdate(e => {
-    scale.value = scale.value * e.scale;
+    scale.value *= e.scale;
   })
   .onEnd(e => {
     runOnJS(setDragging)(false);
@@ -104,81 +106,88 @@ const GlobeRenderer2D: React.FC<Globe2DProps> = ({
 
   const gesture = Gesture.Race(pan, pinch);
 
-  // idle rotation
+  // auto-rotate
   useEffect(() => {
     if (!dragging) {
-      const interval = setInterval(
-        () => (rotLon.value += autoRotateSpeed / 10),
+      const id = setInterval(
+        () => rotLon.value += autoRotateSpeed/10,
         100
       );
-      return () => clearInterval(interval);
+      return () => clearInterval(id);
     }
   }, [dragging, rotLon, autoRotateSpeed]);
-  
+
   return (
     <GestureDetector gesture={gesture}>
-      <Animated.View style={[styles.container, animatedStyle]}>        
-        <Svg width="100%" height="100%" viewBox={`0 0 ${viewBoxSize} ${viewBoxSize}`}>          
+      <Animated.View style={[styles.container, animatedStyle]}>
+        <Svg
+          width="100%"
+          height="100%"
+          viewBox={`0 0 ${viewBoxSize} ${viewBoxSize}`}
+        >
+          {/* Ocean */}
           <Circle
-            cx={viewBoxSize / 2}
-            cy={viewBoxSize / 2}
-            r={viewBoxSize * 0.4}
+            cx={viewBoxSize/2}
+            cy={viewBoxSize/2}
+            r={viewBoxSize*0.4}
             fill="#a3d5f7"
             stroke="#45632e"
           />
+
+          {/* Land */}
           <G>
-            {landFeatures.features.map((feat: any, idx: number) => (
+            {landFeatures.features.map((feat:any,i:number)=>(
               <Path
-                key={idx}
-                d={PATH(feat) as string}
+                key={i}
+                d={PATH(feat)!}
                 fill="#8bc34a"
                 stroke="#45632e"
                 strokeWidth={0.3}
               />
             ))}
           </G>
+
+          {/* ——— SVG-native Pins ——— */}
+          <G>
+            {regions.map(region => {
+              // use the *exact* projection.clipAngle() for perfect sync:
+              const base = (PROJECTION as any).clipAngle();
+              const clip = base + (region.clipAngleAdjust || 0);
+              if (!isFrontHemisphere(region.center, [lastLon, lastLat], clip)) {
+                return null;
+              }
+
+              // 3) now project and draw
+              const [x,y] = PROJECTION(region.center) as [number,number];
+              return (
+                <G
+                  key={region.key}
+                  transform={`translate(${x},${y})`}
+                  onPress={() => onRegionPress(region.key)}
+                  hitSlop={{ top:10, bottom:10, left:10, right:10 }}
+                >
+                  <Circle
+                    r={ICON_SIZE * 0.4}
+                    fill={region.baseColor}
+                    stroke="#fff"
+                    strokeWidth={3}
+                  />
+                </G>
+              );
+            })}
+          </G>
         </Svg>
-
-        {regions.map(region => {
-          const [x, y] = PROJECTION(region.center) as [number, number];
-          // skip back hemisphere
-          const diff = ((region.center[0] - lastLon + 180) % 360) - 180;
-          if (Math.abs(diff) > 90) return null;
-
-          const IconComponent = region.icon; 
-          const left = (x / viewBoxSize) * 100;
-          const top = (y / viewBoxSize) * 100;
-          const size = (ICON_SIZE / viewBoxSize) * 100;
-
-          return (
-            <TouchableOpacity
-              key={region.key}
-              style={{
-                position: 'absolute',
-                left: `${left}%`,
-                top: `${top}%`,
-                width: `${size}%`,
-                height: `${size}%`,
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-              onPress={() => onRegionPress(region.key)}
-            >
-              <IconComponent
-              fill={region.baseColor} 
-              width="70%" 
-              height="70%" 
-              />               
-            </TouchableOpacity>
-          );
-        })}
       </Animated.View>
     </GestureDetector>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex:1 },
+  toolTip: {
+    fontSize:6,
+    color:"#333",
+  }
 });
 
 export default GlobeRenderer2D;
