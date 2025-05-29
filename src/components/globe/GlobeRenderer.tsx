@@ -72,24 +72,35 @@ const GlobeRenderer2D: React.FC<Globe2DProps> = ({
 
   // gestures
   const pan = Gesture.Pan()
-    .onBegin(() => runOnJS(setDragging)(true))
-    .onUpdate(e => {
-      rotLon.value = startLon.value + e.translationX * 0.2;
-      rotLat.value = startLat.value - e.translationY * 0.2;
-    })
-    .onEnd(e => {
-      runOnJS(setDragging)(false);
-      rotLon.value = withDecay({ velocity: e.velocityX * 0.2, deceleration: 0.99 });
-      rotLat.value = withDecay({ velocity: -e.velocityY * 0.2, deceleration: 0.99 });
-    });
+  .onBegin(() => {
+    // mark dragging and capture our “current” rotation as the drag base
+    runOnJS(setDragging)(true);
+    startLon.value = rotLon.value;
+    startLat.value = rotLat.value;
+  })
+  .onUpdate(e => {
+    rotLon.value = startLon.value + e.translationX * 0.2;
+    rotLat.value = startLat.value - e.translationY * 0.2;
+  })
+  .onEnd(e => {
+    runOnJS(setDragging)(false);
+    rotLon.value = withDecay({ velocity: e.velocityX * 0.2, deceleration: 0.99 });
+    rotLat.value = withDecay({ velocity: -e.velocityY * 0.2, deceleration: 0.99 });
+  });
 
   const pinch = Gesture.Pinch()
-    .onBegin(() => runOnJS(setDragging)(true))
-    .onUpdate(e => (scale.value *= e.scale))
-    .onEnd(e => {
-      runOnJS(setDragging)(false);
-      scale.value = withDecay({ velocity: e.velocity, deceleration: 0.99 });
-    });
+  .onBegin(() => {
+    runOnJS(setDragging)(true);
+    // capture current scale too (if you use it inside pinch logic)
+    // startScale.value = scale.value; // optional, if you have startScale
+  })
+  .onUpdate(e => {
+    scale.value = scale.value * e.scale;
+  })
+  .onEnd(e => {
+    runOnJS(setDragging)(false);
+    scale.value = withDecay({ velocity: e.velocity, deceleration: 0.99 });
+  });
 
   const gesture = Gesture.Race(pan, pinch);
 
