@@ -16,12 +16,12 @@ export interface Region {
     geoShape?: Feature<Geometry>;
     /** Optional GLTF model reference for 3D */
     modelRef?: string;
-    /** Icon component for pin or marker */
-    icon: React.FC<SvgProps>;
     /** Geographic center [longitude, latitude] for centering or projection */
     center: [number, number];
     /** SPECT Categories */
     spectTags: Array<'SLEEP'|'MOOD'|'FEED'|'HEALTH'>;
+
+    clipAngleAdjust?: number;
   }
   
   /** Common props for any Globe implementation */
