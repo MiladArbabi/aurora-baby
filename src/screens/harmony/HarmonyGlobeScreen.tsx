@@ -6,7 +6,8 @@ import type { StackScreenProps } from '@react-navigation/stack';
 import type { RootStackParamList } from '../../navigation/AppNavigator';
 import TopNav from '../../components/common/TopNav';
 import BottomNav from '../../components/common/BottomNav';
-import GlobeRenderer from '../../components/globe/GlobeRenderer';
+import GlobeRenderer2D from '../../components/globe/GlobeRenderer';
+import { regions } from '../../data/RegionMapSchema';
 
 type Props = StackScreenProps<RootStackParamList, 'Harmony'>;
 
@@ -14,15 +15,22 @@ const HarmonyGlobeScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <View style={styles.screen}>
       <TopNav navigation={navigation}/>
-      <GlobeRenderer
+      <GlobeRenderer2D
+        regions={regions}
+        viewBoxSize={200}
         onRegionPress={regionKey =>
           navigation.navigate('StoryWorld', { regionKey })
         }
+        initialRotation={[0, 0]}
+        initialScale={1}
+        autoRotateSpeed={2}
       />
       <BottomNav navigation={navigation} activeScreen="Harmony" />
     </View>
   );
 };
+
+
 
 export default HarmonyGlobeScreen;
 
