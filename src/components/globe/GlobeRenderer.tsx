@@ -1,7 +1,6 @@
 // src/components/globe/GlobeRenderer.tsx
-
-import React, { useEffect, useCallback, useState } from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
+import React, { useEffect, useCallback, useState, useMemo } from 'react';
+import { StyleSheet, TouchableOpacity } from 'react-native';
 import Svg, { Circle, G, Path } from 'react-native-svg';
 import Animated, {
   useSharedValue,
@@ -10,65 +9,73 @@ import Animated, {
   withDecay,
   runOnJS,
 } from 'react-native-reanimated';
+import { landFeatures } from '../../data/world-110m';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { geoOrthographic, geoPath } from 'd3-geo';
-import { landFeatures } from '../../data/world-110m';
-import { RegionMap } from '../../data/RegionMapSchema';
-import { RegionHitArea } from './RegionHitArea';
+import { Globe2DProps } from '../../types/globe';
 
-// ————— Projection & path generator —————
-const PROJECTION = geoOrthographic()
-  .scale(80)             // radius of our globe circle
-  .translate([100, 100]) // center in 200×200 viewBox
-  .clipAngle(90);        // only front hemisphere
+//Icon Size
+const ICON_SIZE = 20;
 
-const PATH = geoPath().projection(PROJECTION);
-
-interface Props {
-  onRegionPress: (key: string) => void;
+// Projection & path generator factory
+function makeProjection(viewBoxSize: number) {
+  return geoOrthographic()
+    .scale(viewBoxSize * 0.4)
+    .translate([viewBoxSize / 2, viewBoxSize / 2])
+    .clipAngle(90);
 }
 
-const GlobeRenderer: React.FC<Props> = ({ onRegionPress }) => {
-  // 1) shared values for rotation & zoom
+const GlobeRenderer2D: React.FC<Globe2DProps> = ({
+  regions,
+  onRegionPress,
+  initialRotation = [0, 0],
+  initialScale = 1,
+  autoRotateSpeed = 2, // degrees per second
+  viewBoxSize,
+}) => {
   const [tick, setTick] = useState(0);
+  const [lastLon, setLastLon] = useState(initialRotation[0]);
   const [dragging, setDragging] = useState(false);
-  const rotLon = useSharedValue(0);
-  const rotLat = useSharedValue(0);
-  const startLon = useSharedValue(0);
-  const startLat = useSharedValue(0);
-  const scale  = useSharedValue(1);
 
-  // 2) a JS‐thread function that actually calls projection.rotate
+  const rotLon = useSharedValue(initialRotation[0]);
+  const rotLat = useSharedValue(initialRotation[1]);
+  const scale = useSharedValue(initialScale);
+  const startLon = useSharedValue(initialRotation[0]);
+  const startLat = useSharedValue(initialRotation[1]);
+
+  //Memoize projection & path so they survive re-renders
+  const PROJECTION = useMemo(() => makeProjection(viewBoxSize), [viewBoxSize]);
+  const PATH       = useMemo(() => geoPath().projection(PROJECTION as any), [PROJECTION]);
+
+  // On mount, rotate to your initialRotation
+  useEffect(() => {
+    PROJECTION.rotate(initialRotation);
+    // force one render so that first frame shows correctly
+    setTick(t => t + 1);
+  }, [PROJECTION, initialRotation]);
+
+  // sync projection
   const rotateJS = useCallback((lon: number, lat: number) => {
     PROJECTION.rotate([lon, lat]);
-    setTick(t => t + 1);        // force React to re-render
-  }, []);
+    setLastLon(lon);
+    setTick(t => t + 1);
+  }, [PROJECTION]);
 
-  // 3) Whenever our shared values change, run rotateJS on JS thread
   useAnimatedReaction(
     () => [rotLon.value, rotLat.value],
-    ([lon, lat]) => {
-      runOnJS(rotateJS)(lon, lat);
-    }
+    ([lon, lat]) => runOnJS(rotateJS)(lon, lat)
   );
 
-  // 4) animated style only for scale (zoom)
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
 
-  // 5) Pan gesture → rotation + decay
-  const panGesture = Gesture.Pan()
-  .onBegin(() => {
-          // remember where we started dragging
-          runOnJS(setDragging)(true);
-          startLon.value = rotLon.value;
-          startLat.value = rotLat.value;
-        })
+  // gestures
+  const pan = Gesture.Pan()
+    .onBegin(() => runOnJS(setDragging)(true))
     .onUpdate(e => {
-      // map gesture delta to absolute rotation
       rotLon.value = startLon.value + e.translationX * 0.2;
-      rotLat.value = startLat.value - e.translationY * 0.2;   
+      rotLat.value = startLat.value - e.translationY * 0.2;
     })
     .onEnd(e => {
       runOnJS(setDragging)(false);
@@ -76,45 +83,43 @@ const GlobeRenderer: React.FC<Props> = ({ onRegionPress }) => {
       rotLat.value = withDecay({ velocity: -e.velocityY * 0.2, deceleration: 0.99 });
     });
 
-  // 6) Pinch gesture → zoom + decay
-  const pinchGesture = Gesture.Pinch()
-    .onStart(() => {
-      runOnJS(setDragging)(true);
-    })  
-    .onUpdate(e => {
-      scale.value *= e.scale;
-    })
+  const pinch = Gesture.Pinch()
+    .onBegin(() => runOnJS(setDragging)(true))
+    .onUpdate(e => (scale.value *= e.scale))
     .onEnd(e => {
       runOnJS(setDragging)(false);
       scale.value = withDecay({ velocity: e.velocity, deceleration: 0.99 });
     });
 
-  // 7) Allow pan *or* pinch
-  const gesture = Gesture.Race(panGesture, pinchGesture);
+  const gesture = Gesture.Race(pan, pinch);
 
-  // 8) When user isn’t touching, spin slowly (2°/sec = 0.2° every 100ms)
+  // idle rotation
   useEffect(() => {
     if (!dragging) {
-      const id = setInterval(() => {
-        // bump longitude
-        rotLon.value += 0.5;
-      }, 100);
-      return () => clearInterval(id);
+      const interval = setInterval(
+        () => (rotLon.value += autoRotateSpeed / 10),
+        100
+      );
+      return () => clearInterval(interval);
     }
-  }, [dragging, rotLon]);
+  }, [dragging, rotLon, autoRotateSpeed]);
+  
   return (
     <GestureDetector gesture={gesture}>
-      <Animated.View style={[styles.container, animatedStyle]}>
-        <Svg width="100%" height="100%" viewBox="0 0 200 200">
-          {/* Ocean */}
-          <Circle cx={100} cy={100} r={80} fill="#a3d5f7" stroke="#45632e" />
-
-          {/* Landmasses */}
+      <Animated.View style={[styles.container, animatedStyle]}>        
+        <Svg width="100%" height="100%" viewBox={`0 0 ${viewBoxSize} ${viewBoxSize}`}>          
+          <Circle
+            cx={viewBoxSize / 2}
+            cy={viewBoxSize / 2}
+            r={viewBoxSize * 0.4}
+            fill="#a3d5f7"
+            stroke="#45632e"
+          />
           <G>
-            {(landFeatures as any).features.map((feat: any, i: number) => (
+            {landFeatures.features.map((feat: any, idx: number) => (
               <Path
-                key={i}
-                d={PATH(feat)!}
+                key={idx}
+                d={PATH(feat) as string}
                 fill="#8bc34a"
                 stroke="#45632e"
                 strokeWidth={0.3}
@@ -123,16 +128,37 @@ const GlobeRenderer: React.FC<Props> = ({ onRegionPress }) => {
           </G>
         </Svg>
 
-        {/* Hit‐areas for your harmony keys */}
-        {Object.values(RegionMap).map(region => {
-          const hitStyles = (styles as Record<string, ViewStyle>)[`hit_${region.key}`];
+        {regions.map(region => {
+          const [x, y] = PROJECTION(region.center) as [number, number];
+          // skip back hemisphere
+          const diff = ((region.center[0] - lastLon + 180) % 360) - 180;
+          if (Math.abs(diff) > 90) return null;
+
+          const IconComponent = region.icon; 
+          const left = (x / viewBoxSize) * 100;
+          const top = (y / viewBoxSize) * 100;
+          const size = (ICON_SIZE / viewBoxSize) * 100;
+
           return (
-            <RegionHitArea
+            <TouchableOpacity
               key={region.key}
-              region={region}
-              onPress={onRegionPress}
-              style={hitStyles}
-            />
+              style={{
+                position: 'absolute',
+                left: `${left}%`,
+                top: `${top}%`,
+                width: `${size}%`,
+                height: `${size}%`,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+              onPress={() => onRegionPress(region.key)}
+            >
+              <IconComponent
+              fill={region.baseColor} 
+              width="70%" 
+              height="70%" 
+              />               
+            </TouchableOpacity>
           );
         })}
       </Animated.View>
@@ -142,8 +168,6 @@ const GlobeRenderer: React.FC<Props> = ({ onRegionPress }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  // dummy hit area for 'dreamSky'; add more for each region
-  hit_dreamSky: { top: 120, left: 140, width: 60, height: 60 },
 });
 
-export default GlobeRenderer;
+export default GlobeRenderer2D;

@@ -27,7 +27,6 @@ import {
 } from '../../services/QuickLogAccess'
 import { QuickLogEntry } from '../../models/QuickLogSchema'
 import { quickLogEmitter } from '../../storage/QuickLogEvents';
-import { useRegionDispatch } from '../../context/RegionContext';
 import { generateAIQuickLogs } from '../../services/LlamaLogGenerator'
 
 type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>
@@ -41,8 +40,6 @@ const CareScreen: React.FC = () => {
   const [selectedLog, setSelectedLog] = useState<QuickLogEntry | null>(null)
   const [futureEntries, setFutureEntries] = useState<QuickLogEntry[]>([])
   const [showLast24h, setShowLast24h] = useState(false)
-
-  const regionDispatch = useRegionDispatch();
   
   // fetch logs when filter changes
   useEffect(() => {
@@ -53,9 +50,6 @@ const CareScreen: React.FC = () => {
     getLogsBetween(start.toISOString(), now.toISOString())
       .then(entries => {
         setQuickLogEntries(entries)
-      
-        // seed the globe state from existing logs
-      entries.forEach(e => regionDispatch({ type: 'LOG_RECEIVED', log: e }));
       
       // seed the markers array so even already‐saved entries show up
       const seededMarkers = entries.map(e => {
@@ -88,8 +82,8 @@ const CareScreen: React.FC = () => {
       setQuickLogEntries(existing => [entry, ...existing]);
       
       // Inform globe about this new log
-            regionDispatch({ type: 'LOG_RECEIVED', log: entry });
-
+/*             regionDispatch({ type: 'LOG_RECEIVED', log: entry });
+ */
     } catch (err) {
       console.error('[CareScreen] handleLogged error:', err)
     }

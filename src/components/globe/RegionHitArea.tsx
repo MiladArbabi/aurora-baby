@@ -1,39 +1,44 @@
 // src/components/globe/RegionHitArea.tsx
-
 import React from 'react';
-import { TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
-import type { RegionMeta } from '../../data/RegionMapSchema';
+import {
+  TouchableOpacity,
+  StyleSheet,
+  ViewStyle,
+} from 'react-native';
+import type { Region } from '../../types/globe';
 
 interface Props {
-  region: RegionMeta;
+  /** Region metadata for hit area */
+  region: Region;
+  /** Callback when region is pressed */
   onPress: (key: string) => void;
-  // For now: simple bounding box. Later: use precise SVG hit-testing.
+  /** Override hit area style */
   style?: ViewStyle;
+  children?: React.ReactNode;
 }
 
-export const RegionHitArea: React.FC<Props> = ({ region, onPress, style }) => {
-  // In a real SVG globe we'd map region.svgPaths → hit regions.
+export const RegionHitArea: React.FC<Props> = ({ region, onPress, style, children }) => {
   return (
     <TouchableOpacity
-    testID={`region-hit-${region.key}`} 
-    accessible={true}
+      testID={`region-hit-${region.key}`}
+      accessible
+      accessibilityLabel={`Go to ${region.displayName}`}
       style={[styles.hitArea, style]}
       onPress={() => onPress(region.key)}
       activeOpacity={0.6}
-      accessibilityLabel={`Go to ${region.displayName}`}
-    />
+    >
+      {children ?? null}
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   hitArea: {
     position: 'absolute',
-    // Temporary placeholder size/position
-    top: 100,
-    left: 100,
+    // default placeholder size/position
+    top: 0,
+    left: 0,
     width: 80,
     height: 80,
-    // uncomment to debug
-    // backgroundColor: 'rgba(255,0,0,0.2)',
   },
 });
