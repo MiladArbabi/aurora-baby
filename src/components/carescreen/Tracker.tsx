@@ -163,7 +163,7 @@ const Tracker: React.FC<Props> = ({
           color="rgba(179, 165, 196, 0.50)"
           testID="main-arc"
         />
-      </View>;
+      </View>
 
       {/* Sleep segments */}
       {sleepSegments.map(s => (
