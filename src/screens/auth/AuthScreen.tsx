@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Alert, TextInput, Platform, ImageBackground } from 'react-native';
+import { View, Text, Alert, TextInput, Platform, ImageBackground, TouchableOpacity } from 'react-native';
 import styled from 'styled-components/native';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { signInWithGoogle, signInWithEmail, signUpWithEmail } from '../../services/firebase';
@@ -44,7 +44,7 @@ const ButtonContainer = styled.View`
   justify-content: center;
 `;
 
-const SocialButton = styled.View`
+const SocialButton = styled.TouchableOpacity`
   width: 325px;
   height: 55px;
   margin-bottom: 15px;
@@ -195,8 +195,16 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => { // Updated
               onChangeText={setPassword}
               secureTextEntry
             />
-            <SocialButton text="Sign In" onPress={handleEmailSignIn} />
-            <SocialButton text="Sign Up" onPress={handleEmailSignUp} />
+            <SocialButton testID="sign-in-button" onPress={handleEmailSignIn}>
+            <SocialButtonContent>
+              
+              </SocialButtonContent>
+            </SocialButton>
+            <SocialButton testID="sign-up-button" onPress={handleEmailSignUp}>
+              <SocialButtonContent>
+              
+              </SocialButtonContent>
+            </SocialButton>
           </>
         )}
         {!showEmail && <OtherOptionsText onPress={() => setShowEmail(true)}>Other options</OtherOptionsText>}

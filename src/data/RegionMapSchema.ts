@@ -10,7 +10,7 @@ export const regions: Region[] = [
     spectTags: ['SLEEP'],
     baseColor: '#9EB7FF',
     center: [18, 60],
-    clipAngleAdjust: +5
+    clipAngleAdjust: +5,
   },
   {
     key: 'junglewake',
@@ -19,7 +19,7 @@ export const regions: Region[] = [
     spectTags: ['MOOD'],
     baseColor: '#8BC34A',
     center: [0, 42],
-    clipAngleAdjust: -10,
+    clipAngleAdjust: -5,
   },
   /* {
     key: 'mossroot',
