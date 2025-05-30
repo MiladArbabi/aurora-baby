@@ -16,7 +16,7 @@ import {
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { signInWithGoogleAsync } from './googleAuth';
 
 const firebaseConfig = {
   apiKey: Constants.expoConfig?.extra?.firebaseApiKey || 'AIzaSyC5xeeWjT3XpPMPamhSc748D9Bbif0RhzM',
@@ -39,30 +39,10 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-export const signInWithGoogle = async (): Promise<User> => {
-  try {
-    if (Platform.OS === 'web') {
-      const result = await signInWithPopup(auth, googleProvider);
-      const token = await result.user.getIdToken();
-      await AsyncStorage.setItem('userToken', token);
-      console.log('Google Sign-In Token:', token);
-      return result.user;
-    } else {
-      await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
-      const idToken = userInfo.data?.idToken;
-      if (!idToken) throw new Error('No idToken');
-      const credential = GoogleAuthProvider.credential(idToken);
-      const result = await signInWithCredentialHelper(auth, credential);
-      const token = await result.user.getIdToken();
-      await AsyncStorage.setItem('userToken', token);
-      console.log('Google Sign-In Token:', token);
-      return result.user;
-    }
-  } catch (error) {
-    console.error('Google Auth Error:', error);
-    throw error;
-  }
+export async function signInWithGoogle() {
+  const { access_token } = await signInWithGoogleAsync();
+  const credential = GoogleAuthProvider.credential(null, access_token);
+  return await signInWithCredential(auth, credential);
 };
 
 export const signInWithEmail = async (email: string, password: string): Promise<User> => {
