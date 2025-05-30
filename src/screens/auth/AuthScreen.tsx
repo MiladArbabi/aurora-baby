@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Alert, TextInput, Platform, ImageBackground, TouchableOpacity } from 'react-native';
 import styled from 'styled-components/native';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { signInWithGoogleAsync } from '../../services/googleAuth';
 import { signInWithGoogle, signInWithEmail, signUpWithEmail } from '../../services/firebase';
 import Constants from 'expo-constants';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -120,12 +120,6 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => { // Updated
   const [showEmail, setShowEmail] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
-  if (Platform.OS !== 'web') {
-    GoogleSignin.configure({
-      webClientId: Constants.expoConfig?.extra?.googleWebClientId || '450824864919-2f0636shfkbv7ivr4nhjloiljs5r6tc9.apps.googleusercontent.com',
-    });
-  }
 
   const handleGoogleSignIn = async () => {
     try {
