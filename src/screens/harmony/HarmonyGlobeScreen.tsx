@@ -20,9 +20,9 @@ const HarmonyGlobeScreen: React.FC<Props> = ({ navigation }) => {
         onRegionPress={regionKey =>
           navigation.navigate('StoryWorld', { regionKey })
         }
-        initialRotation={[0, 0]}
+        initialRotation={[0, -25]}
         initialScale={1}
-        autoRotateSpeed={2}
+        autoRotateSpeed={20}
       />
       <BottomNav navigation={navigation} activeScreen="Harmony" />
     </View>

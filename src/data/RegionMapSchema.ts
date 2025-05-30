@@ -12,7 +12,7 @@ export const regions: Region[] = [
     center: [18, 60],
     clipAngleAdjust: +5,
   },
-  {
+/*   {
     key: 'junglewake',
     displayName: 'Verdant Junglewake',
     svgPaths: ['M50,90 C70,50 110,50 130,90 C150,130 110,150 70,130 Z'],
@@ -20,8 +20,8 @@ export const regions: Region[] = [
     baseColor: '#8BC34A',
     center: [0, 42],
     clipAngleAdjust: -5,
-  },
-  /* {
+  }, */
+  {
     key: 'mossroot',
     displayName: 'Mossroot Hollow',
     svgPaths: ['M60,110 C80,150 120,150 140,110 C160,70 120,50 80,70 Z'],
@@ -30,7 +30,7 @@ export const regions: Region[] = [
     center: [21, 0],
     clipAngleAdjust: +5,
   },
-  {
+/*   {
     key: 'rootspire',
     displayName: 'Rootspire Heights',
     svgPaths: ['M100,60 C140,40 180,60 160,100 C140,140 100,120 80,80 Z'],
@@ -38,7 +38,7 @@ export const regions: Region[] = [
     baseColor: '#CE93D8',
     center: [51, 38],
     clipAngleAdjust: +5,
-  },
+  }, */
   {
     key: 'salmonRun',
     displayName: 'Starcloud Salmon Run',
@@ -48,7 +48,7 @@ export const regions: Region[] = [
     center: [138, 36],
     clipAngleAdjust: +5,
   },
-  {
+/*   {
     key: 'crystalis',
     displayName: 'Crystalis Reach',
     svgPaths: ['M80,10 C140,10 200,30 200,90 C200,150 140,170 80,150 C20,130 0,90 0,50 Z'],
