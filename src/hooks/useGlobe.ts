@@ -28,6 +28,8 @@ export function useGlobe({
   const startLon = useSharedValue(initialRotation[0]);
   const startLat = useSharedValue(initialRotation[1]);
 
+  const TILT_DEG = 20; 
+  
   // build projection + path
   const projection = useMemo(
     () => geoOrthographic()
@@ -52,17 +54,21 @@ export function useGlobe({
 
   // auto-rotate if requested
   useEffect(() => {
-    if (autoRotateSpeed > 0) {
+    if (!dragging && Math.abs(rotLon.value % 360) < 0.01) {
       const handle = setInterval(() => {
-        rotLon.value += autoRotateSpeed / 10;
-      }, 100);
+        rotLon.value += autoRotateSpeed / 60;  // slower, smoother
+      }, 1000 / 60); // every frame @60fps
       return () => clearInterval(handle);
     }
-  }, [autoRotateSpeed, rotLon]);
+  }, [autoRotateSpeed, dragging, rotLon]);
 
   // a dummy animatedStyle for zoom. You can expand this if you want pinch-to-zoom.
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    transform: [
+      { scale: dragging ? 0.97 : scale.value },
+      // you could also tilt it slightly on the x-axis:
+      { rotateX: `${rotLat.value / 4}deg` }
+    ]
   }));
 
   return {
