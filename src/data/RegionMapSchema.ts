@@ -10,7 +10,7 @@ export const regions: Region[] = [
     spectTags: ['SLEEP'],
     baseColor: '#9EB7FF',
     center: [18, 60],
-    clipAngleAdjust: +5,
+    clipAngleAdjust: 0,
   },
 /*   {
     key: 'junglewake',
@@ -28,7 +28,7 @@ export const regions: Region[] = [
     spectTags: ['HEALTH'],
     baseColor: '#A1887F',
     center: [21, 0],
-    clipAngleAdjust: +5,
+    clipAngleAdjust: -5,
   },
 /*   {
     key: 'rootspire',
@@ -39,15 +39,15 @@ export const regions: Region[] = [
     center: [51, 38],
     clipAngleAdjust: +5,
   }, */
-  {
+/*   {
     key: 'salmonRun',
     displayName: 'Starcloud Salmon Run',
     svgPaths: ['M140,80 L180,80 L180,120 L140,120 Z'],
     spectTags: ['FEED'],
     baseColor: '#F48FB1',
     center: [138, 36],
-    clipAngleAdjust: +5,
-  },
+    clipAngleAdjust: 0,
+  }, */
 /*   {
     key: 'crystalis',
     displayName: 'Crystalis Reach',

@@ -54,10 +54,11 @@ export function useGlobe({
 
   // auto-rotate if requested
   useEffect(() => {
-    if (!dragging && Math.abs(rotLon.value % 360) < 0.01) {
+    if (!dragging && autoRotateSpeed > 0) {
       const handle = setInterval(() => {
-        rotLon.value += autoRotateSpeed / 60;  // slower, smoother
-      }, 1000 / 60); // every frame @60fps
+        // bump longitude by (deg/sec) / (frames/sec)
+        rotLon.value += autoRotateSpeed / 60;
+      }, 1000 / 60); // 60fps
       return () => clearInterval(handle);
     }
   }, [autoRotateSpeed, dragging, rotLon]);
