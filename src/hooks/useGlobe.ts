@@ -8,7 +8,7 @@ import Animated, {
   runOnJS,
   withDecay,
 } from 'react-native-reanimated';
-import type { Globe2DProps } from '../types/globe';
+import type { Globe2DProps } from '../types/globeTypes';
 
 export function useGlobe({
   viewBoxSize,
@@ -67,8 +67,6 @@ export function useGlobe({
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
       { scale: dragging ? 0.97 : scale.value },
-      // you could also tilt it slightly on the x-axis:
-      { rotateX: `${rotLat.value / 4}deg` }
     ]
   }));
 

@@ -9,7 +9,6 @@ import HarmonyIcon from '../../assets/bottomnavicons/HarmonyIcon';
 import CareIcon from '../../assets/bottomnavicons/CareIcon';
 import WonderIcon from '../../assets/bottomnavicons/WonderIcon';
 import Svg, { Defs, LinearGradient, Stop, Circle } from 'react-native-svg';
-import LinearGradientView from 'react-native-linear-gradient';
 
 const Wrapper = styled.View`
   position: absolute;
