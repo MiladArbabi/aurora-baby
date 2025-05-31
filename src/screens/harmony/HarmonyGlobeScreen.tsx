@@ -29,8 +29,6 @@ const HarmonyGlobeScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-
-
 export default HarmonyGlobeScreen;
 
 const styles = StyleSheet.create({

@@ -13,7 +13,6 @@ import BottomNav from '../../components/common/BottomNav';
 import AnimationIcon from '../../assets/harmonyscreen/playstoryscreen/AnimationIcon';
 import VoiceIcon from '../../assets/harmonyscreen/playstoryscreen/VoiceIcon';
 import TextIcon from '../../assets/harmonyscreen/playstoryscreen/TextIcon';
-import TestAnimation from '../../components/test_files/TestAnimation';
 
 type Props = StackScreenProps<RootStackParamList, 'AnimatedStory'>;
 
@@ -100,7 +99,7 @@ const AnimatedStoryScreen: React.FC<Props> = ({ navigation, route }) => {
           <Text style={{ color: 'white', fontSize: 22, fontWeight: 'bold' }}>
             Animated Story
           </Text>
-          <View style={styles.animationWrapper}>
+          {/* <View style={styles.animationWrapper}>
             {mode === 'text' ? (
               <LottieView
                 ref={animationRef}
@@ -112,7 +111,7 @@ const AnimatedStoryScreen: React.FC<Props> = ({ navigation, route }) => {
             ) : mode ? (
               <TestAnimation type={animationType} />
             ) : null}
-          </View>
+          </View> */}
         </Card>
 
         <IconRow>

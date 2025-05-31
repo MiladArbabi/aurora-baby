@@ -1,12 +1,7 @@
 // src/utils/globeUtils.ts
 export const DEG2RAD = Math.PI / 180;
 
-/**
- * Is [lon, lat] on the *front* half of a globe rotated to [rotLon,rotLat]?
- * @param point         [lon,lat] in degrees
- * @param rotation      [rotLon,rotLat] in degrees
- * @param clipAngleDeg  horizon cutoff in degrees (90 = exact limb)
- */
+// Is [lon, lat] on the *front* half of a globe rotated to [rotLon, rotLat]?
 export function isFrontHemisphere(
   point: [number, number],
   rotation: [number, number],
@@ -19,11 +14,12 @@ export function isFrontHemisphere(
   const λ  = lon    * DEG2RAD;
   const φ  = lat    * DEG2RAD;
 
-  // dot‐product on unit sphere
   const cosc =
     Math.sin(φ0) * Math.sin(φ) +
     Math.cos(φ0) * Math.cos(φ) * Math.cos(λ - λ0);
 
-  // threshold is cos(clipAngle)
   return cosc > Math.cos(clipAngleDeg * DEG2RAD);
 }
+
+// We'll track which pins are “on” right now.
+const visiblePins = new Set<string>();
