@@ -1,5 +1,6 @@
 // src/navigation/AppNavigator.tsx
 import React, { useState, useEffect } from 'react'
+import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import { onAuthStateChanged, auth, checkAuthState } from '../services/firebase'
@@ -8,7 +9,7 @@ import { initRemoteConfig } from '../services/RemoteConfigService';
 
 import LoadingSpinner from '../components/common/Spinner'
 import AuthScreen from '../screens/auth/AuthScreen'
-import OnboardingNavigator from './OnboardingNavigator'
+import OnboardingNavigator, { OnboardingParamList } from './OnboardingNavigator';
 import HomeScreen from '../screens/home/HomeScreen'
 import { HarmonyStatScreen } from '../screens/harmony/HarmonyStatScreen'
 import CareScreen from '../screens/care/CareScreen'
@@ -25,6 +26,7 @@ import TextStoryScreen from '../screens/harmony/TextStoryScreen'
 import VoiceStorytellingScreen from '../screens/harmony/VoiceStorytellingScreen';
 import AnimatedStoryScreen from '../screens/harmony/AnimatedStoryScreen';
 
+import { getParentProfile } from '../storage/ParentProfileStorage';
 import { getChildProfile } from '../services/ChildProfileAccess'
 import { ChildProfile } from '../models/ChildProfile'
 
@@ -40,6 +42,7 @@ export type RootStackParamList = {
   Insights: undefined
   Wonder: undefined
   ProfileSettings: undefined
+  Onboarding: undefined;
   ForestMap: undefined
   Whispr: undefined
   LogDetail: { id: string; type: 'sleep'|'feeding'|'diaper'|'mood'|'health'|'note' }
@@ -61,6 +64,7 @@ export default function AppNavigator() {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<ChildProfile | null | undefined>(undefined)
   const [loading, setLoading] = useState(true)
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
 
   useEffect(() => {
     initRemoteConfig();
