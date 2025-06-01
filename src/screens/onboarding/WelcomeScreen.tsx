@@ -1,12 +1,23 @@
 // src/screens/onboarding/WelcomeScreen.tsx
-import React from 'react'
+import React, { useEffect } from 'react'
 import { View, Text, StyleSheet, Button } from 'react-native'
 import { StackScreenProps } from '@react-navigation/stack'
 import { OnboardingParamList } from '../../navigation/OnboardingNavigator'
+import * as Speech from 'expo-speech'
 
 type Props = StackScreenProps<OnboardingParamList, 'Welcome'>
 
 export default function WelcomeScreen({ navigation }: Props) {
+  
+  useEffect(() => {
+        Speech.speak(
+          'Welcome to Aurora Baby! Let’s get to know you and your little one.'
+        )
+        return () => {
+          Speech.stop()
+        }
+      }, [])
+      
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Welcome to Aurora Baby!</Text>
