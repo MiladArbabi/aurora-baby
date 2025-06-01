@@ -10,7 +10,7 @@ import LoadingSpinner from '../components/common/Spinner'
 import AuthScreen from '../screens/auth/AuthScreen'
 import OnboardingNavigator from './OnboardingNavigator'
 import HomeScreen from '../screens/home/HomeScreen'
-import { StaticGlobeScreen } from '../screens/harmony/StaticGlobeScreen'
+import { HarmonyStatScreen } from '../screens/harmony/HarmonyStatScreen'
 import CareScreen from '../screens/care/CareScreen'
 import PastLogsView from '../screens/care/PastLogsView'
 import InsightsScreen from '../screens/care/InsightsView'
@@ -118,7 +118,7 @@ export default function AppNavigator() {
         initialRouteName="Home"
         >
           <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen name="Harmony" component={StaticGlobeScreen} />
+          <Stack.Screen name="Harmony" component={HarmonyStatScreen} />
           <Stack.Screen name="Care" component={CareScreen} />
           <Stack.Screen name="PastLogs" component={PastLogsView} />
           <Stack.Screen name="Insights" component={InsightsScreen} />

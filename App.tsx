@@ -1,10 +1,11 @@
 // App.tsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider } from '@rneui/themed';
 import { ThemeProvider as StyledThemeProvider } from 'styled-components/native';
 import { useFonts } from 'expo-font';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { syncPendingLogs } from './src/services/logService'; // adjust if path differs
 import { rneThemeBase, theme } from './src/styles/theme';
 import LoadingSpinner from './src/components/common/Spinner';
 import AppNavigator from './src/navigation/AppNavigator';
@@ -15,6 +16,19 @@ const App: React.FC = () => {
   const [fontsLoaded] = useFonts({
     Edrosa: require('./src/assets/fonts/Edrosa.otf'),
   });
+
+  // Run syncPendingLogs on app launch and when regaining connectivity
+  useEffect(() => {
+    // On launch:
+    (async () => {
+      try {
+        await syncPendingLogs();
+      } catch (e) {
+        console.warn('Initial syncPendingLogs failed:', e);
+      }
+    })();
+    return () => {};
+  }, []);
 
   if (!fontsLoaded) {
     return <LoadingSpinner />;
