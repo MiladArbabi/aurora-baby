@@ -10,7 +10,6 @@ import LoadingSpinner from '../components/common/Spinner'
 import AuthScreen from '../screens/auth/AuthScreen'
 import OnboardingNavigator from './OnboardingNavigator'
 import HomeScreen from '../screens/home/HomeScreen'
-import HarmonyGlobeScreen from '../screens/harmony/HarmonyGlobeScreen'
 import { StaticGlobeScreen } from '../screens/harmony/StaticGlobeScreen'
 import CareScreen from '../screens/care/CareScreen'
 import PastLogsView from '../screens/care/PastLogsView'
@@ -18,7 +17,6 @@ import InsightsScreen from '../screens/care/InsightsView'
 import { WonderScreen } from '../screens/wonder/WonderScreen'
 import ProfileSettingScreen from '../screens/ProfileSettingScreen'
 import WhisprScreen from '../screens/whispr/WhisprScreen'
-import StoryWorldScreen from '../screens/harmony/StoryWorldScreen';
 
 import LogDetailScreen from '../screens/care/LogDetailScreen'
 import PlayStoryScreen from '../screens/harmony/PlayStoryScreen'
@@ -133,7 +131,6 @@ export default function AppNavigator() {
           <Stack.Screen name="TextStory" component={TextStoryScreen} options={{ headerShown: false }} />
           <Stack.Screen name="VoiceStorytelling" component={VoiceStorytellingScreen} options={{ headerShown: false, title: 'Listen' }} />
           <Stack.Screen name="AnimatedStory" component={AnimatedStoryScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="StoryWorld" component={StoryWorldScreen} />
         </Stack.Navigator>
       )}
     </NavigationContainer>

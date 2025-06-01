@@ -239,7 +239,7 @@ useEffect(() => {
           onPress={() => onDelete?.(entry.id)}
           testID="log-detail-delete"
         >
-          <DeleteButton width={75} height={75} />
+          <DeleteButton fill={'#FFF'} width={75} height={75} />
         </TouchableOpacity>
 
         {/* drag handle closes */}

@@ -1,9 +1,10 @@
-export { default as Cancel } from "./Cancel";
-export { default as Diaper } from "./Diaper";
+// src/assets/carescreen/LogDetailModalIcons/index.tsx
+/* export { default as Cancel } from "./Cancel";
+ */export { default as Diaper } from "./Diaper";
 export { default as Feeding } from "./Feeding";
 export { default as Handelbar } from "./Handelbar";
 export { default as Health } from "./Health";
 export { default as Mood } from "./Mood";
 export { default as Note } from "./Note";
-export { default as Save } from "./Save";
-export { default as Sleep } from "./Sleep";
+/* export { default as Save } from "./Save";
+ */export { default as Sleep } from "./Sleep";
