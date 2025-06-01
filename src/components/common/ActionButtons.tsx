@@ -8,7 +8,7 @@ import {
   Dimensions,
 } from "react-native"
 import AiLogGeneratorButton from "../../assets/whispr/AiLogGenerator"
-import QuickLogButton from "./QuickLogButton"
+import QuickLogButton from "../carescreen/QuickLogButton"
 import { askWhispr } from "../../services/LlamaLogGenerator"
 import { QuickLogEntry } from "../../models/QuickLogSchema"
 

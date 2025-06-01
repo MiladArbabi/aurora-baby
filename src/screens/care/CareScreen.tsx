@@ -4,6 +4,8 @@ import {
   View,
   StyleSheet,
   LayoutChangeEvent,
+  TouchableOpacity,
+  Text,
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -17,6 +19,8 @@ import { colorMap } from '../../hooks/useTrackerData'
 import TrackerFilter from '../../components/carescreen/TrackerFilter'
 import QuickLogMenu from '../../components/carescreen/QuickLogMenu'
 import LogDetailModal from '../../components/carescreen/LogDetailModal'
+import QuickLogButton from '../../components/carescreen/QuickLogButton'
+import WhisprVoiceButton from '../../components/whispr/WhisprVoiceButton'
 
 import FutureLogsGenerator from '../../components/carescreen/FutureLogsGenerator';
 import { 
@@ -40,8 +44,8 @@ const CareScreen: React.FC = () => {
   const [selectedLog, setSelectedLog] = useState<QuickLogEntry | null>(null)
   const [futureEntries, setFutureEntries] = useState<QuickLogEntry[]>([])
   const [showLast24h, setShowLast24h] = useState(false)
-  
-  // fetch logs when filter changes
+  const [isQuickLogOpen, setQuickLogOpen] = useState(false)
+
   useEffect(() => {
     const now = new Date()
     const start = showLast24h
@@ -50,46 +54,38 @@ const CareScreen: React.FC = () => {
     getLogsBetween(start.toISOString(), now.toISOString())
       .then(entries => {
         setQuickLogEntries(entries)
-      
-      // seed the markers array so even already‐saved entries show up
-      const seededMarkers = entries.map(e => {
-        const t = new Date(e.type === 'sleep' ? e.data.start : e.timestamp)
-        const fraction = (t.getHours()*60 + t.getMinutes() + t.getSeconds()/60) / 1440
-        return { id: e.id, fraction, color: colorMap[e.type], type: e.type }
+        const seededMarkers = entries
+        .filter(e => e.type !== 'sleep')
+        .map(e => {
+          // always use the timestamp field—even for 'sleep'
+          const t = new Date(e.timestamp)
+          const fraction =
+            (t.getHours()*60 + t.getMinutes() + t.getSeconds()/60) / 1440
+                 return { id: e.id, fraction, color: colorMap[e.type], type: e.type }
+        })
+        setQuickLogMarkers(seededMarkers)
       })
-      setQuickLogMarkers(seededMarkers)
-    })
       .catch(err => console.error('[CareScreen] fetch logs:', err))
   }, [showLast24h])
 
   const handleLogged = useCallback((entry: QuickLogEntry) => {
     try {
+      if (entry.type !== 'sleep') {
       const t = new Date(entry.timestamp)
       const fraction =
         (t.getHours() * 60 + t.getMinutes() + t.getSeconds() / 60) / 1440;
-      
-      // Add the new entry to the markers array
-      // If it already exists, don't add it again
-      // This is to prevent duplicates in the markers
       setQuickLogMarkers(existing =>
         existing.some(m => m.id === entry.id)
           ? existing
           : [...existing, { id: entry.id, fraction, color: colorMap[entry.type], type: entry.type }]
-          );
-      
-      // and also put it into the entries list so the PastLogsView (if visible)
-      // or any other consumer can pick it up immediately:
+      );
+    }
       setQuickLogEntries(existing => [entry, ...existing]);
-      
-      // Inform globe about this new log
-/*             regionDispatch({ type: 'LOG_RECEIVED', log: entry });
- */
     } catch (err) {
       console.error('[CareScreen] handleLogged error:', err)
     }
   }, [])
 
-  // whenever anything is saved to storage, turn it into a marker:
   useEffect(() => {
     const onSaved = (entry: QuickLogEntry) => handleLogged(entry)
     quickLogEmitter.on('saved', onSaved)
@@ -117,40 +113,27 @@ const CareScreen: React.FC = () => {
   }, []);
 
   const handleSegmentPress = useCallback((id: string) => {}, [])
-  const handleToggleFilter = useCallback(
-    () => setShowLast24h(v => !v),
-    []
-  )
+  const handleToggleFilter = useCallback(() => setShowLast24h(v => !v), [])
 
-  // Remove a log permanently
   const handleDeleteLog = useCallback(async (id: string) => {
     try {
-      // 1) delete from storage + emit 'deleted'
       await deleteLogEntry(id);
-      // 2) remove from our local state so tracker & list update
       setQuickLogEntries(prev => prev.filter(e => e.id !== id));
       setQuickLogMarkers(prev => prev.filter(m => m.id !== id));
-      // 3) close the modal
       setSelectedLog(null);
-      } catch (err) {
-        console.error('[CareScreen] deleteLog error:', err);
-      }
-    }, []);
+    } catch (err) {
+      console.error('[CareScreen] deleteLog error:', err);
+    }
+  }, []);
 
   function handleGenerateFuture(hoursAhead: number) {
     const now = new Date()
     const start = new Date(now.getTime() - (showLast24h ? 24 : now.getHours() * 60 + now.getMinutes()) * 60 * 1000)
-    
-    // 1) load recent logs
     getLogsBetween(start.toISOString(), now.toISOString())
-    // 2) ask AI
-    .then((recent) => generateAIQuickLogs(recent, hoursAhead))  
-    // 3) persist them
-    .then((suggestions: QuickLogEntry[]) => saveFutureEntries(suggestions))
-    // 4) update UI
-    .then(() => navigation.navigate('Care'))
-    .catch(err => console.error('[CareScreen] future-logs generation error:', err)
-  )
+      .then((recent) => generateAIQuickLogs(recent, hoursAhead))
+      .then((suggestions: QuickLogEntry[]) => saveFutureEntries(suggestions))
+      .then(() => navigation.navigate('Care'))
+      .catch(err => console.error('[CareScreen] future-logs generation error:', err))
   }
 
   const handleNavigate = (tab: MiniTab) => {
@@ -163,28 +146,24 @@ const CareScreen: React.FC = () => {
   }
 
   return (
-    <CareLayout 
-    activeTab="tracker" 
-    onNavigate={handleNavigate}
-    bgColor={theme.colors.accent}
-    >
-        {/* Filter (tracker only) */}
-      <View style={[styles.row, { flex: 1 }]} onLayout={logLayout('Filter')}>
-          <TrackerFilter
-            showLast24h={showLast24h}
-            onToggle={handleToggleFilter}
-          />
-      </View>
-
-      {/* Content */}
-      <Tracker  
-        markers={quickLogMarkers}
-        entries={quickLogEntries}
+    <CareLayout activeTab="tracker" onNavigate={handleNavigate} bgColor={theme.colors.accent}>
+      <Tracker
+        quickMarkers={quickLogMarkers}
         onMarkerPress={handleMarkerPress}
         onSegmentPress={handleSegmentPress}
+        showLast24h={showLast24h}
         onLayout={logLayout('Tracker')}
       />
+      <View style={[styles.row, { flex: 1 }]} onLayout={logLayout('Filter')}>
+        <TrackerFilter showLast24h={showLast24h} onToggle={handleToggleFilter} />
+      </View>
 
+      <View style={styles.actionButtonsContainer}>
+        <QuickLogButton onPress={() => setQuickLogOpen(true)} />
+        <WhisprVoiceButton />
+      </View>
+
+      <QuickLogMenu visible={isQuickLogOpen} onClose={() => setQuickLogOpen(false)} />
 
       <LogDetailModal
         visible={!!selectedLog}
@@ -204,5 +183,15 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  actionButtonsContainer: {
+    position: 'absolute',
+    bottom: 50,
+    left: 150,
+    right: 0,
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 20,
   },
 })

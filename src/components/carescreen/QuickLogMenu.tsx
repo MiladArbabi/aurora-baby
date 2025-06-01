@@ -1,10 +1,13 @@
 //src/components/carescreen/QuickLogMenu.tsx
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   TouchableOpacity,
   StyleSheet,
   GestureResponderEvent,
+  Animated,
+  Pressable,
+  Dimensions
 } from 'react-native';
 import { saveQuickLogEntry } from '../../storage/QuickLogStorage';
 import { QuickLogEntry } from '../../models/QuickLogSchema';
@@ -20,6 +23,7 @@ import MoodButton from '../../assets/carescreen/QuickLogMenu/MoodButton';
 import HealthButton from '../../assets/carescreen/QuickLogMenu/HealthButton';
 
 interface Props {
+  visible: boolean;
   onClose: () => void;
   onLogged?: (entry: QuickLogEntry) => void;
 }
@@ -90,7 +94,19 @@ const IconWrapper: React.FC<IconWrapperProps> = ({
   );
 };
 
-const QuickLogMenu: React.FC<Props> = ({ onClose, onLogged }) => {
+const screenHeight = Dimensions.get('window').height;
+
+const QuickLogMenu: React.FC<Props> = ({ visible, onClose, onLogged }) => {
+  const translateY = useRef(new Animated.Value(screenHeight)).current;
+
+  useEffect(() => {
+    Animated.timing(translateY, {
+      toValue: visible ? 0 : screenHeight,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [visible]);
+
   const handleQuickLog = (type: LogType) => {
     console.log('[QuickLogMenu] handleQuickLog →', type);
 
@@ -161,32 +177,43 @@ const QuickLogMenu: React.FC<Props> = ({ onClose, onLogged }) => {
   );
 
   return (
-    <View testID="quick-log-menu" style={styles.overlay}>
-      <View style={styles.sheet}>
-        <TouchableOpacity
-          testID="menu-handle"
-          onPress={onClose}
-          style={styles.handleContainer}
+    visible ? (
+      <Pressable
+        testID="quick-log-overlay"
+        onPress={onClose}
+        style={styles.overlay}
+      >
+        <Pressable onPress={() => {}} style={{ flex: 1 }}>
+        <Animated.View
+          style={[styles.sheet, { transform: [{ translateY }] }]}
         >
-          <HandleBar />
-        </TouchableOpacity>
+          <TouchableOpacity
+            testID="menu-handle"
+            onPress={onClose}
+            style={styles.handleContainer}
+          >
+            <HandleBar />
+          </TouchableOpacity>
 
-        <View style={styles.row}>
-          {renderButton('log-feed', () => handleQuickLog('feeding'), FeedButton, 'feeding')}
-          {renderButton('log-sleep', () => handleQuickLog('sleep'), SleepButton, 'sleep')}
-        </View>
-        <View style={styles.row}>
-          {renderButton('log-mood', () => handleQuickLog('mood'), MoodButton, 'mood')}
-          {renderButton('log-diaper', () => handleQuickLog('diaper'), DiaperButton, 'diaper')}
-        </View>
-        <View style={styles.row}>
-          {renderButton('log-note', () => handleQuickLog('note'), NotesButton, 'note')}
-          {renderButton('log-health', () => handleQuickLog('health'), HealthButton, 'health')}
-        </View>
-      </View>
-    </View>
+          <View style={styles.row}>
+            {renderButton('log-feed', () => handleQuickLog('feeding'), FeedButton, 'feeding')}
+            {renderButton('log-sleep', () => handleQuickLog('sleep'), SleepButton, 'sleep')}
+          </View>
+          <View style={styles.row}>
+            {renderButton('log-mood', () => handleQuickLog('mood'), MoodButton, 'mood')}
+            {renderButton('log-diaper', () => handleQuickLog('diaper'), DiaperButton, 'diaper')}
+          </View>
+          <View style={styles.row}>
+            {renderButton('log-note', () => handleQuickLog('note'), NotesButton, 'note')}
+            {renderButton('log-health', () => handleQuickLog('health'), HealthButton, 'health')}
+          </View>
+        </Animated.View>
+        </Pressable>
+      </Pressable>
+    ) : null
   );
 };
+
 
 const styles = StyleSheet.create({
   overlay: {

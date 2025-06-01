@@ -7,13 +7,12 @@ import {
   TouchableOpacity,
   Text,
   Alert,
+  LayoutChangeEvent
 } from 'react-native'
 import MainArc from '../../assets/carescreen/tracker-rings/MainArc'
 import InnerRim from '../../assets/carescreen/tracker-rings/InnerRim'
 import Core from '../../assets/carescreen/tracker-rings/Core'
 import OutterRim from '../../assets/carescreen/tracker-rings/OutterRim'
-import SleepRing from './SleepRing'
-import SegmentArc from './SegmentArc'
 import EventMarker from './EventMarker'
 import { useTrackerData } from '../../hooks/useTrackerData'
 import { QuickLogEntry } from '../../models/QuickLogSchema'
@@ -37,6 +36,7 @@ export interface Props {
   onMarkerPress?: (id: string, type: QuickLogEntry['type']) => void
   quickMarkers?: QuickMarker[]
   showLast24h?: boolean
+  onLayout?: (e: LayoutChangeEvent) => void
 }
 
 const Tracker: React.FC<Props> = ({
@@ -44,8 +44,9 @@ const Tracker: React.FC<Props> = ({
   onMarkerPress,
   quickMarkers = [],
   showLast24h = false,
+  onLayout
 }) => {
-  const { sleepSegments, eventMarkers } = useTrackerData(showLast24h)
+  const { eventMarkers } = useTrackerData(showLast24h)
 
   // current time fraction
   const now = new Date()
@@ -62,11 +63,7 @@ const Tracker: React.FC<Props> = ({
     !quickMarkers.some(qm => qm.id === em.id)
   )
 
-  const all: QuickMarker[] = [
-    ...persisted,
-    ...quickMarkers
-  ]
-
+  const all: QuickMarker[] = [...persisted, ...quickMarkers]
   const buckets: QuickMarker[][] = []
   all.forEach(m => {
     const found = buckets.find(b => Math.abs(b[0].fraction - m.fraction) <= EPSILON)
@@ -91,7 +88,6 @@ const Tracker: React.FC<Props> = ({
         />
       )
     } else if (bucket.length === 2) {
-      // two: fan-out
       return bucket.map((m, i) => {
         const offset = i === 0 ? -SPREAD_ANGLE : SPREAD_ANGLE
         let frac = (baseFrac + offset / (2 * Math.PI)) % 1
@@ -109,8 +105,7 @@ const Tracker: React.FC<Props> = ({
         )
       })
     } else {
-      // more than 2: cluster
-      // compute absolute position for the cluster bubble
+      // >2: show cluster bubble
       const angle = baseFrac * 2 * Math.PI - Math.PI / 2
       const fullRadius = BASE_SIZE / 2
       const placementRadius = fullRadius - 40 / 2
@@ -123,12 +118,12 @@ const Tracker: React.FC<Props> = ({
           style={[
             styles.container,
             {
-              left:   x - MARKER_SIZE/2,
-              top:    y - MARKER_SIZE/2,
-              width:  MARKER_SIZE,
+              left: x - MARKER_SIZE / 2,
+              top: y - MARKER_SIZE / 2,
+              width: MARKER_SIZE,
               height: MARKER_SIZE,
-              borderRadius: MARKER_SIZE/2,
-              backgroundColor: '#888',  // choose your cluster color
+              borderRadius: MARKER_SIZE / 2,
+              backgroundColor: '#888',
               justifyContent: 'center',
               alignItems: 'center',
             },
@@ -139,8 +134,8 @@ const Tracker: React.FC<Props> = ({
               bucket
                 .map(m => {
                   const minutes = Math.round(m.fraction * 1440)
-                  const hh = String(Math.floor(minutes/60)).padStart(2,'0')
-                  const mm = String(minutes%60).padStart(2,'0')
+                  const hh = String(Math.floor(minutes / 60)).padStart(2, '0')
+                  const mm = String(minutes % 60).padStart(2, '0')
                   return `${hh}:${mm} — ${m.type}`
                 })
                 .join('\n')
@@ -154,8 +149,11 @@ const Tracker: React.FC<Props> = ({
   })
 
   return (
-    <View style={[styles.container, { width: TRACKER_SIZE, height: TRACKER_SIZE }]}>      
-      {/* Main static arc */}
+    <View
+      style={[styles.container, { width: TRACKER_SIZE, height: TRACKER_SIZE }]}
+      onLayout={onLayout}
+    >
+      {/* Main static arc behind everything */}
       <View style={styles.arcAbsolute}>
         <MainArc
           size={BASE_SIZE}
@@ -165,19 +163,7 @@ const Tracker: React.FC<Props> = ({
         />
       </View>
 
-      {/* Sleep segments */}
-      {sleepSegments.map(s => (
-      <SleepRing
-        key={s.id}
-        size={BASE_SIZE}
-        startFrac={s.startFraction}
-        endFrac={s.endFraction}
-        color={s.color}
-        onPress={() => onSegmentPress?.(s.id)}
-      />
-      ))}
-
-      {/* combined, fan-out (2) or cluster (>2) */}
+      {/* Now we only render EventMarker items—no more SleepRing */}
       {renderItems}
 
       {/* Inner rim */}
@@ -195,7 +181,7 @@ const Tracker: React.FC<Props> = ({
         <Core size={CORE_SIZE} color="#E9DAFA" testId="core-circle" />
       </View>
 
-      {/* Current time indicator outer rim */}
+      {/* Current‐time indicator outer rim */}
       <View style={styles.arcAbsolute}>
         <OutterRim
           size={OUTER_SIZE}

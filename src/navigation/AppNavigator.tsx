@@ -15,7 +15,7 @@ import { StaticGlobeScreen } from '../screens/harmony/StaticGlobeScreen'
 import CareScreen from '../screens/care/CareScreen'
 import PastLogsView from '../screens/care/PastLogsView'
 import InsightsScreen from '../screens/care/InsightsView'
-import WonderScreen from '../screens/wonder/WonderScreen'
+import { WonderScreen } from '../screens/wonder/WonderScreen'
 import ProfileSettingScreen from '../screens/ProfileSettingScreen'
 import WhisprScreen from '../screens/whispr/WhisprScreen'
 import StoryWorldScreen from '../screens/harmony/StoryWorldScreen';
