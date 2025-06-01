@@ -91,6 +91,5 @@ const styles = StyleSheet.create({
   container: {
     position: 'absolute',
     zIndex: 100,
-    elevation: 100,
   },
 })
