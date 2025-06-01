@@ -13,6 +13,9 @@ install! 'cocoapods', :deterministic_uuids => false
 prepare_react_native_project!
 
 target 'aurorababymobile' do
+  # --- BEGIN Patch: Enable modular headers for Firebase Swift pods ---
+  use_modular_headers!
+  # --- END Patch ---
   use_expo_modules!
 
   if ENV['EXPO_USE_COMMUNITY_AUTOLINKING'] == '1'
@@ -32,17 +35,23 @@ target 'aurorababymobile' do
 
   config = use_native_modules!(config_command)
 
-  # Enable modular headers for Firebase dependencies
+  # Enable use_frameworks! if you need to override linkage (optional, keep if you already had it):
   use_frameworks! :linkage => podfile_properties['ios.useFrameworks'].to_sym if podfile_properties['ios.useFrameworks']
   use_frameworks! :linkage => ENV['USE_FRAMEWORKS'].to_sym if ENV['USE_FRAMEWORKS']
-  pod 'FirebaseAuth', :modular_headers => true
-  pod 'FirebaseCoreInternal', :modular_headers => true
-  pod 'GoogleUtilities', :modular_headers => true
-  pod 'FirebaseAuthInterop', :modular_headers => true
-  pod 'FirebaseAppCheckInterop', :modular_headers => true
-  pod 'FirebaseCore', :modular_headers => true
-  pod 'FirebaseCoreExtension', :modular_headers => true
-  pod 'RecaptchaInterop', :modular_headers => true
+
+  # --- BEGIN Patch: Add modular_headers to every Firebase pod that uses Swift ---
+  pod 'FirebaseAuth',                    :modular_headers => true
+  pod 'FirebaseCoreInternal',            :modular_headers => true
+  pod 'GoogleUtilities',                 :modular_headers => true
+  pod 'FirebaseAuthInterop',             :modular_headers => true
+  pod 'FirebaseAppCheckInterop',         :modular_headers => true
+  pod 'FirebaseCore',                    :modular_headers => true
+  pod 'FirebaseCoreExtension',           :modular_headers => true
+  pod 'RecaptchaInterop',                :modular_headers => true
+  pod 'FirebaseRemoteConfig',            :modular_headers => true
+  pod 'FirebaseABTesting',               :modular_headers => true
+  pod 'FirebaseInstallations',           :modular_headers => true
+  # --- END Patch ---
 
   use_react_native!(
     :path => config[:reactNativePath],

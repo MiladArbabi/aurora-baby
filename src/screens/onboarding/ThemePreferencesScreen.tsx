@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { View, Text, TouchableOpacity, Button, StyleSheet } from 'react-native'
 import { StackScreenProps } from '@react-navigation/stack'
 import { OnboardingParamList } from '../../navigation/OnboardingNavigator'
 import { saveChildProfile, getChildProfile } from '../../services/ChildProfileAccess'
+import * as Speech from 'expo-speech'
 
 const ALL_THEMES = ['Animals','Adventure','Magic','Calming','Music','Forest','Night']
 
@@ -11,6 +12,13 @@ type Props = StackScreenProps<OnboardingParamList, 'Themes'>
 export default function ThemePreferencesScreen({ navigation }: Props) {
   const [selected, setSelected] = useState<string[]>([])
   
+  useEffect(() => {
+          Speech.speak('What themes does your child love? Tap to select one or more options.')
+          return () => {
+            Speech.stop()
+          }
+        }, [])
+
   const toggle = (theme: string) => {
     setSelected(sel =>
       sel.includes(theme) ? sel.filter(t=>t!==theme) : [...sel, theme]

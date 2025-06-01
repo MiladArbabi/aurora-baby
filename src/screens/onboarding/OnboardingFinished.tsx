@@ -1,5 +1,5 @@
 // src/screens/onboarding/OnboardingFinished.tsx
-import React from 'react'
+import { useEffect } from 'react'
 import { View, Text, Button, StyleSheet } from 'react-native'
 import { useNavigation, CommonActions, NavigationProp } from '@react-navigation/native'
 import { saveChildProfile } from '../../storage/ChildProfileStorage'
@@ -7,9 +7,17 @@ import { saveParentProfile } from '../../storage/ParentProfileStorage'  // youâ€
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RootStackParamList } from '../../navigation/AppNavigator'
+import * as Speech from 'expo-speech'
 
 export default function OnboardingFinished() {
   const nav = useNavigation<NavigationProp<RootStackParamList>>();
+
+   useEffect(() => {
+            Speech.speak('All set. Youâ€™ll now be taken to your dashboard.')
+            return () => {
+              Speech.stop()
+            }
+          }, [])
 
   const handleDone = async () => {
     // (1) Persist both profiles (you already saved them in earlier steps)
