@@ -14,10 +14,9 @@ interface Props {
   onToggle: () => void
 }
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window')
 // based on your Figma px → percent
-const CONTAINER_WIDTH = 188
-const ITEM_WIDTH      = 65
+const CONTAINER_WIDTH = 200
+const ITEM_WIDTH      = 50
 const ITEM_HEIGHT     = 65
 
 const TrackerFilter: React.FC<Props> = ({ showLast24h, onToggle }) => (
@@ -56,9 +55,8 @@ const styles = StyleSheet.create({
   container: {
     width: CONTAINER_WIDTH,
     alignSelf: 'center',
-    flexDirection: 'row',
+    flexDirection: 'column',
     justifyContent: 'space-between',
-    marginBottom: 16,
   },
   item: {
     width: ITEM_WIDTH,

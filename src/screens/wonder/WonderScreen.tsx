@@ -1,103 +1,85 @@
-// src/screens/WonderScreen.tsx
-import React, { useState } from 'react'
-import { View, ScrollView, StyleSheet } from 'react-native'
-import { useTheme } from 'styled-components/native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { useNavigation } from '@react-navigation/native'
-import type { StackNavigationProp } from '@react-navigation/stack'
-import { RootStackParamList } from '../../navigation/AppNavigator'
+// src/screens/wonder/WonderScreen.tsx
+import React from 'react';
+import { View, StyleSheet, Text, SafeAreaView } from 'react-native';
+import { Globe } from '../../components/globe/Globe';
+import { STATIC_REGIONS } from '../../data/StaticRegions';
+import BottomNav from '../../components/common/BottomNav';
+import TopNav from '../../components/common/TopNav';
 
-import { wonderSections } from '../../data/wonderSections'
-import WonderCardList from '../../components/wonderscreen/WonderCardList'
-import TopNav from '../../components/common/TopNav'
-import BottomNav from '../../components/common/BottomNav'
-import GameIcon from '../../assets/wonderscreen/GameIcon'
-import ARIcon   from '../../assets/wonderscreen/ARIcon'
-import VRIcon from '../../assets/wonderscreen/VRIcon'
-import type { WonderCardData } from '../../types/WonderCardData'
-import { sizes } from '../../styles/theme'
+type Props = {
+  navigation: any;
+};
 
-
-export const WonderScreen = () => {
-  const [selectedFilter, setSelectedFilter] = useState<'all'|'ar'|'vr'|'play'>('all')
-  const theme = useTheme()
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>()
-
-  const filterCards = (cards: WonderCardData[]) =>
-    selectedFilter === 'all'
-      ? cards
-      : cards.filter(card => card.features?.includes(selectedFilter))
-
-  const onIconPress = (filter: 'ar' | 'vr' | 'play') => {
-    setSelectedFilter(prev => (prev === filter ? 'all' : filter))
-  }
+export const WonderScreen: React.FC<Props> = ({ navigation }) => {
+  /**
+   * Handler for when a region is tapped on the globe.
+   * Right now we just console.log the regionId, but you could
+   * navigate to some “WonderDetail” screen, open a modal, etc.
+   */
+  const onRegionPress = (regionId: string) => {
+    console.log('WonderScreen → tapped region:', regionId);
+    // e.g. navigation.navigate('SomeWonderDetail', { regionId });
+  };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.darkAccent }]}>
-      {/* Top */}
+    <SafeAreaView style={styles.safeArea}>
+      {/* Top nav bar (if you have one) */}
       <TopNav navigation={navigation} />
 
-      {/* Filters */}
-      <View style={styles.iconRow}>
-        <VRIcon
-          fill={ selectedFilter === 'vr' ? theme.colors.secondaryBackground : theme.colors.muted }
-          onPress={() => onIconPress('vr')}
+      <View style={styles.container}>
+        {/* A heading for your Wonder screen */}
+        <Text style={styles.headerTitle}>Welcome to Wonder</Text>
+        <Text style={styles.headerSubtitle}>
+          Explore the world—tap a region to begin your wonderous journey!
+        </Text>
+
+        {/* 
+          Here we render our reusable <Globe> component.
+          - regions = STATIC_REGIONS (same data as Harmony’s globe)
+          - diameter = 250 (adjust to taste)
+          - onRegionPress = the callback above
+        */}
+        <Globe
+          regions={STATIC_REGIONS}
+          diameter={250}
+          onRegionPress={onRegionPress}
         />
-        <GameIcon
-          fill={ selectedFilter === 'play' ? theme.colors.secondaryBackground : theme.colors.muted }
-          style={styles.iconSpacing}
-          onPress={() => onIconPress('play')}
-        />
-        <ARIcon
-          fill={ selectedFilter === 'ar' ? theme.colors.secondaryBackground : theme.colors.muted }
-          style={styles.iconSpacing}
-          onPress={() => onIconPress('ar')}
-        />
+
+        {/* 
+          You can put additional “WonderScreen” content below,
+          for example buttons, carousels, etc. 
+        */}
       </View>
 
-      {/* Scrollable Content */}
-      <View style={styles.content}>
-        <ScrollView
-          contentContainerStyle={{
-            paddingBottom: sizes.bottomNavHeight + 16
-          }}
-          showsVerticalScrollIndicator={false}
-        >
-          {wonderSections.map(section => (
-            <WonderCardList
-              key={section.id}
-              title={section.title}
-              data={filterCards(section.data)}
-            />
-          ))}
-        </ScrollView>
-      </View>
-
-      {/* Fixed Bottom Nav */}
+      {/* Bottom nav (same as everywhere else) */}
       <BottomNav navigation={navigation} activeScreen="Wonder" />
     </SafeAreaView>
-  )
-}
-
-export default WonderScreen
+  );
+};
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F0F9FF', // light sky‐blue background
+  },
   container: {
     flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 24,
   },
-  content: {
-    flex: 1,
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#1E40AF', // deep blue‐800
+    textAlign: 'center',
+    marginBottom: 8,
   },
-  scrollContent: {
-    paddingBottom: sizes.bottomNavHeight,
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#4B5563', // gray‐700
+    textAlign: 'center',
+    marginBottom: 24,
+    maxWidth: 300,
   },
-  iconRow: {
-    flexDirection: 'row',
-    marginTop: 20,        
-    marginLeft: 16,
-    justifyContent: 'center'
-  },
-  iconSpacing: {
-    marginLeft: 50,  
-  }
-})
+});
