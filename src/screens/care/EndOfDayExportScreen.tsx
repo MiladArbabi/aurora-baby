@@ -5,6 +5,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { getLogsForDate, formatLogsAsCsv } from '../../services/EndOfDayExportService';
 import { format, startOfToday, endOfToday } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 import styled from 'styled-components/native';
 
 import { getChildProfile } from '../../services/ChildProfileAccess';
@@ -23,6 +24,7 @@ const HeaderRow = styled.View`
   `;
 
 export default function EndOfDayExportScreen({ navigation }: Props) {
+    const { t } = useTranslation();
     const [todayLogs, setTodayLogs] = useState<QuickLogEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [childName, setChildName] = useState<string | null>(null);
@@ -139,7 +141,7 @@ export default function EndOfDayExportScreen({ navigation }: Props) {
   }
 
   // Re‐compute the screen heading:
-  const headingBase = `End-of-Day Export (${todayLabel})`;
+  const headingBase = t('care.endOfDayExportTitle', { date: todayLabel });
   const screenHeading =
     childName && parentName
       ? `${childName} (${relationString} of ${parentName}) – ${todayLabel}`

@@ -8,6 +8,7 @@ import { RootStackParamList } from '../../navigation/AppNavigator';
 import { DefaultTheme } from 'styled-components/native';
 import { getAuth, signOut } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { useTranslation } from 'react-i18next';
 
 import { getChildProfile } from '../../storage/ChildProfileStorage'
 import { getParentProfile } from '../../storage/ParentProfileStorage'
@@ -26,7 +27,7 @@ const Header = styled.Text`
   font-size: 24px;
   color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.text};
   font-family: ${({ theme }: { theme: DefaultTheme }) => theme.fonts.regular};
-  margin-bottom: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.medium}px;
+  margin-top: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.xlarge}px;
 `;
 
 const FieldContainer = styled.View`
@@ -122,6 +123,7 @@ const HeaderRow = styled.View`
 
 const ProfileSettingScreen: React.FC = () => {
   const theme = useTheme();
+  const { t } = useTranslation();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [name, setName] = useState('User Name');
   const [avatar, setAvatar] = useState(require('../../assets/png/icons/avatar.png'));
@@ -209,7 +211,7 @@ const ProfileSettingScreen: React.FC = () => {
 
   return (
     <Container>     
-      <Header>Profile Settings</Header>
+      <Header>{t('profile.header')}</Header>
 
       <HeaderRow>
         <BackButton fill={''} onPress={() => navigation.goBack()} />
@@ -218,15 +220,15 @@ const ProfileSettingScreen: React.FC = () => {
         </AvatarContainer>
       </HeaderRow>
       <FieldContainer>
-        <Label>Name</Label>
+      <Label>{t('profile.nameLabel')}</Label>
         <Input value={name} onChangeText={setName} />
       </FieldContainer>
       <FieldContainer>
-        <Label>Child's Name</Label>
+        <Label>{t('profile.childNameLabel')}</Label>
         <Input value={childName} onChangeText={setChildName} />
       </FieldContainer>
       <FieldContainer>
-        <Label>Child's Birthdate</Label>
+      <Label>{t('profile.childBirthLabel')}</Label>
         <Input value={childBirthdate} onChangeText={setChildBirthdate} />
       </FieldContainer>
       
@@ -278,11 +280,10 @@ const ProfileSettingScreen: React.FC = () => {
         }}
       >
         <Text style={{ color: theme.colors.background, fontSize: 16 }}>
-          SIGN OUT
-        </Text>
+          {t('profile.signOut')}
+          </Text>
       </TouchableOpacity>
 
-      
         <LinkButton 
         title="Reset Onboarding" 
         onPress={handleReset} 
@@ -294,9 +295,9 @@ const ProfileSettingScreen: React.FC = () => {
           alignItems: 'center',
         }}
         >
-         <Text style={{ color: theme.colors.background, fontSize: 16 }} >
-           RESET ONBOARDING
-         </Text>
+        <Text style={{ color: theme.colors.background, fontSize: 16 }}>
+          {t('profile.resetOnboarding')}
+        </Text>
         </LinkButton>
 
       {/* LINK TO “WHAT WE’VE COLLECTED” DASHBOARD */}
@@ -311,7 +312,7 @@ const ProfileSettingScreen: React.FC = () => {
         }}
       >
         <Text style={{ color: theme.colors.background, fontSize: 16 }}>
-          WHAT WE HAVE COLLECTED
+          {t('profile.whatWeCollected')}
         </Text>
       </TouchableOpacity>
 
@@ -327,7 +328,7 @@ const ProfileSettingScreen: React.FC = () => {
        }}
      >
        <Text style={{ color: theme.colors.background, fontSize: 16 }}>
-         ROUTINE GAP THRESHOLD
+       {t('profile.gapThreshold')}
        </Text>
      </TouchableOpacity>
 
@@ -343,7 +344,23 @@ const ProfileSettingScreen: React.FC = () => {
         }}
       >
         <Text style={{ color: theme.colors.background, fontSize: 16 }}>
-          VOICE/TONE SETTINGS
+        {t('profile.ttsSettings')}S
+        </Text>
+      </TouchableOpacity>
+
+      {/* LOCALIZATION SETTINGS */}
+      <TouchableOpacity
+        onPress={() => navigation.navigate('LocalizationSettings')}
+        style={{
+          marginBottom: theme.spacing.large,
+          backgroundColor: theme.colors.secondaryBackground,
+          padding: theme.spacing.medium,
+          borderRadius: 8,
+          alignItems: 'center',
+        }}
+      >
+        <Text style={{ color: theme.colors.background, fontSize: 16 }}>
+          {t('settings.localization')}
         </Text>
       </TouchableOpacity>
     </Container>

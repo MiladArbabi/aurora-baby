@@ -1,6 +1,7 @@
 // src/services/TTSService.ts
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import Tts from 'react-native-tts'
+import i18n from '../localization';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1) Voice‐profile definitions
@@ -54,7 +55,7 @@ Tts.getInitStatus()
     Tts.setDefaultPitch(def.pitch)
     Tts.setDefaultRate(def.rate, true)
   })
-  .catch(err => console.warn('TTS init failed, no‐op:', err))
+  .catch(err => console.warn('TTS init failed, no-op:', err))
 
 let chunks: string[] = []
 let currentIndex = 0

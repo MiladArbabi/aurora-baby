@@ -1,0 +1,33 @@
+{
+    "profile": {
+      "header": "Profilinställningar",
+      "nameLabel": "Namn",
+      "childNameLabel": "Barnets namn",
+      "childBirthLabel": "Barnets födelsedatum",
+      "shareAnalytics": "Dela anonym statistik",
+      "shareWithPeds": "Dela data med barnläkare",
+      "allowNotifications": "Tillåt notiser",
+      "whatWeCollected": "Vad vi har samlat in",
+      "gapThreshold": "Rutinslucktröskel",
+      "ttsSettings": "Röst/ton-inställningar",
+      "signOut": "LOGGA UT",
+      "resetOnboarding": "ÅTERSTÄLL START"
+    },
+    "care": {
+      "endOfDayExportTitle": "Daglig export ({{date}})",
+      "noLogs": "Inga loggar för idag.",
+      "shareButton": "Dela sammanfattning (CSV)",
+      "logType_feeding": "Matning",
+      "logType_diaper": "Blöja",
+      "logType_sleep": "Sömn",
+      "logType_health": "Hälsa",
+      "logType_mood": "Humör",
+      "logType_note": "Notering"
+    },
+    "settings": {
+        "localization": "Språkinställningar",
+        "chooseLanguage": "Välj språk",
+        "english": "Engelska",
+        "swedish": "Svenska"
+    }
+  }

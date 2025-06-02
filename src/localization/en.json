@@ -1,0 +1,34 @@
+{
+    "profile": {
+      "header": "Profile Settings",
+      "nameLabel": "Name",
+      "childNameLabel": "Child's Name",
+      "childBirthLabel": "Child's Birthdate",
+      "shareAnalytics": "Share Anonymous Analytics",
+      "shareWithPeds": "Share Data with Pediatrician",
+      "allowNotifications": "Allow Notifications",
+      "whatWeCollected": "What We’ve Collected",
+      "gapThreshold": "Routine Gap Threshold",
+      "ttsSettings": "Voice/Tone Settings",
+      "signOut": "SIGN OUT",
+      "resetOnboarding": "RESET ONBOARDING"
+    },
+    "care": {
+      "endOfDayExportTitle": "End‐of‐Day Export ({{date}})",
+      "noLogs": "No logs recorded today.",
+      "shareButton": "Share Summary (CSV)",
+      "logType_feeding": "Feeding",
+      "logType_diaper": "Diaper",
+      "logType_sleep": "Sleep",
+      "logType_health": "Health",
+      "logType_mood": "Mood",
+      "logType_note": "Note"
+    },
+    "settings": {
+        "localization": "Localization Settings",
+        "chooseLanguage": "Choose Language",
+        "english": "English",
+        "swedish": "Svenska"
+    }
+  }
+  

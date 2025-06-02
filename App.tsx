@@ -11,6 +11,8 @@ import LoadingSpinner from './src/components/common/Spinner';
 import AppNavigator from './src/navigation/AppNavigator';
 import 'react-native-get-random-values';
 import 'react-native-url-polyfill';
+import { I18nextProvider } from 'react-i18next';
+import i18n from './src/localization';
 
 const App: React.FC = () => {
   const [fontsLoaded] = useFonts({
@@ -38,8 +40,10 @@ const App: React.FC = () => {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider theme={rneThemeBase as any}>
         <StyledThemeProvider theme={theme}>
+          <I18nextProvider i18n={i18n}>
           <AppNavigator />
           <StatusBar style="auto" />
+          </I18nextProvider>
         </StyledThemeProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
