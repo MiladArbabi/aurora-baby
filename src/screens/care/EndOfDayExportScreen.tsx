@@ -5,13 +5,22 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { getLogsForDate, formatLogsAsCsv } from '../../services/EndOfDayExportService';
 import { format, startOfToday, endOfToday } from 'date-fns';
+import styled from 'styled-components/native';
 
 import { getChildProfile } from '../../services/ChildProfileAccess';
 import { getParentProfile } from '../../services/ParentProfileAccess';
 import { QuickLogEntry } from 'models/QuickLogSchema';
 import { getLogsBetween } from '../../services/QuickLogAccess';
 
+import BackButton from '../../assets/icons/common/BackButton';
+
 type Props = StackScreenProps<RootStackParamList, 'EndOfDayExport'>;
+
+const HeaderRow = styled.View`
+    flex-direction: row;
+    align-items: center;
+    margin-vertical: 24px;
+  `;
 
 export default function EndOfDayExportScreen({ navigation }: Props) {
     const [todayLogs, setTodayLogs] = useState<QuickLogEntry[]>([]);
@@ -138,7 +147,12 @@ export default function EndOfDayExportScreen({ navigation }: Props) {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.heading}>{screenHeading}</Text>
+        <HeaderRow>
+          <BackButton onPress={() => navigation.goBack()} />
+          {/* empty View just to keep some space to the right if needed */}
+          <View style={{ flex: 1 }} />
+        </HeaderRow>
+        <Text style={styles.heading}>{screenHeading}</Text>
 
       {todayLogs.length === 0 ? (
         <Text style={styles.noLogs}>No logs recorded today.</Text>
