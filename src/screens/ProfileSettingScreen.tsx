@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Image, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Image, TouchableOpacity, Button } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
-import { useNavigation } from '@react-navigation/native';
+import { CommonActions, useNavigation } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { DefaultTheme } from 'styled-components/native';
 import { getAuth, signOut } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import { getChildProfile } from '../storage/ChildProfileStorage'
 import { getParentProfile } from '../storage/ParentProfileStorage'
@@ -95,7 +96,6 @@ const ProfileSettingScreen: React.FC = () => {
   const [colorMode, setColorMode] = useState<'light' | 'dark'>('light');
   const [parentName,    setParentName]    = useState('')
 
-
   useEffect(() => {
     ;(async () => {
       const p = await getParentProfile()   // implement this
@@ -113,6 +113,21 @@ const ProfileSettingScreen: React.FC = () => {
     // Mock avatar change
     console.log('Change avatar');
   };
+
+  const handleReset = async () => {
+    await AsyncStorage.removeItem('@child_profile')
+    await AsyncStorage.removeItem('@parent_profile')
+    // (Also clear lastScreen, etc.)
+    await AsyncStorage.removeItem('@last_screen')
+
+    // Now force‐restart the navigation tree by sending everyone to Auth (so they sign in again)
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'Auth' }],
+      })
+    )
+  }
 
   return (
     <Container>     
@@ -164,6 +179,7 @@ const ProfileSettingScreen: React.FC = () => {
       >
         <Text style={{ color: theme.colors.background, fontSize: 16 }}>Sign Out</Text>
       </TouchableOpacity>
+      <Button title="Reset Onboarding" onPress={handleReset} />
       <TouchableOpacity testID="profile-back-button" onPress={() => navigation.goBack()}>
         <Text style={{ fontSize: 18, color: theme.colors.text }}>← Back</Text>
       </TouchableOpacity> 

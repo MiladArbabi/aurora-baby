@@ -1,11 +1,11 @@
 // src/navigation/AppNavigator.tsx
 
 import React, { useState, useEffect } from 'react'
-import { ActivityIndicator, View } from 'react-native'
+import { ActivityIndicator } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
-import { auth, checkAuthState } from '../services/firebase'         // <-- remove onAuthStateChanged here
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth'  // <-- import from firebase/auth
+import { auth, checkAuthState } from '../services/firebase'
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth'
 import { initRemoteConfig } from '../services/RemoteConfigService'
 
 import LoadingSpinner from '../components/common/Spinner'
@@ -31,6 +31,7 @@ import { ChildProfile } from '../models/ChildProfile'
 
 export type RootStackParamList = {
   Auth: undefined
+  Onboarding: undefined
   Home: undefined
   Harmony: undefined
   Care: undefined
@@ -38,7 +39,6 @@ export type RootStackParamList = {
   Insights: undefined
   Wonder: undefined
   ProfileSettings: undefined
-  Onboarding: undefined
   Whispr: undefined
   LogDetail: { id: string; type: string }
   PlayStory: { storyId: string; title?: string; fullStory?: string; fromPreview?: boolean }
@@ -55,29 +55,22 @@ export default function AppNavigator() {
   const [profile, setProfile] = useState<ChildProfile | null | undefined>(undefined)
   const [loading, setLoading] = useState(true)
 
+  // 0) Initialize any remote config if you have it
   useEffect(() => {
     initRemoteConfig()
   }, [])
 
-  // 1) Initialize auth
+  // 1) Rehydrate auth
   useEffect(() => {
     let mounted = true
-
     ;(async () => {
-      const persisted = await checkAuthState()
+      const persisted = await checkAuthState() // returns FirebaseUser | null
       if (mounted) {
-        setUser(persisted)         // persisted is FirebaseUser | null
+        setUser(persisted)
         setLoading(false)
       }
     })()
-
-    // Listen to onAuthStateChanged from firebase/auth (Web SDK)
-    const unsub = onAuthStateChanged(auth, (u: FirebaseUser | null) => {
-      if (mounted) {
-        setUser(u)
-      }
-    })
-
+    const unsub = onAuthStateChanged(auth, (u) => mounted && setUser(u))
     return () => {
       mounted = false
       unsub()
@@ -86,38 +79,43 @@ export default function AppNavigator() {
 
   // 2) Load child profile once we know the user
   useEffect(() => {
-    if (!user) return
+    if (!user) {
+      setProfile(undefined)
+      return
+    }
     let mounted = true
-
     ;(async () => {
-      const stored = await getChildProfile() // returns ChildProfile | null
+      const stored = await getChildProfile() // ChildProfile | null
       if (mounted) {
         setProfile(stored)
       }
     })()
-
     return () => {
       mounted = false
     }
   }, [user])
 
-  // 3) Show spinner while resolving auth/profile
-  if (loading || (user !== null && profile === undefined)) {
+   // 3) Show spinner until both user and profile are resolved
+   if (loading || (user !== null && profile === undefined)) {
     return <LoadingSpinner />
   }
 
   return (
     <NavigationContainer>
       {!user ? (
-        // not signed in
+        // ── A) NOT SIGNED IN: only Auth
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="Auth" component={AuthScreen} />
         </Stack.Navigator>
+
       ) : profile === null ? (
-        // signed in but no profile → onboarding
-        <OnboardingNavigator />
+        // ── B) SIGNED IN but no child profile: run Onboarding flow
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Onboarding" component={OnboardingNavigator} />
+        </Stack.Navigator>
+
       ) : (
-        // fully onboarded → main app
+        // ── C) SIGNED IN + child profile ≠ null: show main app 
         <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Home">
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="Harmony" component={HarmonyStatScreen} />

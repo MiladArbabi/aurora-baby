@@ -55,6 +55,8 @@ export async function signInWithGoogle(): Promise<User> {
     auth,
     credential
   )
+  await AsyncStorage.removeItem('@child_profile')
+  await AsyncStorage.removeItem('@parent_profile')
   return userCredential.user
 }
 
@@ -74,6 +76,15 @@ export const signInWithEmail = async (
     await AsyncStorage.setItem('userToken', token)
     await AsyncStorage.setItem('userEmail', email)
     await AsyncStorage.setItem('userPassword', password)
+
+    // Only clear child_profile if this email differs from the one that was stored,
+    // so existing users who already have a profile don’t get forced through onboarding again.
+    const storedEmail = await AsyncStorage.getItem('userEmail')
+    if (storedEmail !== email) {
+      await AsyncStorage.removeItem('@child_profile')
+      await AsyncStorage.removeItem('@parent_profile')
+    }
+
     return user
   } catch (error) {
     console.error('Email Sign-In Error:', error)
@@ -97,6 +108,10 @@ export const signUpWithEmail = async (
     await AsyncStorage.setItem('userToken', token)
     await AsyncStorage.setItem('userEmail', email)
     await AsyncStorage.setItem('userPassword', password)
+    
+    // A brand‐new user should never have a child profile yet—clear just in case
+    await AsyncStorage.removeItem('@child_profile')
+
     return user
   } catch (error) {
     console.error('Email Sign-Up Error:', error)
@@ -168,6 +183,8 @@ export const signOut = async (): Promise<void> => {
   try {
     await auth.signOut()
     await AsyncStorage.multiRemove(['userToken', 'userEmail', 'userPassword'])
+    await AsyncStorage.removeItem('@child_profile')
+    await AsyncStorage.removeItem('@parent_profile')
   } catch (error) {
     console.error('Sign out error:', error)
     throw error

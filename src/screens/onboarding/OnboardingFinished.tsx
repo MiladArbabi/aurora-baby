@@ -1,44 +1,33 @@
 // src/screens/onboarding/OnboardingFinished.tsx
-import { useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { View, Text, Button, StyleSheet } from 'react-native'
-import { useNavigation, CommonActions, NavigationProp } from '@react-navigation/native'
-import { saveChildProfile } from '../../storage/ChildProfileStorage'
-import { saveParentProfile } from '../../storage/ParentProfileStorage'  // you’ll create this
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { StackNavigationProp } from '@react-navigation/stack'
-import { RootStackParamList } from '../../navigation/AppNavigator'
+import { useNavigation } from '@react-navigation/native'
 import * as Speech from 'expo-speech'
 
+// We do NOT dispatch any RESET → “Home” here. Instead, once the child_profile is saved,
+// AppNavigator will automatically re‐render and show the “Home” stack.
+
 export default function OnboardingFinished() {
-  const nav = useNavigation<NavigationProp<RootStackParamList>>();
+  const nav = useNavigation()
 
-   useEffect(() => {
-            Speech.speak('All set. You’ll now be taken to your dashboard.')
-            return () => {
-              Speech.stop()
-            }
-          }, [])
+  useEffect(() => {
+    Speech.speak('All set! Welcome to Aurora Baby.')
+    return () => {
+      Speech.stop()
+    }
+  }, [])
 
-  const handleDone = async () => {
-    // (1) Persist both profiles (you already saved them in earlier steps)
-    //     but if you haven’t, you can fetch them here from a temp store
-    // saveParentProfile(parent)
-    // saveChildProfile(child)
-
-    // (2) reset the navigation stack so “Home” becomes the root
-    nav.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: 'Home' }], 
-      })
-    )
+  const handleDone = () => {
+    // Simply pop this “Done” screen. On unmounting, AppNavigator
+    // sees profile !== null and automatically swaps to Home.
+    nav.goBack()
   }
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>All set! 🎉</Text>
       <Text style={styles.sub}>
-        You’ll now be taken to your dashboard.
+        Welcome to Aurora Baby.
       </Text>
       <Button title="Get started" onPress={handleDone} />
     </View>
@@ -46,7 +35,7 @@ export default function OnboardingFinished() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex:1, justifyContent:'center', alignItems:'center', padding:16 },
-  title:     { fontSize:24, fontWeight:'bold', marginBottom:16 },
-  sub:       { fontSize:16, textAlign:'center', marginBottom:32 },
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 16 },
+  sub: { fontSize: 16, textAlign: 'center', marginBottom: 32 },
 })

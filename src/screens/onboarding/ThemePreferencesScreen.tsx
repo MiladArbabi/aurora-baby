@@ -1,3 +1,4 @@
+// src/screens/onboarding/ThemePreferencesScreen.tsx
 import React, { useState, useEffect } from 'react'
 import { View, Text, TouchableOpacity, Button, StyleSheet } from 'react-native'
 import { StackScreenProps } from '@react-navigation/stack'
@@ -13,7 +14,7 @@ export default function ThemePreferencesScreen({ navigation }: Props) {
   const [selected, setSelected] = useState<string[]>([])
   
   useEffect(() => {
-          Speech.speak('What themes does your child love? Tap to select one or more options.')
+          Speech.speak('What themes does your child love?')
           return () => {
             Speech.stop()
           }

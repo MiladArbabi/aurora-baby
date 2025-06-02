@@ -1,5 +1,4 @@
 // src/screens/onboarding/ChildProfileScreen.tsx
-
 import React, { useState, useEffect } from 'react'
 import {
   View,
@@ -23,7 +22,7 @@ export default function ChildProfileScreen({ navigation }: Props) {
 
   useEffect(() => {
     Speech.speak(
-      'About your child. Please enter your child’s name and date of birth in YYYY dash MM dash DD format.'
+      'About your child. Please enter your child’s name and date of birth.'
     )
     return () => {
       Speech.stop()

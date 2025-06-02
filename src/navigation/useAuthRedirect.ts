@@ -1,3 +1,4 @@
+// src/navigation/useAuthRedirect.ts
 import { useEffect } from 'react';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from './AppNavigator';

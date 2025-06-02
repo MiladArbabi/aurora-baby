@@ -2,7 +2,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 export interface ParentProfile { name: string }
-
 const PARENT_KEY = '@parent_profile'
 
 export const saveParentProfile = async (p: ParentProfile) =>
