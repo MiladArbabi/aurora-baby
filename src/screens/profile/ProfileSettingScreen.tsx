@@ -50,7 +50,7 @@ const Input = styled.TextInput`
 `;
 
 const LinkButton = styled.TouchableOpacity`
-    background-color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.secondaryBackgroundLight};
+    background-color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.secondaryBackground};
     padding: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.medium}px;
     border-radius: 8px;
     align-items: center;

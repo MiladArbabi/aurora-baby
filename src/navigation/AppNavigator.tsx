@@ -20,6 +20,7 @@ import ProfileSettingScreen from '../screens/profile/ProfileSettingScreen'
 import PrivacyDashboardScreen from '../screens/profile/PrivacyDashboardScreen'
 import GapSettingsScreen from '../screens/profile/GapSettingsScreen'
 import TTSSettingsScreen from 'screens/profile/TTSSettingsScreen'
+import EndOfDayExportScreen from 'screens/care/EndOfDayExportScreen'
 import WhisprScreen from '../screens/whispr/WhisprScreen'
 import LogDetailScreen from '../screens/care/LogDetailScreen'
 import PlayStoryScreen from '../screens/harmony/PlayStoryScreen'
@@ -43,6 +44,7 @@ export type RootStackParamList = {
   ProfileSettings: undefined
   GapSettings: undefined
   PrivacyDashboard: undefined
+  EndOfDayExport: undefined
   TTSSettings: undefined
   Whispr: undefined
   LogDetail: { id: string; type: string }
@@ -118,7 +120,6 @@ export default function AppNavigator() {
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="Onboarding" component={OnboardingNavigator} />
         </Stack.Navigator>
-
       ) : (
         // ── C) SIGNED IN + child profile ≠ null: show main app 
         <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Home">
@@ -129,6 +130,7 @@ export default function AppNavigator() {
           <Stack.Screen name="Wonder" component={WonderScreen} />
           <Stack.Screen name="ProfileSettings" component={ProfileSettingScreen} />
           <Stack.Screen name="PrivacyDashboard" component={PrivacyDashboardScreen} />
+          <Stack.Screen name="EndOfDayExport" component={EndOfDayExportScreen} />
           <Stack.Screen name="GapSettings" component={GapSettingsScreen}/>
           <Stack.Screen name="TTSSettings" component={TTSSettingsScreen}/>          
           <Stack.Screen name="Harmony" component={HarmonyStatScreen} />

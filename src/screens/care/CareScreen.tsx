@@ -4,16 +4,18 @@ import {
   View,
   StyleSheet,
   LayoutChangeEvent,
-  TouchableOpacity,
+  Text as NativeText,
   Text,
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTheme } from 'styled-components/native'
 import { RootStackParamList } from '../../navigation/AppNavigator'
+import styled from 'styled-components/native'
+import { DefaultTheme } from 'styled-components/native';
+
 import CareLayout from '../../components/carescreen/CareLayout'
 import MiniNavBar, { MiniTab } from '../../components/carescreen/MiniNavBar'
-
 import Tracker, { QuickMarker } from '../../components/carescreen/Tracker'
 import { colorMap } from '../../hooks/useTrackerData'
 import TrackerFilter from '../../components/carescreen/TrackerFilter'
@@ -21,8 +23,9 @@ import QuickLogMenu from '../../components/carescreen/QuickLogMenu'
 import LogDetailModal from '../../components/carescreen/LogDetailModal'
 import QuickLogButton from '../../components/carescreen/QuickLogButton'
 import WhisprVoiceButton from '../../components/whispr/WhisprVoiceButton'
+import EndOfDayExport from './EndOfDayExportScreen'
+import Button from '../../components/common/Button'
 
-import FutureLogsGenerator from '../../components/carescreen/FutureLogsGenerator';
 import { 
   getLogsBetween, 
   getFutureEntries, 
@@ -34,6 +37,22 @@ import { quickLogEmitter } from '../../storage/QuickLogEvents';
 import { generateAIQuickLogs } from '../../services/LlamaLogGenerator'
 
 type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>
+
+// Replace common/Button with a styled wrapper for centering and wrapping text
+const ShareButton = styled.TouchableOpacity`
+  background-color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.secondaryBackground};
+  padding-vertical: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.medium}px;
+  padding-horizontal: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.large}px;
+  border-radius: 8px;
+  align-self: center;
+  margin-bottom: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.medium}px;
+`
+const ShareLabel = styled.Text`
+  color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.background};
+  font-size: 16px;
+  text-align: center;
+  flex-wrap: wrap;
+`
 
 const CareScreen: React.FC = () => {
   const navigation = useNavigation<CareNavProp>()
@@ -147,6 +166,13 @@ const CareScreen: React.FC = () => {
 
   return (
     <CareLayout activeTab="tracker" onNavigate={handleNavigate} bgColor={theme.colors.accent}>
+      <View style={{ borderRadius: 25 }}>
+       <ShareButton onPress={() => navigation.navigate('EndOfDayExport')}>
+        <ShareLabel>
+          Share Today’s Logs
+        </ShareLabel>
+       </ShareButton>
+      </View>
       <Tracker
         quickMarkers={quickLogMarkers}
         onMarkerPress={handleMarkerPress}

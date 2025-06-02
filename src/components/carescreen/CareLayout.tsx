@@ -4,14 +4,12 @@ import { SafeAreaView, View, StyleSheet } from 'react-native'
 import { useTheme } from 'styled-components/native'
 import TopNav from '../common/TopNav'
 import MiniNavBar, { MiniTab } from '../carescreen/MiniNavBar'
-import ActionButtons from '../common/ActionButtons'
 import BottomNav from '../common/BottomNav'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RootStackParamList } from '../../navigation/AppNavigator'
 import { QuickLogEntry } from '../../models/QuickLogSchema'
 import { getLogsBetween } from '../../services/QuickLogAccess'
-import QuickLogMenu from '../carescreen/QuickLogMenu'
 
 type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>
 
