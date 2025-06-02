@@ -19,6 +19,7 @@ import { WonderScreen } from '../screens/wonder/WonderScreen'
 import ProfileSettingScreen from '../screens/profile/ProfileSettingScreen'
 import PrivacyDashboardScreen from '../screens/profile/PrivacyDashboardScreen'
 import GapSettingsScreen from '../screens/profile/GapSettingsScreen'
+import TTSSettingsScreen from 'screens/profile/TTSSettingsScreen'
 import WhisprScreen from '../screens/whispr/WhisprScreen'
 import LogDetailScreen from '../screens/care/LogDetailScreen'
 import PlayStoryScreen from '../screens/harmony/PlayStoryScreen'
@@ -42,6 +43,7 @@ export type RootStackParamList = {
   ProfileSettings: undefined
   GapSettings: undefined
   PrivacyDashboard: undefined
+  TTSSettings: undefined
   Whispr: undefined
   LogDetail: { id: string; type: string }
   PlayStory: { storyId: string; title?: string; fullStory?: string; fromPreview?: boolean }
@@ -127,7 +129,8 @@ export default function AppNavigator() {
           <Stack.Screen name="Wonder" component={WonderScreen} />
           <Stack.Screen name="ProfileSettings" component={ProfileSettingScreen} />
           <Stack.Screen name="PrivacyDashboard" component={PrivacyDashboardScreen} />
-          <Stack.Screen name="GapSettings" component={GapSettingsScreen}/>         
+          <Stack.Screen name="GapSettings" component={GapSettingsScreen}/>
+          <Stack.Screen name="TTSSettings" component={TTSSettingsScreen}/>          
           <Stack.Screen name="Harmony" component={HarmonyStatScreen} />
           <Stack.Screen name="Whispr" component={WhisprScreen} />
           <Stack.Screen name="LogDetail" component={LogDetailScreen} />

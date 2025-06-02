@@ -272,6 +272,7 @@ const ProfileSettingScreen: React.FC = () => {
         <Text style={{ color: theme.colors.background, fontSize: 16 }}>Sign Out</Text>
       </TouchableOpacity>
       <Button title="Reset Onboarding" onPress={handleReset} />
+
       {/* LINK TO “WHAT WE’VE COLLECTED” DASHBOARD */}
       <TouchableOpacity
         onPress={() => navigation.navigate('PrivacyDashboard')}
@@ -288,6 +289,7 @@ const ProfileSettingScreen: React.FC = () => {
           What We’ve Collected
         </Text>
       </TouchableOpacity>
+
       {/* LINK TO “ADJUST GAP THRESHOLDS” */}
      <TouchableOpacity
        onPress={() => navigation.navigate('GapSettings')}
@@ -304,6 +306,23 @@ const ProfileSettingScreen: React.FC = () => {
          Adjust Gap Thresholds
        </Text>
      </TouchableOpacity>
+
+     {/* LINK TO “TTS SETTINGS” */}
+      <TouchableOpacity
+        onPress={() => navigation.navigate('TTSSettings')}
+        style={{
+          marginTop: theme.spacing.medium,
+          marginBottom: theme.spacing.large,
+          backgroundColor: theme.colors.secondaryBackground,
+          padding: theme.spacing.medium,
+          borderRadius: 8,
+          alignItems: 'center',
+        }}
+      >
+        <Text style={{ color: theme.colors.background, fontSize: 16 }}>
+          TTS Settings
+        </Text>
+      </TouchableOpacity>
     </Container>
   );
 };
