@@ -18,18 +18,19 @@ import BackButton from '../../assets/icons/common/BackButton';
 const Container = styled.ScrollView`
   flex: 1;
   background-color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.background};
-  padding: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.large}px;
+  padding-horizontal: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.large}px;
+  padding-vertical: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.medium}px;
 `;
 
 const Header = styled.Text`
   font-size: 24px;
   color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.text};
   font-family: ${({ theme }: { theme: DefaultTheme }) => theme.fonts.regular};
-  margin-bottom: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.large}px;
+  margin-bottom: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.medium}px;
 `;
 
 const FieldContainer = styled.View`
-  margin-bottom: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.medium}px;
+  margin-bottom: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.large}px;
 `;
 
 const Label = styled.Text`
@@ -48,11 +49,18 @@ const Input = styled.TextInput`
   color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.muted};
 `;
 
+const LinkButton = styled.TouchableOpacity`
+    background-color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.secondaryBackgroundLight};
+    padding: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.medium}px;
+    border-radius: 8px;
+    align-items: center;
+    margin-bottom: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.large}px;
+  `;
+
 const AvatarContainer = styled.TouchableOpacity`
   align-items: center;
-  margin-vertical: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.medium}px 0  ${({ theme }: { theme: DefaultTheme }) => theme.spacing.medium}px 0;
+  margin-vertical: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.large}px;
   overflow: visible;
-  
 `;
 
 const AvatarImage = styled.Image`
@@ -65,7 +73,7 @@ const ColorModeContainer = styled.View`
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  margin-top: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.large}px;
+  margin-vertical: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.large}px;
 `;
 
 const ColorModeText = styled.Text`
@@ -95,7 +103,7 @@ const SwitchRow = styled.View`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.medium}px;
+  margin-vertical: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.medium}px;
 `;
 
 const SwitchLabel = styled.Text`
@@ -254,30 +262,47 @@ const ProfileSettingScreen: React.FC = () => {
         testID="signout-button"
         onPress={async () => {
           try {
-            await signOut(getAuth());
-            navigation.navigate('Auth');
+            await signOut(getAuth())
+            navigation.navigate('Auth')
           } catch (error) {
-            console.error('Sign-out failed', error);
+            console.error('Sign-out failed', error)
           }
         }}
         style={{
           marginTop: theme.spacing.xlarge,
-          marginBottom: theme.spacing.xlarge,
-          backgroundColor: theme.colors.primary,
+          marginBottom: theme.spacing.medium,
+          backgroundColor: theme.colors.secondaryBackground,
           padding: theme.spacing.medium,
-          borderRadius: 10,
+          borderRadius: 8,
           alignItems: 'center',
         }}
       >
-        <Text style={{ color: theme.colors.background, fontSize: 16 }}>Sign Out</Text>
+        <Text style={{ color: theme.colors.background, fontSize: 16 }}>
+          SIGN OUT
+        </Text>
       </TouchableOpacity>
-      <Button title="Reset Onboarding" onPress={handleReset} />
+
+      
+        <LinkButton 
+        title="Reset Onboarding" 
+        onPress={handleReset} 
+        style={{
+          marginBottom: theme.spacing.large,
+          backgroundColor: theme.colors.error,
+          padding: theme.spacing.medium,
+          borderRadius: 8,
+          alignItems: 'center',
+        }}
+        >
+         <Text style={{ color: theme.colors.background, fontSize: 16 }} >
+           RESET ONBOARDING
+         </Text>
+        </LinkButton>
 
       {/* LINK TO “WHAT WE’VE COLLECTED” DASHBOARD */}
       <TouchableOpacity
         onPress={() => navigation.navigate('PrivacyDashboard')}
         style={{
-          marginTop: theme.spacing.medium,
           marginBottom: theme.spacing.large,
           backgroundColor: theme.colors.secondaryBackground,
           padding: theme.spacing.medium,
@@ -286,7 +311,7 @@ const ProfileSettingScreen: React.FC = () => {
         }}
       >
         <Text style={{ color: theme.colors.background, fontSize: 16 }}>
-          What We’ve Collected
+          WHAT WE HAVE COLLECTED
         </Text>
       </TouchableOpacity>
 
@@ -294,7 +319,6 @@ const ProfileSettingScreen: React.FC = () => {
      <TouchableOpacity
        onPress={() => navigation.navigate('GapSettings')}
        style={{
-         marginTop: theme.spacing.medium,
          marginBottom: theme.spacing.medium,
          backgroundColor: theme.colors.secondaryBackground,
          padding: theme.spacing.medium,
@@ -303,7 +327,7 @@ const ProfileSettingScreen: React.FC = () => {
        }}
      >
        <Text style={{ color: theme.colors.background, fontSize: 16 }}>
-         Adjust Gap Thresholds
+         ROUTINE GAP THRESHOLD
        </Text>
      </TouchableOpacity>
 
@@ -311,7 +335,6 @@ const ProfileSettingScreen: React.FC = () => {
       <TouchableOpacity
         onPress={() => navigation.navigate('TTSSettings')}
         style={{
-          marginTop: theme.spacing.medium,
           marginBottom: theme.spacing.large,
           backgroundColor: theme.colors.secondaryBackground,
           padding: theme.spacing.medium,
@@ -320,7 +343,7 @@ const ProfileSettingScreen: React.FC = () => {
         }}
       >
         <Text style={{ color: theme.colors.background, fontSize: 16 }}>
-          TTS Settings
+          VOICE/TONE SETTINGS
         </Text>
       </TouchableOpacity>
     </Container>
