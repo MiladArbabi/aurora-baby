@@ -1,7 +1,6 @@
 // src/navigation/AppNavigator.tsx
 
 import React, { useState, useEffect } from 'react'
-import { ActivityIndicator } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import { auth, checkAuthState } from '../services/firebase'
@@ -19,6 +18,7 @@ import InsightsScreen from '../screens/care/InsightsView'
 import { WonderScreen } from '../screens/wonder/WonderScreen'
 import ProfileSettingScreen from '../screens/profile/ProfileSettingScreen'
 import PrivacyDashboardScreen from '../screens/profile/PrivacyDashboardScreen'
+import GapSettingsScreen from '../screens/profile/GapSettingsScreen'
 import WhisprScreen from '../screens/whispr/WhisprScreen'
 import LogDetailScreen from '../screens/care/LogDetailScreen'
 import PlayStoryScreen from '../screens/harmony/PlayStoryScreen'
@@ -40,6 +40,7 @@ export type RootStackParamList = {
   Insights: undefined
   Wonder: undefined
   ProfileSettings: undefined
+  GapSettings: undefined
   PrivacyDashboard: undefined
   Whispr: undefined
   LogDetail: { id: string; type: string }
@@ -120,13 +121,14 @@ export default function AppNavigator() {
         // ── C) SIGNED IN + child profile ≠ null: show main app 
         <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Home">
           <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen name="Harmony" component={HarmonyStatScreen} />
           <Stack.Screen name="Care" component={CareScreen} />
           <Stack.Screen name="PastLogs" component={PastLogsView} />
           <Stack.Screen name="Insights" component={InsightsScreen} />
           <Stack.Screen name="Wonder" component={WonderScreen} />
           <Stack.Screen name="ProfileSettings" component={ProfileSettingScreen} />
           <Stack.Screen name="PrivacyDashboard" component={PrivacyDashboardScreen} />
+          <Stack.Screen name="GapSettings" component={GapSettingsScreen}/>         
+          <Stack.Screen name="Harmony" component={HarmonyStatScreen} />
           <Stack.Screen name="Whispr" component={WhisprScreen} />
           <Stack.Screen name="LogDetail" component={LogDetailScreen} />
           <Stack.Screen name="PlayStory" component={PlayStoryScreen} />

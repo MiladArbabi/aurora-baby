@@ -288,9 +288,22 @@ const ProfileSettingScreen: React.FC = () => {
           What We’ve Collected
         </Text>
       </TouchableOpacity>
-      <TouchableOpacity testID="profile-back-button" onPress={() => navigation.goBack()}>
-        <Text style={{ fontSize: 18, color: theme.colors.text }}>← Back</Text>
-      </TouchableOpacity> 
+      {/* LINK TO “ADJUST GAP THRESHOLDS” */}
+     <TouchableOpacity
+       onPress={() => navigation.navigate('GapSettings')}
+       style={{
+         marginTop: theme.spacing.medium,
+         marginBottom: theme.spacing.medium,
+         backgroundColor: theme.colors.secondaryBackground,
+         padding: theme.spacing.medium,
+         borderRadius: 8,
+         alignItems: 'center',
+       }}
+     >
+       <Text style={{ color: theme.colors.background, fontSize: 16 }}>
+         Adjust Gap Thresholds
+       </Text>
+     </TouchableOpacity>
     </Container>
   );
 };
