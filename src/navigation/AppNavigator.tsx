@@ -17,7 +17,8 @@ import CareScreen from '../screens/care/CareScreen'
 import PastLogsView from '../screens/care/PastLogsView'
 import InsightsScreen from '../screens/care/InsightsView'
 import { WonderScreen } from '../screens/wonder/WonderScreen'
-import ProfileSettingScreen from '../screens/ProfileSettingScreen'
+import ProfileSettingScreen from '../screens/profile/ProfileSettingScreen'
+import PrivacyDashboardScreen from '../screens/profile/PrivacyDashboardScreen'
 import WhisprScreen from '../screens/whispr/WhisprScreen'
 import LogDetailScreen from '../screens/care/LogDetailScreen'
 import PlayStoryScreen from '../screens/harmony/PlayStoryScreen'
@@ -39,6 +40,7 @@ export type RootStackParamList = {
   Insights: undefined
   Wonder: undefined
   ProfileSettings: undefined
+  PrivacyDashboard: undefined
   Whispr: undefined
   LogDetail: { id: string; type: string }
   PlayStory: { storyId: string; title?: string; fullStory?: string; fromPreview?: boolean }
@@ -124,6 +126,7 @@ export default function AppNavigator() {
           <Stack.Screen name="Insights" component={InsightsScreen} />
           <Stack.Screen name="Wonder" component={WonderScreen} />
           <Stack.Screen name="ProfileSettings" component={ProfileSettingScreen} />
+          <Stack.Screen name="PrivacyDashboard" component={PrivacyDashboardScreen} />
           <Stack.Screen name="Whispr" component={WhisprScreen} />
           <Stack.Screen name="LogDetail" component={LogDetailScreen} />
           <Stack.Screen name="PlayStory" component={PlayStoryScreen} />

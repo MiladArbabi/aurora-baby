@@ -4,16 +4,18 @@ import { View, Text, Switch, Image, TouchableOpacity, Button } from 'react-nativ
 import styled, { useTheme } from 'styled-components/native';
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 import { DefaultTheme } from 'styled-components/native';
 import { getAuth, signOut } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
-import { getChildProfile } from '../storage/ChildProfileStorage'
-import { getParentProfile } from '../storage/ParentProfileStorage'
-import { PrivacySettings, getPrivacySettings, savePrivacySettings } from '../services/PrivacySettingsStorage';
+import { getChildProfile } from '../../storage/ChildProfileStorage'
+import { getParentProfile } from '../../storage/ParentProfileStorage'
+import { PrivacySettings, getPrivacySettings, savePrivacySettings } from '../../services/PrivacySettingsStorage';
 
-const Container = styled.View`
+import BackButton from '../../assets/icons/common/BackButton';
+
+const Container = styled.ScrollView`
   flex: 1;
   background-color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.background};
   padding: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.large}px;
@@ -48,13 +50,15 @@ const Input = styled.TextInput`
 
 const AvatarContainer = styled.TouchableOpacity`
   align-items: center;
-  margin-bottom: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.medium}px;
+  margin-vertical: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.medium}px 0  ${({ theme }: { theme: DefaultTheme }) => theme.spacing.medium}px 0;
+  overflow: visible;
+  
 `;
 
 const AvatarImage = styled.Image`
-  width: 100px;
-  height: 100px;
-  border-radius: 50px;
+  width: 75px;
+  height: 75px;
+  border-radius: 10px;
 `;
 
 const ColorModeContainer = styled.View`
@@ -100,11 +104,19 @@ const SwitchLabel = styled.Text`
   font-family: ${({ theme }: { theme: DefaultTheme }) => theme.fonts.regular};
 `;
 
+const HeaderRow = styled.View`
+   flex-direction: row;
+   align-items: center;
+   justify-content: space-between;
+   margin-bottom: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.medium}px;
+   overflow: visible;
+ `;
+
 const ProfileSettingScreen: React.FC = () => {
   const theme = useTheme();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [name, setName] = useState('User Name');
-  const [avatar, setAvatar] = useState(require('../assets/png/icons/avatar.png'));
+  const [avatar, setAvatar] = useState(require('../../assets/png/icons/avatar.png'));
   const [childName, setChildName] = useState('Child Name');
   const [childBirthdate, setChildBirthdate] = useState('YYYY-MM-DD');
   const [colorMode, setColorMode] = useState<'light' | 'dark'>('light');
@@ -124,7 +136,9 @@ const ProfileSettingScreen: React.FC = () => {
       const c = await getChildProfile();
       if (c) {
         setChildName(c.name);
-        setChildBirthdate(c.dob);
+        // Only keep “YYYY-MM-DD” (drop the “T00:00:00.000Z”)
+        const justDate = c.dob.split('T')[0];
+        setChildBirthdate(justDate);
       }
 
       // Load privacy settings
@@ -187,11 +201,14 @@ const ProfileSettingScreen: React.FC = () => {
 
   return (
     <Container>     
-      <Header marginTop={theme.spacing.xlarge} >Profile Settings</Header>
-      
-      <AvatarContainer onPress={handleAvatarPress}>
-        <AvatarImage source={avatar} marginTop='25'/>
-      </AvatarContainer>
+      <Header>Profile Settings</Header>
+
+      <HeaderRow>
+        <BackButton fill={''} onPress={() => navigation.goBack()} />
+        <AvatarContainer onPress={handleAvatarPress}>
+          <AvatarImage source={avatar} />
+        </AvatarContainer>
+      </HeaderRow>
       <FieldContainer>
         <Label>Name</Label>
         <Input value={name} onChangeText={setName} />
@@ -255,6 +272,22 @@ const ProfileSettingScreen: React.FC = () => {
         <Text style={{ color: theme.colors.background, fontSize: 16 }}>Sign Out</Text>
       </TouchableOpacity>
       <Button title="Reset Onboarding" onPress={handleReset} />
+      {/* LINK TO “WHAT WE’VE COLLECTED” DASHBOARD */}
+      <TouchableOpacity
+        onPress={() => navigation.navigate('PrivacyDashboard')}
+        style={{
+          marginTop: theme.spacing.medium,
+          marginBottom: theme.spacing.large,
+          backgroundColor: theme.colors.secondaryBackground,
+          padding: theme.spacing.medium,
+          borderRadius: 8,
+          alignItems: 'center',
+        }}
+      >
+        <Text style={{ color: theme.colors.background, fontSize: 16 }}>
+          What We’ve Collected
+        </Text>
+      </TouchableOpacity>
       <TouchableOpacity testID="profile-back-button" onPress={() => navigation.goBack()}>
         <Text style={{ fontSize: 18, color: theme.colors.text }}>← Back</Text>
       </TouchableOpacity> 
