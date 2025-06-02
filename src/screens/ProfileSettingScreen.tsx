@@ -1,8 +1,8 @@
+// src/screens/ProfileSettingScreen.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Image, TouchableOpacity, Button } from 'react-native';
+import { View, Text, Switch, Image, TouchableOpacity, Button } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
 import { CommonActions, useNavigation } from '@react-navigation/native';
-import { StackScreenProps } from '@react-navigation/stack';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { DefaultTheme } from 'styled-components/native';
@@ -11,6 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import { getChildProfile } from '../storage/ChildProfileStorage'
 import { getParentProfile } from '../storage/ParentProfileStorage'
+import { PrivacySettings, getPrivacySettings, savePrivacySettings } from '../services/PrivacySettingsStorage';
 
 const Container = styled.View`
   flex: 1;
@@ -86,6 +87,19 @@ const SwitchButtonText = styled.Text`
   color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.background};
 `;
 
+const SwitchRow = styled.View`
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.medium}px;
+`;
+
+const SwitchLabel = styled.Text`
+  font-size: 16px;
+  color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.text};
+  font-family: ${({ theme }: { theme: DefaultTheme }) => theme.fonts.regular};
+`;
+
 const ProfileSettingScreen: React.FC = () => {
   const theme = useTheme();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -96,18 +110,30 @@ const ProfileSettingScreen: React.FC = () => {
   const [colorMode, setColorMode] = useState<'light' | 'dark'>('light');
   const [parentName,    setParentName]    = useState('')
 
-  useEffect(() => {
-    ;(async () => {
-      const p = await getParentProfile()   // implement this
-      if (p) setParentName(p.name)
+  // privacy‐toggle states
+  const [shareAnalytics, setShareAnalytics] = useState(true);
+  const [shareWithPediatrician, setShareWithPediatrician] = useState(false);
+  const [allowNotifications, setAllowNotifications] = useState(true);
 
-      const c = await getChildProfile()
+  useEffect(() => {
+    // Load existing parent/child info
+    (async () => {
+      const p = await getParentProfile();
+      if (p) setName(p.name);
+
+      const c = await getChildProfile();
       if (c) {
-        setChildName(c.name)
-        setChildBirthdate(c.dob)
+        setChildName(c.name);
+        setChildBirthdate(c.dob);
       }
-    })()
-  }, [])
+
+      // Load privacy settings
+      const priv = await getPrivacySettings();
+      setShareAnalytics(priv.shareAnalytics);
+      setShareWithPediatrician(priv.shareWithPediatrician);
+      setAllowNotifications(priv.allowNotifications);
+    })();
+  }, []);
 
   const handleAvatarPress = () => {
     // Mock avatar change
@@ -129,9 +155,40 @@ const ProfileSettingScreen: React.FC = () => {
     )
   }
 
+  const toggleShareAnalytics = async (val: boolean) => {
+    setShareAnalytics(val);
+    await savePrivacySettings({
+      shareAnalytics: val,
+      shareWithPediatrician,
+      allowNotifications,
+    });
+    // If you have an analytics SDK, call something like:
+    // Analytics.setEnabled(val);
+  };
+
+  const toggleShareWithPediatrician = async (val: boolean) => {
+    setShareWithPediatrician(val);
+    await savePrivacySettings({
+      shareAnalytics,
+      shareWithPediatrician: val,
+      allowNotifications,
+    });
+  };
+
+  const toggleAllowNotifications = async (val: boolean) => {
+    setAllowNotifications(val);
+    await savePrivacySettings({
+      shareAnalytics,
+      shareWithPediatrician,
+      allowNotifications: val,
+    });
+    // e.g. register/unregister for push if needed
+  };
+
   return (
     <Container>     
       <Header marginTop={theme.spacing.xlarge} >Profile Settings</Header>
+      
       <AvatarContainer onPress={handleAvatarPress}>
         <AvatarImage source={avatar} marginTop='25'/>
       </AvatarContainer>
@@ -147,6 +204,7 @@ const ProfileSettingScreen: React.FC = () => {
         <Label>Child's Birthdate</Label>
         <Input value={childBirthdate} onChangeText={setChildBirthdate} />
       </FieldContainer>
+      
       <ColorModeContainer>
         <ColorModeText>Color Mode</ColorModeText>
         <ColorModeSwitch>
@@ -158,6 +216,23 @@ const ProfileSettingScreen: React.FC = () => {
           </SwitchButton>
         </ColorModeSwitch>
       </ColorModeContainer>
+      
+      {/* PRIVACY SWITCHES */}
+      <SwitchRow>
+        <SwitchLabel>Share Anonymous Analytics</SwitchLabel>
+        <Switch value={shareAnalytics} onValueChange={toggleShareAnalytics} />
+      </SwitchRow>
+
+      <SwitchRow>
+        <SwitchLabel>Share Data with Pediatrician</SwitchLabel>
+        <Switch value={shareWithPediatrician} onValueChange={toggleShareWithPediatrician} />
+      </SwitchRow>
+
+      <SwitchRow style={{ marginBottom: theme.spacing.large }}>
+        <SwitchLabel>Allow Notifications</SwitchLabel>
+        <Switch value={allowNotifications} onValueChange={toggleAllowNotifications} />
+      </SwitchRow>
+      
       <TouchableOpacity
         testID="signout-button"
         onPress={async () => {
