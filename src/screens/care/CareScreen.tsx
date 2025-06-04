@@ -6,6 +6,7 @@ import {
   LayoutChangeEvent,
   Text as NativeText,
   Text,
+  TouchableOpacity
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -30,13 +31,15 @@ import WhisprVoiceButton from '../../components/whispr/WhisprVoiceButton'
 import { 
   getLogsBetween, 
   getFutureEntries, 
-  saveFutureEntries, 
+  saveFutureEntries,
   deleteLogEntry,
   deleteFutureEntry
 } from '../../services/QuickLogAccess'
 import { QuickLogEntry } from '../../models/QuickLogSchema'
 import { quickLogEmitter } from '../../storage/QuickLogEvents';
 import { generateAIQuickLogs } from '../../services/LlamaLogGenerator'
+import { useFutureLogs } from '../../hooks/useFutureLogs'
+import { generateRuleBasedQuickLogs } from '../../services/RuleBasedLogGenerator' 
 
 type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>
 
@@ -67,6 +70,21 @@ const CareScreen: React.FC = () => {
   const [futureEntries, setFutureEntries] = useState<QuickLogEntry[]>([])
   const [showLast24h, setShowLast24h] = useState(false)
   const [isQuickLogOpen, setQuickLogOpen] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
+
+  const toFutureMarkers = (entries: QuickLogEntry[]): QuickMarker[] => {
+        return entries.map((e) => {
+          const t = new Date(e.timestamp)
+          const fraction = (t.getHours() * 60 + t.getMinutes() + t.getSeconds() / 60) / 1440
+          return {
+            id: e.id,
+            fraction,
+            color: colorMap[e.type],
+            type: e.type,
+            isFuture: true,
+          }
+        })
+      }
 
   const promoteFutureLog = useCallback(
     async (entry: QuickLogEntry) => {
@@ -96,6 +114,35 @@ const CareScreen: React.FC = () => {
     },
     [futureEntries, futureMarkers]
   )
+
+  // ── (NEW) “Fill next-day logs” handler ─────────────────────
+  const handleFillNextDay = useCallback(async () => {
+      setIsGenerating(true)
+      try {
+        // a) get “real” logs from start-of-today → now
+        const now = new Date()
+        const start = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        const recent = await getLogsBetween(start.toISOString(), now.toISOString())
+  
+        // b) generate rule-based (or AI) suggestions for next 24h
+        //    assume you have generateRuleBasedQuickLogs(recent, hoursAhead, babyId)
+        //    (replace with your AI call if desired)
+        let babyId = recent[0]?.babyId ?? ''
+        const suggestions = await generateRuleBasedQuickLogs(recent, 24, babyId)
+  
+        // c) persist to AsyncStorage under FUTURE_LOGS_KEY
+        await saveFutureEntries(suggestions)
+        quickLogEmitter.emit('future-saved', suggestions[0] /* or emit each individually */)
+  
+        // d) update local state immediately
+        setFutureEntries((prev) => [...prev, ...suggestions])
+        setFutureMarkers((prev) => [...prev, ...toFutureMarkers(suggestions)])
+      } catch (err) {
+        console.error('[CareScreen] fillNextDay error:', err)
+      } finally {
+        setIsGenerating(false)
+      }
+    }, [futureEntries, futureMarkers])
 
   useEffect(() => {
     const checkInterval = setInterval(() => {
@@ -288,13 +335,7 @@ const CareScreen: React.FC = () => {
 
   return (
     <CareLayout activeTab="tracker" onNavigate={handleNavigate} bgColor={theme.colors.accent}>
-      <View style={{ borderRadius: 25 }}>
-       <ShareButton onPress={() => navigation.navigate('EndOfDayExport')}>
-        <ShareLabel>
-          Share Today’s Logs
-        </ShareLabel>
-       </ShareButton>
-      </View>
+      
       <Tracker
         quickMarkers={[...quickLogMarkers, ...futureMarkers]}
         onMarkerPress={handleMarkerPress}
@@ -305,9 +346,21 @@ const CareScreen: React.FC = () => {
         <TrackerFilter showLast24h={showLast24h} onToggle={handleToggleFilter} />
       </View>
 
-      <View style={styles.actionButtonsContainer}>
-        <QuickLogButton onPress={() => setQuickLogOpen(true)} />
-        <WhisprVoiceButton />
+      {/* ── new: Fill next-day logs button on Tracker screen ── */}
+      <TouchableOpacity
+        style={[styles.fillButton]}
+        onPress={handleFillNextDay}
+        disabled={isGenerating}
+      >
+        <Text style={styles.fillButtonText}>{isGenerating ? 'Generating…' : 'Fill next-day logs'}</Text>
+      </TouchableOpacity>
+      
+      <View style={{ borderRadius: 25}}>
+       <ShareButton onPress={() => navigation.navigate('EndOfDayExport')}>
+        <ShareLabel>
+          Share Today’s Logs
+        </ShareLabel>
+       </ShareButton>
       </View>
 
       <QuickLogMenu visible={isQuickLogOpen} onClose={() => setQuickLogOpen(false)} />
@@ -341,4 +394,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 20,
   },
+  fillButton: {
+        backgroundColor: '#50E3C2',
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 6,
+        alignSelf: 'center',
+        marginTop: 16,
+      },
+      fillButtonText: {
+        color: '#FFF',
+        fontSize: 14,
+        fontWeight: '600',
+      },
+    
 })

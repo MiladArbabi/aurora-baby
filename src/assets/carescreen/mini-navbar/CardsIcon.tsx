@@ -2,7 +2,7 @@ import React from "react";
 import Svg, { Path, SvgProps } from "react-native-svg";
 
 const CardsIcon = (props: SvgProps) => (
-  <Svg width="35" height="35" {...props}>
+  <Svg width="35" height="35" viewBox="0 0 35 35" {...props}>
     <Path d="M0 3.17932V31.8206H35V3.17932H0ZM32.9492 8.26254H7.48709V5.23011H32.9492V8.26254ZM5.4363 5.23011V8.26254H2.05079V5.23011H5.4363ZM2.05079 29.7699V10.3133H32.9492V29.7699H2.05079Z" fill="#453F4E"/>
     <Path d="M11.8665 13.6866H30.6421V15.7374H11.8665V13.6866Z" fill="#453F4E"/>
     <Path d="M6.46992 13.7359L5.32401 12.59L3.8739 14.0401L6.46992 16.6361L9.92022 13.1858L8.47011 11.7357L6.46992 13.7359Z" fill="#453F4E"/>

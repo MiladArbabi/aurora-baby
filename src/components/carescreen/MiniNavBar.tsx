@@ -1,5 +1,6 @@
 import React from 'react'
 import { View, TouchableOpacity, StyleSheet } from 'react-native'
+import { SvgProps } from 'react-native-svg'
 import TrackerIcon from '../../assets/carescreen/mini-navbar/TrackerIcon'
 import GraphIcon   from '../../assets/carescreen/mini-navbar/GraphIcon'
 import CardsIcon   from '../../assets/carescreen/mini-navbar/CardsIcon'
@@ -13,13 +14,14 @@ interface Props {
 }
 
 const MiniNavBar: React.FC<Props> = ({ activeTab, onNavigate }) => (
-  <View testID="mini-navbar-container" style={styles.container}>
+<View testID="mini-navbar-container" style={styles.container}>
     <TouchableOpacity
       testID="future-icon"
       onPress={() => onNavigate?.('future')}
       style={[styles.iconContainer, activeTab !== 'future' && styles.inactive]}
     >
-      <FutureLogsIcon />
+      {/* You can optionally force a size: <FutureLogsIcon width={24} height={24} /> */}
+      <FutureLogsIcon width={50} height={50} />
     </TouchableOpacity>
 
     <TouchableOpacity
@@ -27,21 +29,23 @@ const MiniNavBar: React.FC<Props> = ({ activeTab, onNavigate }) => (
       onPress={() => onNavigate?.('cards')}
       style={[styles.iconContainer, activeTab !== 'cards' && styles.inactive]}
     >
-      <CardsIcon />
+      <CardsIcon width={50} height={50} />
     </TouchableOpacity>
+
     <TouchableOpacity
       testID="tracker-icon"
       onPress={() => onNavigate?.('tracker')}
       style={[styles.iconContainer, activeTab !== 'tracker' && styles.inactive]}
     >
-      <TrackerIcon />
+      <TrackerIcon width={50} height={50} />
     </TouchableOpacity>
+
     <TouchableOpacity
       testID="graph-icon"
       onPress={() => onNavigate?.('graph')}
       style={[styles.iconContainer, activeTab !== 'graph' && styles.inactive]}
     >
-      <GraphIcon />
+      <GraphIcon width={50} height={50}/>
     </TouchableOpacity>
   </View>
 )
@@ -52,13 +56,20 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     flexDirection: 'row',
-    justifyContent: 'flex-end',  // all icons on the right
+    justifyContent: 'space-around',
     paddingHorizontal: 16,
+    backgroundColor: 'transparent',
   },
   iconContainer: {
-    marginLeft: 20,              // 20px between icons
+    flex: 1,
+    marginLeft: 20,
+    paddingVertical: 8,
   },
   inactive: {
-    opacity: 0.75,
+    opacity: 0.6,
   },
+  largeIcon: {
+        width: 32,
+        height: 32,
+    },
 })
