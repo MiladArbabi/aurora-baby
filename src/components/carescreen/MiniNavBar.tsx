@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, TouchableOpacity, StyleSheet } from 'react-native'
+import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native'
 import { SvgProps } from 'react-native-svg'
 import TrackerIcon from '../../assets/carescreen/mini-navbar/TrackerIcon'
 import GraphIcon   from '../../assets/carescreen/mini-navbar/GraphIcon'
@@ -18,33 +18,44 @@ const MiniNavBar: React.FC<Props> = ({ activeTab, onNavigate }) => (
     <TouchableOpacity
       testID="future-icon"
       onPress={() => onNavigate?.('future')}
-      style={[styles.iconContainer, activeTab !== 'future' && styles.inactive]}
+      style={styles.iconWrapper}
     >
-      {/* You can optionally force a size: <FutureLogsIcon width={24} height={24} /> */}
+      {activeTab === 'future' && (
+        <View style={styles.activeBackground} />
+      )}
       <FutureLogsIcon width={50} height={50} />
     </TouchableOpacity>
 
     <TouchableOpacity
       testID="cards-icon"
       onPress={() => onNavigate?.('cards')}
-      style={[styles.iconContainer, activeTab !== 'cards' && styles.inactive]}
-    >
+      style={styles.iconWrapper}
+      >
+      {activeTab === 'cards' && (
+        <View style={styles.activeBackground} />
+      )}
       <CardsIcon width={50} height={50} />
     </TouchableOpacity>
 
     <TouchableOpacity
       testID="tracker-icon"
       onPress={() => onNavigate?.('tracker')}
-      style={[styles.iconContainer, activeTab !== 'tracker' && styles.inactive]}
-    >
+      style={styles.iconWrapper}
+      >
+      {activeTab === 'tracker' && (
+        <View style={styles.activeBackground} />
+      )}
       <TrackerIcon width={50} height={50} />
     </TouchableOpacity>
 
     <TouchableOpacity
       testID="graph-icon"
       onPress={() => onNavigate?.('graph')}
-      style={[styles.iconContainer, activeTab !== 'graph' && styles.inactive]}
+      style={styles.iconWrapper}
     >
+      {activeTab === 'graph' && (
+        <View style={styles.activeBackground} />
+      )}
       <GraphIcon width={50} height={50}/>
     </TouchableOpacity>
   </View>
@@ -60,16 +71,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     backgroundColor: 'transparent',
   },
-  iconContainer: {
-    flex: 1,
-    marginLeft: 20,
-    paddingVertical: 8,
-  },
-  inactive: {
-    opacity: 0.6,
-  },
-  largeIcon: {
-        width: 32,
-        height: 32,
+// each icon gets its own flex box; we layer a background View behind it when active
+  iconWrapper: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 8,
+    },
+    activeBackground: {
+      position: 'absolute',
+      width: 75,
+      height: 75,
+      borderRadius: 12,
+      backgroundColor: '#E9DAFA',
+      // light shadow (iOS  Android)
+      ...Platform.select({
+        ios: {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+        },
+        android: {
+          elevation: 3,
+        },
+      }),
     },
 })
