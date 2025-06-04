@@ -77,13 +77,27 @@ export default function PastLogsView() {
   // whenever any new entry is saved, prepend it into the list:
   useEffect(() => {
     const handler = (entry: QuickLogEntry) => {
-      setEntries(es => [entry, ...es]);
-    };
+      setEntries((es) => [entry, ...es])
+    }
     quickLogEmitter.on('saved', handler);
+  return () => {
+    quickLogEmitter.off('saved', handler);
+  };
+}, [])
+  
+  const handlerDelete = (id: string) => {
+    setEntries((es) => es.filter((e) => e.id !== id))
+  }
+  
+  useEffect(() => {
+    const onDeleted = (entry: QuickLogEntry) => {
+      handlerDelete(entry.id)
+    }
+    quickLogEmitter.on('deleted', onDeleted)
     return () => {
-      quickLogEmitter.off('saved', handler);
-    };
-  }, []);
+      quickLogEmitter.off('deleted', onDeleted)
+      }
+    }, [])
 
   const filtered = selectedCategory==='all'
     ? entries
@@ -192,7 +206,9 @@ export default function PastLogsView() {
             // 2. close the modal
             setSelectedEntry(null);
             // 3. call your backend deletion (if you have one)
-            deleteLogEntry(id).catch(console.error);
+            const sel = entries.find((e) => e.id === id)
+            if (sel) deleteLogEntry(sel).catch(console.error) 
+
           }}
         />
       )}

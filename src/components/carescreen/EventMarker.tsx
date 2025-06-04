@@ -1,10 +1,6 @@
 // src/components/carescreen/EventMarker.tsx
 import React from 'react'
-import {
-  TouchableOpacity,
-  StyleSheet,
-  GestureResponderEvent,
-} from 'react-native'
+import { StyleSheet, GestureResponderEvent, TouchableOpacity, ViewStyle, StyleProp } from 'react-native'
 import { QuickLogEntry } from '../../models/QuickLogSchema'
 
 import SleepButton from '../../assets/carescreen/QuickLogMenu/SleepButton';
@@ -22,6 +18,7 @@ interface Props {
   onPress?: (e: GestureResponderEvent) => void
   ringStrokeWidth?: number 
   type?: QuickLogEntry['type'] 
+  style?: StyleProp<ViewStyle>
 }
 
 const EventMarker: React.FC<Props> = ({
@@ -31,7 +28,8 @@ const EventMarker: React.FC<Props> = ({
   testID,
   onPress,
   ringStrokeWidth = 0,  
-  type,     // <— default if you don’t pass it
+  type, 
+  style 
 }) => {
   // compute the “inner” radius at the center of your main arc
   const fullRadius = size / 2
@@ -71,6 +69,7 @@ const iconMap = {
           borderRadius: markerSize / 2,
           backgroundColor: color,
         },
+        style
       ]}
     >
     {IconComponent && (

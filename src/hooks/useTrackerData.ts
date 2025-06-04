@@ -15,7 +15,7 @@ const fracOfDay = (d: Date) =>
   (d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60) / 1440
 
 export const colorMap: Record<QuickLogEntry['type'], string> = {
-  sleep:   '#4A90E2',
+  sleep:   '#FFFFFF',
   feeding: '#50E3C2',
   diaper:  '#F5A623',
   mood:    '#F8E71C',
@@ -70,9 +70,13 @@ export function useTrackerData(showLast24h: boolean = false) {
     load()
     const onSaved = () => load()
     quickLogEmitter.on('saved', onSaved)
+    quickLogEmitter.on('deleted', onSaved)
+    quickLogEmitter.on('future-deleted', onSaved)
     return () => {
       alive = false
       quickLogEmitter.off('saved', onSaved)
+      quickLogEmitter.off('deleted', onSaved)
+      quickLogEmitter.off('future-deleted', onSaved)
     }
   }, [showLast24h, nowFrac])
 
