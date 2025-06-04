@@ -30,7 +30,8 @@ export async function loadModel(): Promise<void> {
 export async function generateCompletion(prompt: string): Promise<string> {
   const fs = require('fs');
   const path = require('path');
-  const MODEL_PATH = path.resolve(__dirname, '../../models/llama-2-7b.gguf');
+  const MODEL_PATH = path.resolve(__dirname, '../../models/llama-2-7b-q4_0.gguf');
+  console.log(__dirname, MODEL_PATH);
 
   if (!fs.existsSync(MODEL_PATH)) {
     throw new Error('Model file missing');

@@ -15,6 +15,7 @@ import { HarmonyStatScreen } from '../screens/harmony/HarmonyStatScreen'
 import CareScreen from '../screens/care/CareScreen'
 import PastLogsView from '../screens/care/PastLogsView'
 import InsightsScreen from '../screens/care/InsightsView'
+import InferredLogsScreen from 'screens/care/InferredLogsScreen'
 import { WonderScreen } from '../screens/wonder/WonderScreen'
 import ProfileSettingScreen from '../screens/profile/ProfileSettingScreen'
 import PrivacyDashboardScreen from '../screens/profile/PrivacyDashboardScreen'
@@ -41,6 +42,7 @@ export type RootStackParamList = {
   Care: undefined
   PastLogs: undefined
   Insights: undefined
+  InferredLogs: undefined
   Wonder: undefined
   ProfileSettings: undefined
   GapSettings: undefined
@@ -129,6 +131,7 @@ export default function AppNavigator() {
           <Stack.Screen name="Care" component={CareScreen} />
           <Stack.Screen name="PastLogs" component={PastLogsView} />
           <Stack.Screen name="Insights" component={InsightsScreen} />
+          <Stack.Screen name="InferredLogs" component={InferredLogsScreen} />
           <Stack.Screen name="Wonder" component={WonderScreen} />
           <Stack.Screen name="ProfileSettings" component={ProfileSettingScreen} />
           <Stack.Screen name="PrivacyDashboard" component={PrivacyDashboardScreen} />

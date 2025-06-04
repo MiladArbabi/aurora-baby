@@ -136,7 +136,7 @@ const CareScreen: React.FC = () => {
 
   const handleDeleteLog = useCallback(async (id: string) => {
     try {
-      await deleteLogEntry(id);
+      await deleteLogEntry({ id } as QuickLogEntry);
       setQuickLogEntries(prev => prev.filter(e => e.id !== id));
       setQuickLogMarkers(prev => prev.filter(m => m.id !== id));
       setSelectedLog(null);
@@ -156,9 +156,11 @@ const CareScreen: React.FC = () => {
   }
 
   const handleNavigate = (tab: MiniTab) => {
-    if (tab === 'cards') navigation.navigate('PastLogs')
-    else if (tab === 'graph') navigation.navigate('Insights')
-  }
+    if (tab === 'cards') navigation.navigate('PastLogs');
+    else if (tab === 'tracker') return;     // already on Care
+    else if (tab === 'graph') navigation.navigate('Insights');
+    else if (tab === 'future') navigation.navigate('InferredLogs');
+  };
 
   const logLayout = (name: string) => (e: LayoutChangeEvent) => {
     console.log(`${name} row height:`, e.nativeEvent.layout.height)

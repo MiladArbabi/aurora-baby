@@ -1,84 +1,60 @@
-//src/services/QuickLogAccess.ts
-import { QuickLogEntry, QuickLogType } from '../models/QuickLogSchema';
-import { 
-  getAllQuickLogEntries, 
-  saveFutureLogEntry, 
-  getAllFutureLogEntries,
-  removeQuickLogEntry
- } from '../storage/QuickLogStorage';
-import { quickLogEmitter } from '../storage/QuickLogEvents';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { QuickLogEntry } from '../models/QuickLogSchema';
 
-/**
- * Exactly the storage call, but renamed so tests can mock it directly.
- */
-export const getAllEntries = getAllQuickLogEntries;
-
-/**
- * Returns all QuickLog entries of a given type (e.g., 'sleep', 'feeding').
- */
-export const getLogsByType = async (
-  type: QuickLogType
-): Promise<QuickLogEntry[]> => {
-  const all = await getAllEntries();
-  return all.filter((entry) => entry.type === type);
-};
-
-export const getLogsGroupedByDate = async (): Promise<
-  Record<string, QuickLogEntry[]>
-> => {
-  const all = await getAllEntries();
-  return all.reduce((acc, entry) => {
-    const dateKey = entry.timestamp.slice(0, 10); // YYYY-MM-DD
-    if (!acc[dateKey]) {
-      acc[dateKey] = [];
-    }
-    acc[dateKey].push(entry);
-    return acc;
-  }, {} as Record<string, QuickLogEntry[]>);
-};
-
-export const getLatestLog = async (
-  type: QuickLogType
-): Promise<QuickLogEntry | null> => {
-  const logs = await getLogsByType(type);
-  if (logs.length === 0) return null;
-  return logs.reduce((latest, entry) =>
-    entry.timestamp > latest.timestamp ? entry : latest
-  );
-};
-
-export const getLogsBetween = async (
-  start: string,
-  end: string
-): Promise<QuickLogEntry[]> => {
-  const all = await getAllEntries();
-  return all.filter(
-    (entry) => entry.timestamp >= start && entry.timestamp <= end
-  );
-};
-
-/**
- * Delete one quick-log entry by id.
- */
-export async function deleteLogEntry(id: string): Promise<void> {
-  await removeQuickLogEntry(id);
-  console.debug('[QuickLogAccess] deleteLogEntry:', id)
-}
-
-/**
- * Persist AI-generated “future” logs:
- * here you could AsyncStorage them under a different key, etc.
- * For now we just re-emit them so screens can listen.
- */
-export async function saveFutureEntries(entries: QuickLogEntry[]): Promise<void> {
-  // TODO: persist to storage
-  entries.forEach((e) => quickLogEmitter.emit('future-saved', e));
-}
+const FUTURE_LOGS_KEY = '@future_logs';
 
 /** Load any already-saved future entries. */
 export async function getFutureEntries(): Promise<QuickLogEntry[]> {
-  // TODO: read from your “future” storage key
-  return []; 
+  const raw = await AsyncStorage.getItem(FUTURE_LOGS_KEY);
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw) as QuickLogEntry[];
+  } catch {
+    console.error('[QuickLogAccess] getFutureEntries: JSON.parse error');
+    return [];
+  }
 }
 
+/** Persist AI-generated “future” logs: append all new entries to existing array. */
+export async function saveFutureEntries(entries: QuickLogEntry[]): Promise<void> {
+  // 1) load old array (if any)
+  const raw = await AsyncStorage.getItem(FUTURE_LOGS_KEY);
+  let existing: QuickLogEntry[] = [];
+  if (raw) {
+    try {
+      existing = JSON.parse(raw) as QuickLogEntry[];
+    } catch {
+      existing = [];
+    }
+  }
+  // 2) merge new  existing
+  const merged = [...entries, ...existing];
+  // 3) write back
+  try {
+    await AsyncStorage.setItem(FUTURE_LOGS_KEY, JSON.stringify(merged));
+  } catch (err) {
+    console.error('[QuickLogAccess] saveFutureEntries failed:', err);
+    throw err;
+  }
+}
 
+/** Fetch “real” logs between two timestamps. (Unchanged from previous.) */
+import { getAllQuickLogEntries } from '../storage/QuickLogStorage';
+export async function getLogsBetween(
+  start: string,
+  end: string
+): Promise<QuickLogEntry[]> {
+  const all = await getAllQuickLogEntries();
+  return all.filter(e => e.timestamp >= start && e.timestamp <= end);
+}
+
+export async function deleteLogEntry(entry: QuickLogEntry): Promise<void> {
+  const all = await getAllQuickLogEntries();
+  const updated = all.filter(e => e.timestamp !== entry.timestamp);
+  await AsyncStorage.setItem(
+    '@quicklog_entries',
+    JSON.stringify(updated)
+  );
+  // Emit an event if needed
+  // quickLogEmitter.emit('deleted', entry);
+}

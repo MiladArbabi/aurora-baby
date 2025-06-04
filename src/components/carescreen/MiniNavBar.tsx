@@ -3,8 +3,9 @@ import { View, TouchableOpacity, StyleSheet } from 'react-native'
 import TrackerIcon from '../../assets/carescreen/mini-navbar/TrackerIcon'
 import GraphIcon   from '../../assets/carescreen/mini-navbar/GraphIcon'
 import CardsIcon   from '../../assets/carescreen/mini-navbar/CardsIcon'
+import FutureLogsIcon from '../../assets/carescreen/mini-navbar/FutureLogsIcon';
 
-export type MiniTab = 'tracker' | 'graph' | 'cards'
+export type MiniTab = 'tracker' | 'graph' | 'cards' | 'future'
 
 interface Props {
   activeTab: MiniTab
@@ -13,6 +14,14 @@ interface Props {
 
 const MiniNavBar: React.FC<Props> = ({ activeTab, onNavigate }) => (
   <View testID="mini-navbar-container" style={styles.container}>
+    <TouchableOpacity
+      testID="future-icon"
+      onPress={() => onNavigate?.('future')}
+      style={[styles.iconContainer, activeTab !== 'future' && styles.inactive]}
+    >
+      <FutureLogsIcon />
+    </TouchableOpacity>
+
     <TouchableOpacity
       testID="cards-icon"
       onPress={() => onNavigate?.('cards')}

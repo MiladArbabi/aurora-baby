@@ -126,11 +126,12 @@ export default function PastLogsView() {
     setEntries(es => [...suggestions, ...es])
   } */
 
-  const handleNavigate = (tab: MiniTab) => {
-    if (tab==='cards') return
-    if (tab==='tracker') navigation.navigate('Care')
-    if (tab==='graph')   navigation.navigate('Insights')
-  }
+    const handleNavigate = (tab: MiniTab) => {
+      if (tab === 'cards') return;
+      else if (tab === 'tracker') navigation.navigate('Care');     // already on Care
+      else if (tab === 'graph') navigation.navigate('Insights');
+      else if (tab === 'future') navigation.navigate('InferredLogs');
+    };
 
   return (
     <CareLayout
@@ -147,20 +148,6 @@ export default function PastLogsView() {
           // 1. Slide all of your non-scrolling UI into ListHeaderComponent
           ListHeaderComponent={() => (
             <View>
-              <View style={[styles.pillRow, { backgroundColor: theme.colors.background,}]}>
-              <TouchableOpacity
-                style={styles.pill}
-                /* onPress={() => handleGenerateFuture(24)} */
-                >
-                  <Text style={styles.pillText}>Fill next-day logs</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                style={styles.pill}
-               /*  onPress={() => handleGenerateFuture(168)} */
-                >
-                  <Text style={styles.pillText}>Fill next-week logs</Text>
-                </TouchableOpacity>
-              </View>
               {/* LogType Filters */}
               <ScrollView
               horizontal

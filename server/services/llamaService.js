@@ -40,6 +40,21 @@ Story Style Rules:
 const MODEL_PATH = path.resolve(__dirname, '../../models/llama-2-7b-q4_0.gguf');
 let session = null;
 
+async function generateCompletion(promptText) {
+  await loadSession();
+  // build a minimal “JSON‐only” prompt (or reuse your existing story prompt)
+  const fullPrompt = promptText;
+  const reply = await session.completePrompt(fullPrompt, {
+    maxTokens:           128,
+    temperature:         0.7,
+    topP:                0.9,
+    repeatPenalty:       1.1,
+    customStopTriggers:  ['\n\n'], // stop at double newline, etc.
+    trimWhitespaceSuffix: true,
+  });
+  return reply.trim();
+}
+
 async function loadSession() {
   if (session) return;
   if (!fs.existsSync(MODEL_PATH)) {
@@ -114,4 +129,4 @@ async function generateStoryTitle(storyText) {
   return raw.split('\n')[0].trim();
 }
 
-module.exports = { generateStoryCompletion, generateStoryTitle };
+module.exports = { generateStoryCompletion, generateStoryTitle, generateCompletion };

@@ -4,12 +4,14 @@ const express = require('express');
 const cors    = require('cors');
 const whisprRoute = require('./routes/whisprRoute');
 const storyRoute = require('./routes/storyRoute');
+const futureLogsRoute = require('./routes/futureLogsRoute');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/api/whispr/query', whisprRoute);
 app.use('/api/story/generate', storyRoute);
+app.use('/api/futureLogs', futureLogsRoute);
 
 const PORT = process.env.PORT || 4000;
 if (require.main === module) {
