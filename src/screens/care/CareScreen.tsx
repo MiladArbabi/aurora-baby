@@ -67,7 +67,7 @@ const ShareLabel = styled.Text`
   text-align: center;
   flex-wrap: wrap;
 `
-const RING_SIZE = Math.min(Dimensions.get('window').width * 0.85, 300)
+const RING_SIZE = Dimensions.get('window').width * 0.9
 const RING_THICKNESS = 30
 const GAP = 4
 const CLOCK_STROKE_WIDTH = 10
@@ -87,8 +87,8 @@ const CareScreen: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false)
   const { entries, eventMarkers, nowFrac, hourlyCategories } = useTrackerData(showLast24h)
 
-  const sleepMask:    boolean[] = Array(24).fill(false)
-  const playMask:     boolean[] = Array(24).fill(false)
+  // Build a single sleepMask (true when sleeping; false means “awake”)
+  const sleepMask: boolean[] = Array(24).fill(false)
   const feedDiaperMask: boolean[] = Array(24).fill(false)
   const showerEssMask: boolean[] = Array(24).fill(false)
 
@@ -97,14 +97,14 @@ const CareScreen: React.FC = () => {
       case 'sleep':
         sleepMask[h] = true
         break
-      case 'play':
-        playMask[h] = true
-        break
       case 'feedDiaper':
         feedDiaperMask[h] = true
         break
       case 'showerEss':
         showerEssMask[h] = true
+        break
+      default:
+        // any hour not “sleep” is implicitly “awake”
         break
     }
   }
@@ -491,88 +491,68 @@ const CareScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* ── 4. Tracker section (flex:4) ─────────────────────────── */}
+      {/* ── Tracker section (flex:4) ─────────────────────────── */}
       <View style={styles.trackerContainer}>
       <View style={styles.ringWrapper}>
-          {/* 1) sleep/nap ring (outermost) */}
-          <View
-            style={{
-              position: 'absolute',
-              width: RING_SIZE,
-              height: RING_SIZE,
-              top: CLOCK_STROKE_EXTRA,
-              left: CLOCK_STROKE_EXTRA,
-            }}
-          >
-            <CategoryRing
-              size={RING_SIZE}
-              strokeWidth={RING_THICKNESS}
-              mask={sleepMask}
-              fillColor="#A3B1E0"       // light blue
-              separatorColor="rgba(0,0,0,0.1)"
-              testID="sleep-ring"
-            />
-          </View>
+          {/* 1) sleep / awake (outermost) */}
+    <View
+      style={{
+        position: 'absolute',
+        width: RING_SIZE,
+        height: RING_SIZE,
+        top: CLOCK_STROKE_EXTRA,
+        left: CLOCK_STROKE_EXTRA,
+      }}
+    >
+      <CategoryRing
+        size={RING_SIZE}
+        strokeWidth={RING_THICKNESS}
+        mask={sleepMask}          // highlight sleeping hours
+        fillColor="#A3B1E0"       // blue = sleep, the rest is transparent (awake)
+        separatorColor="rgba(0,0,0,0.1)"
+        testID="sleep‐awake‐ring"
+      />
+    </View>
 
-          {/* 2) awake/play ring (next) */}
-          <View
-            style={{
-              position: 'absolute',
-              width: RING_SIZE - (RING_THICKNESS + GAP),
-              height: RING_SIZE - (RING_THICKNESS + GAP),
-              top: CLOCK_STROKE_EXTRA + (RING_THICKNESS + GAP) / 2,
-              left: CLOCK_STROKE_EXTRA + (RING_THICKNESS + GAP) / 2,
-            }}
-          >
-            <CategoryRing
-              size={RING_SIZE - (RING_THICKNESS + GAP)}
-              strokeWidth={RING_THICKNESS}
-              mask={playMask}
-              fillColor="#C8E6C9"       // light green
-              separatorColor="rgba(0,0,0,0.1)"
-              testID="play-ring"
-            />
-          </View>
+          {/* 2) feed/diaper ring (middle) */}
+    <View
+      style={{
+        position: 'absolute',
+        width: RING_SIZE - 2 * (RING_THICKNESS + GAP),
+        height: RING_SIZE - 2 * (RING_THICKNESS + GAP),
+        top: CLOCK_STROKE_EXTRA + (RING_THICKNESS + GAP),
+        left: CLOCK_STROKE_EXTRA + (RING_THICKNESS + GAP),
+      }}
+    >
+      <CategoryRing
+        size={RING_SIZE - 2 * (RING_THICKNESS + GAP)}
+        strokeWidth={RING_THICKNESS}
+        mask={feedDiaperMask}
+        fillColor="#FFE0B2"       // orange for feed/diaper
+        separatorColor="rgba(0,0,0,0.1)"
+        testID="feed‐ring"
+      />
+    </View>
 
-          {/* 3) feed/diaper ring (third) */}
-          <View
-            style={{
-              position: 'absolute',
-              width: RING_SIZE - 2 * (RING_THICKNESS + GAP),
-              height: RING_SIZE - 2 * (RING_THICKNESS + GAP),
-              top: CLOCK_STROKE_EXTRA + (RING_THICKNESS + GAP),
-              left: CLOCK_STROKE_EXTRA + (RING_THICKNESS + GAP),
-            }}
-          >
-            <CategoryRing
-              size={RING_SIZE - 2 * (RING_THICKNESS + GAP)}
-              strokeWidth={RING_THICKNESS}
-              mask={feedDiaperMask}
-              fillColor="#FFE0B2"       // light orange
-              separatorColor="rgba(0,0,0,0.1)"
-              testID="feed-ring"
-            />
-          </View>
-
-          {/* 4) other essentials ring (innermost) */}
-          <View
-            style={{
-              position: 'absolute',
-              width: RING_SIZE - 3 * (RING_THICKNESS + GAP),
-              height: RING_SIZE - 3 * (RING_THICKNESS + GAP),
-              top: CLOCK_STROKE_EXTRA + 2 * (RING_THICKNESS + GAP) - (RING_THICKNESS + GAP) / 2,
-              left: CLOCK_STROKE_EXTRA + 2 * (RING_THICKNESS + GAP) - (RING_THICKNESS + GAP) / 2,
-            }}
-          >
-            <CategoryRing
-              size={RING_SIZE - 3 * (RING_THICKNESS + GAP)}
-              strokeWidth={RING_THICKNESS}
-              mask={showerEssMask}
-              fillColor="#F0F4C3"       // light yellow
-              separatorColor="rgba(0,0,0,0.1)"
-              testID="essentials-ring"
-            />
-          </View>
+    {/* 3) other essentials ring (inner) */}
+    <View
+      style={{
+        position: 'absolute',
+        width: RING_SIZE - 4 * (RING_THICKNESS + GAP),
+        height: RING_SIZE - 4 * (RING_THICKNESS + GAP),
+        top: CLOCK_STROKE_EXTRA + 2 * (RING_THICKNESS + GAP),
+        left: CLOCK_STROKE_EXTRA + 2 * (RING_THICKNESS + GAP),
+      }}
+    >
+      <CategoryRing
+        size={RING_SIZE - 4 * (RING_THICKNESS + GAP)}
+        strokeWidth={RING_THICKNESS}
+        mask={showerEssMask}
+        fillColor="#F0F4C3"       // yellow for “other essentials”
+        separatorColor="rgba(0,0,0,0.1)"
+        testID="essentials-ring"
+      />
+    </View>
 
           {/* 5) current‐time arc around the outermost circle */}
           <View style={styles.arcAbsolute}>
