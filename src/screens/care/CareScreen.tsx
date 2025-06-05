@@ -7,7 +7,8 @@ import {
   Text as NativeText,
   Text,
   TouchableOpacity,
-  Dimensions
+  Dimensions,
+  Platform
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -20,7 +21,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import CareLayout from '../../components/carescreen/CareLayout'
 import { MiniTab } from '../../components/carescreen/MiniNavBar'
 /* import Tracker, { QuickMarker } from '../../components/carescreen/Tracker' */
-import SliceRing from 'components/carescreen/SliceRing'
+import SliceRing, { SliceCategory } from 'components/carescreen/SliceRing'
 import { saveQuickLogEntry } from '../../storage/QuickLogStorage'; 
 
 import { colorMap } from '../../hooks/useTrackerData'
@@ -47,6 +48,7 @@ import { FUTURE_LOGS_KEY } from '../../services/QuickLogAccess'
 import FillNextDayLogsIcon from '../../assets/carescreen/common/FillNextDayLogsIcon'
 import ClearLogs           from '../../assets/carescreen/common/ClearLogs'
 import ShareIcon           from '../../assets/carescreen/common/ShareIcon'
+import { generateDefaultDailyTemplate } from '../../utils/dailySliceTemplate'
 
 type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>
 
@@ -78,6 +80,23 @@ const CareScreen: React.FC = () => {
   const [showLast24h, setShowLast24h] = useState(false)
   const [isQuickLogOpen, setQuickLogOpen] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
+
+  // Build a static 24‐hour category array from our default template
+  const template = generateDefaultDailyTemplate()
+  // flatten into a single SliceCategory[] based on priority order:
+  //  sleep > feedDiaper > showerEss > play
+  const categories: SliceCategory[] = []
+  for (let h = 0; h < 24; ++h) {
+    if (template.sleep[h]) {
+      categories[h] = 'sleep'
+    } else if (template.feedDiaper[h]) {
+      categories[h] = 'feedDiaper'
+    } else if (template.showerEss[h]) {
+      categories[h] = 'showerEss'
+    } else {
+      categories[h] = 'play'
+    }
+  }
 
   const toFutureMarkers = (entries: QuickLogEntry[]): QuickMarker[] => {
         return entries.map((e) => {
@@ -410,6 +429,7 @@ const CareScreen: React.FC = () => {
         strokeWidth={30}
         separatorColor="rgba(0,0,0,0.15)"
         testID="slice-ring"
+        categories={categories}
       />
       </View>
 

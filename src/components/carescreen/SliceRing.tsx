@@ -1,13 +1,17 @@
 // src/components/carescreen/SliceRing.tsx
 import React from 'react'
-import Svg, { Path, Line } from 'react-native-svg'
+import Svg, { Path, Line, Circle } from 'react-native-svg'
+
+// categories for each hour
+export type SliceCategory = 'sleep' | 'play' | 'feedDiaper' | 'showerEss'
 
 interface SliceRingProps {
   size: number            // full width/height of the SVG
   strokeWidth: number     // thickness of the donut ring
   separatorColor?: string // color for the faint dividing lines
   testID?: string
-}
+  categories: SliceCategory[]
+ }
 
 const polarToCartesian = (
   centerX: number,
@@ -63,10 +67,19 @@ const describeSlice = (
   ].join(' ')
 }
 
+// define fill color for each category (dark and light variants)
+const categoryColorMap: Record<SliceCategory, string> = {
+      sleep:      '#A3B1E0',      // e.g. light‐blue
+      play:       '#C8E6C9',      // e.g. light‐green
+      feedDiaper: '#FFE0B2',      // e.g. light‐orange
+      showerEss:  '#F0F4C3',      // e.g. light‐yellow
+    }
+
 const SliceRing: React.FC<SliceRingProps> = ({
   size,
   strokeWidth,
   separatorColor = 'rgba(0,0,0,0.1)',
+  categories,
   testID
 }) => {
   // radius of outer circle
@@ -74,13 +87,12 @@ const SliceRing: React.FC<SliceRingProps> = ({
   const outerRadius = size / 2
   const innerRadius = outerRadius - strokeWidth
 
-  // Generate 24 equal slices (360°/24 = 15° each)
-  const slices = []
+  // build each slice path and optionally fill
+  const filledSlices = []
   for (let i = 0; i < 24; i++) {
     const startAngle = (i * 360) / 24
     const endAngle   = ((i + 1) * 360) / 24
 
-    // Build the path for this single slice
     const d = describeSlice(
       center,
       center,
@@ -90,9 +102,34 @@ const SliceRing: React.FC<SliceRingProps> = ({
       endAngle
     )
 
-    slices.push(
+    // fill based on category
+    const fillColor = categoryColorMap[categories[i]] || 'transparent'
+    filledSlices.push(
       <Path
-        key={i}
+        key={`fill-${i}`}
+        d={d}
+        fill={fillColor}
+        stroke="none"
+      />
+    )
+  }
+
+  // old “separator” slices are now drawn on top of fills
+  const separators = []
+  for (let i = 0; i < 24; i++) {
+    const startAngle = (i * 360) / 24
+    const endAngle   = ((i + 1) * 360) / 24
+    const d = describeSlice(
+      center,
+      center,
+      innerRadius,
+      outerRadius,
+      startAngle,
+      endAngle
+    )
+    separators.push(
+      <Path
+        key={`sep-${i}`}
         d={d}
         fill="transparent"
         stroke={separatorColor}
@@ -125,10 +162,37 @@ const SliceRing: React.FC<SliceRingProps> = ({
     )
   }
 
+  // ── 3) Faint circle boundaries ──────────────────────────────
+  // Outer boundary at outerRadius
+  const outerCircle = (
+    <Circle
+      cx={center}
+      cy={center}
+      r={outerRadius}
+      stroke={separatorColor}
+      strokeWidth={1}
+      fill="none"
+    />
+  )
+  // Inner boundary at innerRadius
+  const innerCircle = (
+    <Circle
+      cx={center}
+      cy={center}
+      r={innerRadius}
+      stroke={separatorColor}
+      strokeWidth={1}
+      fill="none"
+    />
+  )
+
   return (
     <Svg width={size} height={size} testID={testID}>
-      {slices}
+      {filledSlices}
+      {separators}
       {dividers}
+      {outerCircle}
+      {innerCircle}
     </Svg>
   )
 }
