@@ -6,7 +6,8 @@ import {
   LayoutChangeEvent,
   Text as NativeText,
   Text,
-  TouchableOpacity
+  TouchableOpacity,
+  Dimensions
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -18,7 +19,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import CareLayout from '../../components/carescreen/CareLayout'
 import { MiniTab } from '../../components/carescreen/MiniNavBar'
-import Tracker, { QuickMarker } from '../../components/carescreen/Tracker'
+/* import Tracker, { QuickMarker } from '../../components/carescreen/Tracker' */
+import SliceRing from 'components/carescreen/SliceRing'
 import { saveQuickLogEntry } from '../../storage/QuickLogStorage'; 
 
 import { colorMap } from '../../hooks/useTrackerData'
@@ -27,6 +29,7 @@ import QuickLogMenu from '../../components/carescreen/QuickLogMenu'
 import LogDetailModal from '../../components/carescreen/LogDetailModal'
 import QuickLogButton from '../../components/carescreen/QuickLogButton'
 import WhisprVoiceButton from '../../components/whispr/WhisprVoiceButton'
+import { QuickMarker } from '../../components/carescreen/Tracker'
 
 import { 
   getLogsBetween, 
@@ -396,12 +399,18 @@ const CareScreen: React.FC = () => {
 
       {/* ── 4. Tracker section (flex:4) ─────────────────────────── */}
       <View style={styles.trackerContainer}>
-        <Tracker
+        {/* <Tracker
           quickMarkers={[...quickLogMarkers, ...futureMarkers]}
           onMarkerPress={handleMarkerPress}
           showLast24h={showLast24h}
           onLayout={logLayout('Tracker')}
-        />
+        /> */}
+        <SliceRing
+        size={Math.min(Dimensions.get('window').width * 0.85, 300)} 
+        strokeWidth={30}
+        separatorColor="rgba(0,0,0,0.15)"
+        testID="slice-ring"
+      />
       </View>
 
       {/* ── 5. Filter section (flex:1) ──────────────────────────── */}
