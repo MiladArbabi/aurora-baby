@@ -11,6 +11,8 @@ interface CategoryRingProps {
   fillColor: string           // color to fill when mask[h] === true
   separatorColor?: string    // same faint lines as SliceRing
   testID?: string
+  accessible?: boolean       // for accessibility purposes
+  accessibilityLabel?: string
 }
 
 const polarToCartesian = (
@@ -56,7 +58,6 @@ const CategoryRing: React.FC<CategoryRingProps> = ({
   fillColor,
   separatorColor = 'rgba(0,0,0,0.1)',
   testID,
-  style,
 }) => {
   const center = size / 2
   const outerRadius = size / 2

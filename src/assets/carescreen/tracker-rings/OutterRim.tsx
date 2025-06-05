@@ -7,9 +7,11 @@ interface RimProps {
   color: string
   testID: string
   progress?: number
+  accessible?: boolean
+  accessibilityLabel?: string
 }
 
-const OutterRim: React.FC<RimProps> = ({
+const ClockArc: React.FC<RimProps> = ({
   size,
   strokeWidth,
   color,
@@ -43,4 +45,4 @@ const OutterRim: React.FC<RimProps> = ({
   )
 }
 
-export default OutterRim
+export default ClockArc

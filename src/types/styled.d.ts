@@ -25,6 +25,12 @@ declare module 'styled-components/native' {
       iconActive: string;
       iconInactive: string;
       error: string;
+      trackerAwake: string;
+      trackerSleep: string;
+      trackerFeed: string;
+      trackerEssentials: string;
+      trackerArc: string;
+      trackerTick: string;
     };
     fonts: {
       regular: string;

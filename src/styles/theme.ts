@@ -30,6 +30,14 @@ export const colors = {
   navBackground: '#2F2346',
   iconActive:    '#A4B9CC',
   iconInactive:  '#A9A9A9',
+
+  // ───── Tracker-specific palette ─────────────────────────────
+  trackerAwake:      '#FFD54F',         // warm yellow for awake/play
+  trackerSleep:      '#A3B1E0',         // light blue for sleep
+  trackerFeed:       '#FFE0B2',         // pale orange for feed/diaper
+  trackerEssentials: '#F0F4C3',         // pale pastel green for essentials
+  trackerArc:        '#FFFFFF',         // white (clock‐arc)
+  trackerTick:       'rgba(0,0,0,0.8)',  // dark/opaque ticks
 } as const;
 
 export const fonts = {

@@ -1,5 +1,5 @@
 // src/screens/CareScreen.tsx
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useState, useMemo } from 'react'
 import {
   View,
   StyleSheet,
@@ -12,13 +12,15 @@ import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTheme } from 'styled-components/native'
 import { RootStackParamList } from '../../navigation/AppNavigator'
+import Svg, { Line, Circle } from 'react-native-svg'
+import { useWindowDimensions } from 'react-native'
 
 import CareLayout from '../../components/carescreen/CareLayout'
 import { MiniTab } from '../../components/carescreen/MiniNavBar'
 import { useTrackerData } from '../../hooks/useTrackerData'
 import TrackerFilter from '../../components/carescreen/TrackerFilter'
 import CategoryRing from '../../components/carescreen/CategoryRing'
-import OutterRim from '../../assets/carescreen/tracker-rings/OutterRim'
+import ClockArc from '../../assets/carescreen/tracker-rings/OutterRim'
 
 import FillNextDayLogsIcon from '../../assets/carescreen/common/FillNextDayLogsIcon'
 import ClearLogs from '../../assets/carescreen/common/ClearLogs'
@@ -26,24 +28,30 @@ import ShareIcon from '../../assets/carescreen/common/ShareIcon'
 
 type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>
 
-const RING_SIZE = Dimensions.get('window').width * 0.9
-const RING_THICKNESS = 30
-const GAP = 4
-const CLOCK_STROKE_WIDTH = 10
-const CLOCK_STROKE_EXTRA = CLOCK_STROKE_WIDTH / 2
+
+const RING_SIZE = Dimensions.get('window').width * 0.9;
+
+const RING_THICKNESS = 30;
+const GAP = 1;
+const CLOCK_STROKE_WIDTH = 5;
+const CLOCK_STROKE_EXTRA = CLOCK_STROKE_WIDTH;
 
 const CareScreen: React.FC = () => {
   const navigation = useNavigation<CareNavProp>()
   const theme = useTheme()
 
+    // Derive shared constants:
+    const WRAPPER_SIZE = RING_SIZE + CLOCK_STROKE_EXTRA * 2;
+    const CENTER = WRAPPER_SIZE / 2;
+    const INNERMOST_DIAMETER = RING_SIZE - 4 * (RING_THICKNESS + GAP);
+    const CLOCK_RADIUS = INNERMOST_DIAMETER / 2 - RING_THICKNESS;
+  
   // Show last 24h vs today
   const [showLast24h, setShowLast24h] = useState(false)
   // Example “isGenerating” flag (for any future‐generation button)
   const [isGenerating, setIsGenerating] = useState(false)
-
   // Pull hourlyCategories and nowFrac from our custom hook
   const { hourlyCategories, nowFrac } = useTrackerData(showLast24h)
-
   // Build boolean masks for each category ring
   const sleepMask: boolean[] = Array(24).fill(false)
   const feedDiaperMask: boolean[] = Array(24).fill(false)
@@ -52,17 +60,16 @@ const CareScreen: React.FC = () => {
   for (let h = 0; h < 24; h++) {
     switch (hourlyCategories[h]) {
       case 'sleep':
-        sleepMask[h] = true
-        break
+        sleepMask[h] = true;
+        break;
       case 'feedDiaper':
-        feedDiaperMask[h] = true
-        break
+        feedDiaperMask[h] = true;
+        break;
       case 'showerEss':
-        showerEssMask[h] = true
-        break
+        showerEssMask[h] = true;
+        break;
       default:
-        // any other hour is “awake/play”
-        break
+        break; // awake/play
     }
   }
 
@@ -84,7 +91,50 @@ const CareScreen: React.FC = () => {
     console.log(`${name} row height:`, e.nativeEvent.layout.height)
   }
 
-  // Render the four “00:00 / 06:00 / 12:00 / 18:00” labels
+  // Colors from theme
+  const awakeColor      = theme.colors.trackerAwake;
+  const sleepColor      = theme.colors.trackerSleep;
+  const feedColor       = theme.colors.trackerFeed;
+  const essColor        = theme.colors.trackerEssentials;
+  const arcColor        = theme.colors.trackerArc;
+  const tickColor       = theme.colors.trackerTick;
+
+ // Pre-compute tick lines once (they never depend on changing state):
+ const clockTicks = useMemo(() => {
+  return Array.from({ length: 24 }).map((_, i) => {
+    const tickOuter = CLOCK_RADIUS + CLOCK_STROKE_WIDTH / 2;
+    const isMajor = [0, 6, 12, 18].includes(i);
+    const tickInner = tickOuter - (isMajor ? 12 : 6);
+
+    const angleDeg = (i * 360) / 24;
+    const angleRad = ((angleDeg - 90) * Math.PI) / 180;
+
+    const x1 = CENTER + tickOuter * Math.cos(angleRad);
+    const y1 = CENTER + tickOuter * Math.sin(angleRad);
+    const x2 = CENTER + tickInner * Math.cos(angleRad);
+    const y2 = CENTER + tickInner * Math.sin(angleRad);
+
+    return (
+      <Line
+        key={`tick-${i}`}
+        x1={x1}
+        y1={y1}
+        x2={x2}
+        y2={y2}
+        stroke={tickColor}
+        strokeWidth={1}
+        onPress={() => handleTickPress(i)}
+      />
+    );
+  });
+}, [CENTER, CLOCK_RADIUS, tickColor]);
+
+const handleTickPress = useCallback((hourIndex: number) => {
+      console.log(`Tick ${hourIndex} pressed`);
+      // TODO: implement any desired interaction (e.g., drill-down, log entry)
+    }, []);
+
+/*   // Render the four “00:00 / 06:00 / 12:00 / 18:00” labels
   const renderTimeLabels = () => {
     // Total wrapper size = RING_SIZE + 2 * CLOCK_STROKE_EXTRA
     const wrapperSize = RING_SIZE + CLOCK_STROKE_EXTRA * 2
@@ -129,8 +179,40 @@ const CareScreen: React.FC = () => {
         </Text>
       )
     })
-  }
+  } */
 
+    const outermostRingStyle = {
+      position: 'absolute' as const,
+      width: RING_SIZE,
+      height: RING_SIZE,
+      top: CLOCK_STROKE_EXTRA,
+      left: CLOCK_STROKE_EXTRA,
+      zIndex: 1,
+    };
+    
+    const middleRingStyle = {
+      position: 'absolute' as const,
+      width: RING_SIZE - 2 * (RING_THICKNESS + GAP),
+      height: RING_SIZE - 2 * (RING_THICKNESS + GAP),
+      top: CLOCK_STROKE_EXTRA + (RING_THICKNESS + GAP),
+      left: CLOCK_STROKE_EXTRA + (RING_THICKNESS + GAP),
+      zIndex: 0,
+    };
+    
+    const innerRingStyle = {
+      position: 'absolute' as const,
+      width: RING_SIZE - 4 * (RING_THICKNESS + GAP),
+      height: RING_SIZE - 4 * (RING_THICKNESS + GAP),
+      top: CLOCK_STROKE_EXTRA + 2 * (RING_THICKNESS + GAP),
+      left: CLOCK_STROKE_EXTRA + 2 * (RING_THICKNESS + GAP),
+    };
+    
+    const arcContainerStyle = {
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: 'center' as const,
+      alignItems: 'center' as const,
+    };
+    
   // Example handlers for the three icons (Clear, Fill, Share)
   // Currently, they log to console or toggle a flag.
   const handleClearAll = () => {
@@ -152,10 +234,10 @@ const CareScreen: React.FC = () => {
 
   return (
     <CareLayout activeTab="tracker" onNavigate={handleNavigate} bgColor={theme.colors.accent}>
-      {/* ── 1. Icons section (flex:1) ─────────────────────────── */}
+      {/* ── 1. Icons ─────────────────────────────────────────── */}
       <View style={styles.buttonsContainer}>
         <TouchableOpacity onPress={handleClearAll} style={styles.iconWrapper}>
-          <ClearLogs width={50} height={50} fill="#D0021B" />
+          <ClearLogs width={50} height={50} fill={theme.colors.error || '#D0021B'} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -163,125 +245,131 @@ const CareScreen: React.FC = () => {
           disabled={isGenerating}
           style={styles.iconWrapper}
         >
-          <FillNextDayLogsIcon width={50} height={50} fill="#50E3C2" />
+          <FillNextDayLogsIcon width={50} height={50} fill={theme.colors.primary || '#50E3C2'} />
         </TouchableOpacity>
 
         <TouchableOpacity onPress={handleShare} style={styles.iconWrapper}>
-          <ShareIcon width={75} height={75} fill="#453F4E" />
+          <ShareIcon width={75} height={75} fill={theme.colors.background || '#453F4E'} />
         </TouchableOpacity>
       </View>
 
-      {/* ── 2. Tracker section (flex:4) ───────────────────────── */}
+      {/* ── 2. Tracker ───────────────────────────────────────── */}
       <View style={styles.trackerContainer}>
         <View style={styles.ringWrapper}>
-
-          {/* ───── 1) sleep / awake (outermost) ───── */}
-          <View
-            style={{
-              position: 'absolute',
-              width: RING_SIZE,
-              height: RING_SIZE,
-              top: CLOCK_STROKE_EXTRA,
-              left: CLOCK_STROKE_EXTRA,
-            }}
-          >
-            {/* 
-              1a) Awake ring (warm yellow) 
-              → wrap in an absolute child so it sits at (0,0) inside this parent 
-            */}
+          {/* 1) Awake/Sleep ring pair (outermost) */}
+          <View style={outermostRingStyle}>
             <View style={{ position: 'absolute', top: 0, left: 0 }}>
               <CategoryRing
                 size={RING_SIZE}
                 strokeWidth={RING_THICKNESS}
-                mask={sleepMask.map(isSleep => !isSleep)}
-                fillColor="#FFD54F"                 // warm yellow for awake
+                mask={sleepMask.map((isSleep) => !isSleep)}
+                fillColor={awakeColor}
                 separatorColor="rgba(0,0,0,0.1)"
                 testID="awake-ring"
               />
             </View>
-
-            {/* 
-              1b) Sleep ring (light blue) 
-              → also wrapped absolutely so it perfectly overlaps the awake‐ring beneath 
-            */}
             <View style={{ position: 'absolute', top: 0, left: 0 }}>
               <CategoryRing
                 size={RING_SIZE}
                 strokeWidth={RING_THICKNESS}
                 mask={sleepMask}
-                fillColor="#A3B1E0"                 // light blue for sleep
+                fillColor={sleepColor}
                 separatorColor="rgba(0,0,0,0.1)"
                 testID="sleep-ring"
               />
             </View>
           </View>
 
-          {/* ───── 2) feed/diaper ring (middle) ───── */}
-          <View
-            style={{
-              position: 'absolute',
-              width: RING_SIZE - 2 * (RING_THICKNESS + GAP),
-              height: RING_SIZE - 2 * (RING_THICKNESS + GAP),
-              top: CLOCK_STROKE_EXTRA + (RING_THICKNESS + GAP),
-              left: CLOCK_STROKE_EXTRA + (RING_THICKNESS + GAP),
-            }}
-          >
-            <CategoryRing
-              size={RING_SIZE - 2 * (RING_THICKNESS + GAP)}
-              strokeWidth={RING_THICKNESS}
-              mask={feedDiaperMask}
-              fillColor="#FFE0B2"
-              separatorColor="rgba(0,0,0,0.1)"
-              testID="feed-ring"
-            />
+          {/* 2) Feed/Diaper ring (middle) */}
+          <View style={middleRingStyle}>
+            {feedDiaperMask.some(Boolean) && (
+              <CategoryRing
+                size={RING_SIZE - 2 * (RING_THICKNESS + GAP)}
+                strokeWidth={RING_THICKNESS}
+                mask={feedDiaperMask}
+                fillColor={feedColor}
+                separatorColor="rgba(0,0,0,0.1)"
+                testID="feed-ring"
+                accessible
+                accessibilityLabel={`Feed/diaper: ${
+                  feedDiaperMask.filter(Boolean).length
+                  } hours`}
+              />
+            )}
           </View>
 
-          {/* ───── 3) essentials ring (inner) ───── */}
-          <View
-            style={{
-              position: 'absolute',
-              width: RING_SIZE - 4 * (RING_THICKNESS + GAP),
-              height: RING_SIZE - 4 * (RING_THICKNESS + GAP),
-              top: CLOCK_STROKE_EXTRA + 2 * (RING_THICKNESS + GAP),
-              left: CLOCK_STROKE_EXTRA + 2 * (RING_THICKNESS + GAP),
-            }}
-          >
-            <CategoryRing
-              size={RING_SIZE - 4 * (RING_THICKNESS + GAP)}
-              strokeWidth={RING_THICKNESS}
-              mask={showerEssMask}
-              fillColor="#F0F4C3"
-              separatorColor="rgba(0,0,0,0.1)"
-              testID="essentials-ring"
-            />
+          {/* 3) Essentials ring (inner) */}
+          <View style={innerRingStyle}>
+            {showerEssMask.some(Boolean) && (
+              <CategoryRing
+                size={RING_SIZE - 4 * (RING_THICKNESS + GAP)}
+                strokeWidth={RING_THICKNESS}
+                mask={showerEssMask}
+                fillColor={essColor}
+                separatorColor="rgba(0,0,0,0.1)"
+                testID="essentials-ring"
+                accessible
+                accessibilityLabel={`Essentials: ${
+                  showerEssMask.filter(Boolean).length
+                } hours`}
+              />
+            )}
           </View>
 
-          {/* ───── 4) current‐time arc ───── */}
-          <View style={styles.arcAbsolute}>
-            <OutterRim
-              size={RING_SIZE + CLOCK_STROKE_EXTRA * 2}
+          {/* 4) Clock arc + ticks (innermost) */}
+          <View style={arcContainerStyle}>
+            <ClockArc
+              size={INNERMOST_DIAMETER - 2 * RING_THICKNESS}
               strokeWidth={CLOCK_STROKE_WIDTH}
-              color="#FFFFFF"
+              color={arcColor}
               progress={nowFrac}
               testID="time-arc"
+              accessible
+              accessibilityLabel={`Current time indicator at ${Math.floor(
+                nowFrac * 24
+              )}00`}
             />
+            <Svg
+              width={WRAPPER_SIZE}
+              height={WRAPPER_SIZE}
+              style={styles.tickSvg}
+            >
+              {clockTicks}
+
+              {/* Now‐marker dot at end of arc */}
+              <Circle
+                cx={
+                  CENTER +
+                  (CLOCK_RADIUS + CLOCK_STROKE_WIDTH / 2) *
+                    Math.cos(nowFrac * 2 * Math.PI - Math.PI / 2)
+                }
+                cy={
+                  CENTER +
+                  (CLOCK_RADIUS + CLOCK_STROKE_WIDTH / 2) *
+                    Math.sin(nowFrac * 2 * Math.PI - Math.PI / 2)
+                }
+                r={4}
+                fill={theme.colors.highlight || '#FF4081'}
+              />
+            </Svg>
           </View>
         </View>
 
-        {/* …time‐of‐day labels, etc. */}
-        <View style={styles.labelsWrapper}>
+        {/* … optionally time-of-day labels here … */}
+        {/*
+        <View style={[styles.labelsWrapper, { zIndex: 3 }]}>
           {renderTimeLabels()}
         </View>
+        */}
       </View>
 
-
-      {/* ── 3. Filter section (flex:1) ──────────────────────────── */}
+      {/* ── 3. Filter ─────────────────────────────────────────── */}
       <View style={styles.filterContainer} onLayout={logLayout('Filter')}>
         <TrackerFilter showLast24h={showLast24h} onToggle={handleToggleFilter} />
       </View>
     </CareLayout>
-  )
-}
+  );
+};
 
 export default CareScreen
 
@@ -299,7 +387,11 @@ const styles = StyleSheet.create({
   iconWrapper: {
     marginHorizontal: 12,
   },
-
+  tickSvg: {
+       position: 'absolute',
+        top: 0,
+        left: 0,
+      },
   // Tracker section (flex:4)
   trackerContainer: {
     flex: 4,
