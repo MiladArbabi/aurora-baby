@@ -1,13 +1,14 @@
 // src/components/carescreen/CategoryRing.tsx
-
 import React from 'react'
 import Svg, { Path } from 'react-native-svg'
+import { ViewStyle, StyleProp } from 'react-native'
 
 interface CategoryRingProps {
-  size: number               // full width/height of the SVG
+  size: number  
+  style?: StyleProp<ViewStyle>
   strokeWidth: number        // thickness of this ring
   mask: boolean[]            // length = 24; true = fill that slice
-  fillColor: string          // color to fill when mask[h] === true
+  fillColor: string           // color to fill when mask[h] === true
   separatorColor?: string    // same faint lines as SliceRing
   testID?: string
 }
@@ -54,7 +55,8 @@ const CategoryRing: React.FC<CategoryRingProps> = ({
   mask,
   fillColor,
   separatorColor = 'rgba(0,0,0,0.1)',
-  testID
+  testID,
+  style,
 }) => {
   const center = size / 2
   const outerRadius = size / 2
