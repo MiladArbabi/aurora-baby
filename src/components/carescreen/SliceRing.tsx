@@ -1,6 +1,6 @@
 // src/components/carescreen/SliceRing.tsx
 import React from 'react'
-import Svg, { Path } from 'react-native-svg'
+import Svg, { Path, Line } from 'react-native-svg'
 
 interface SliceRingProps {
   size: number            // full width/height of the SVG
@@ -101,9 +101,34 @@ const SliceRing: React.FC<SliceRingProps> = ({
     )
   }
 
+  // ── 2) Radial divider lines ─────────────────────────────────
+  // Draw 24 faint lines from center to outer radius, one at each 15° boundary
+  const dividers = []
+  for (let i = 0; i < 24; i++) {
+    // angle in degrees, measured from vertical (0° = 12 o'clock)
+    const angleDeg = (i * 360) / 24 - 90
+    // convert to radians for math
+    const angleRad = (angleDeg * Math.PI) / 180
+    const x2 = center + outerRadius * Math.cos(angleRad)
+    const y2 = center + outerRadius * Math.sin(angleRad)
+
+    dividers.push(
+      <Line
+        key={`divider-${i}`}
+        x1={center}
+        y1={center}
+        x2={x2}
+        y2={y2}
+        stroke={separatorColor}
+        strokeWidth={1}
+      />
+    )
+  }
+
   return (
     <Svg width={size} height={size} testID={testID}>
       {slices}
+      {dividers}
     </Svg>
   )
 }
