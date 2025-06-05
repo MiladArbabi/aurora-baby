@@ -5,8 +5,8 @@ import {
   Dimensions,
   TouchableOpacity,
 } from 'react-native'
-import TwentyFourHourFilter from '../../assets/icons/common/TwentyFourHourFilter'
-import TodayFilter from '../../assets/icons/common/TodayFilter'
+import TwentyFourHourFilter from '../../assets/carescreen/common/TwentyFourHourFilter'
+import TodayFilter from '../../assets/carescreen/common/TodayFilter'
 
 interface Props {
   /** true ⇒ showing “Last 24 h”, false ⇒ “Today” */

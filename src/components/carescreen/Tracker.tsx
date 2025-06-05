@@ -17,10 +17,10 @@ import { useTrackerData } from '../../hooks/useTrackerData'
 import { QuickLogEntry } from '../../models/QuickLogSchema'
 
 const { width }      = Dimensions.get('window')
-const TRACKER_SIZE   = width * 0.9
+const TRACKER_SIZE   = width * 0.85
 const BASE_SIZE      = TRACKER_SIZE
-const FUTURE_ARC_SIZE = BASE_SIZE - 90
-const CORE_SIZE       = BASE_SIZE * (200 / 300)
+const FUTURE_ARC_SIZE = BASE_SIZE - 80
+const CORE_SIZE       = BASE_SIZE * (200 / 275)
 const OUTER_SIZE      = BASE_SIZE * (320 / 300)
 
 export interface QuickMarker {

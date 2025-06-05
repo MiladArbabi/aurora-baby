@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QuickLogEntry } from '../models/QuickLogSchema';
 import { quickLogEmitter } from '../storage/QuickLogEvents';
 
-const FUTURE_LOGS_KEY = '@future_logs';
+export const FUTURE_LOGS_KEY = '@future_logs';
 
 /** Load any already-saved future entries. */
 export async function getFutureEntries(): Promise<QuickLogEntry[]> {

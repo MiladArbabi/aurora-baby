@@ -19,7 +19,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import CareLayout from '../../components/carescreen/CareLayout'
 import { MiniTab } from '../../components/carescreen/MiniNavBar'
 import Tracker, { QuickMarker } from '../../components/carescreen/Tracker'
-import { saveQuickLogEntry } from '../../storage/QuickLogStorage'; // for real logs
+import { saveQuickLogEntry } from '../../storage/QuickLogStorage'; 
 
 import { colorMap } from '../../hooks/useTrackerData'
 import TrackerFilter from '../../components/carescreen/TrackerFilter'
@@ -40,6 +40,10 @@ import { quickLogEmitter } from '../../storage/QuickLogEvents';
 import { generateAIQuickLogs } from '../../services/LlamaLogGenerator'
 import { useFutureLogs } from '../../hooks/useFutureLogs'
 import { generateRuleBasedQuickLogs } from '../../services/RuleBasedLogGenerator' 
+import { FUTURE_LOGS_KEY } from '../../services/QuickLogAccess'
+import FillNextDayLogsIcon from '../../assets/carescreen/common/FillNextDayLogsIcon'
+import ClearLogs           from '../../assets/carescreen/common/ClearLogs'
+import ShareIcon           from '../../assets/carescreen/common/ShareIcon'
 
 type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>
 
@@ -115,6 +119,23 @@ const CareScreen: React.FC = () => {
     [futureEntries, futureMarkers]
   )
 
+  /** ── “Clear all future logs” ─────────────────────────────────────────────────── */
+  const handleClearAll = useCallback(async () => {
+      try {
+        // 1) wipe AsyncStorage key
+        await AsyncStorage.setItem(FUTURE_LOGS_KEY, JSON.stringify([]))
+  
+        // 2) clear local future state
+        setFutureEntries([])
+        setFutureMarkers([])
+  
+        // 3) Let any listeners know they should remove future markers:
+        quickLogEmitter.emit('future-deleted', { id: '' }) // generic broadcast
+      } catch (err) {
+        console.error('[CareScreen] clearAllFuture error:', err)
+      }
+    }, [])
+
   // ── (NEW) “Fill next-day logs” handler ─────────────────────
   const handleFillNextDay = useCallback(async () => {
       setIsGenerating(true)
@@ -143,6 +164,18 @@ const CareScreen: React.FC = () => {
         setIsGenerating(false)
       }
     }, [futureEntries, futureMarkers])
+
+  /** ── Optionally listen for “future-deleted” so UI updates immediately */
+  useEffect(() => {
+    const onFutureDeleted = ({ id }: { id: string }) => {
+            setFutureEntries([]);
+            setFutureMarkers([]);
+          };
+          quickLogEmitter.on('future-deleted', onFutureDeleted);
+          return () => {
+            quickLogEmitter.off('future-deleted', onFutureDeleted);
+          };
+    }, [])
 
   useEffect(() => {
     const checkInterval = setInterval(() => {
@@ -257,7 +290,6 @@ const CareScreen: React.FC = () => {
     };
   }, []);
 
-  const handleSegmentPress = useCallback((id: string) => {}, [])
   const handleToggleFilter = useCallback(() => setShowLast24h(v => !v), [])
 
   const handleDeleteLog = useCallback(async (id: string) => {
@@ -335,36 +367,50 @@ const CareScreen: React.FC = () => {
 
   return (
     <CareLayout activeTab="tracker" onNavigate={handleNavigate} bgColor={theme.colors.accent}>
-      
-      <Tracker
-        quickMarkers={[...quickLogMarkers, ...futureMarkers]}
-        onMarkerPress={handleMarkerPress}
-        showLast24h={showLast24h}
-        onLayout={logLayout('Tracker')}
-      />
-      <View style={[styles.row, { flex: 1 }]} onLayout={logLayout('Filter')}>
+
+    {/* ── 3. Icons section (flex:1) ─────────────────────────── */}
+      <View style={styles.buttonsContainer}>
+
+        <TouchableOpacity
+          onPress={handleClearAll}
+          style={styles.iconWrapper}
+        >
+          <ClearLogs  width={50} height={50} fill="#D0021B" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={handleFillNextDay}
+          disabled={isGenerating}
+          style={styles.iconWrapper}
+        >
+          <FillNextDayLogsIcon width={50} height={50} fill="#50E3C2" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => navigation.navigate('EndOfDayExport')}
+          style={styles.iconWrapper}
+        >
+          <ShareIcon width={75} height={75} fill="#453F4E" />
+        </TouchableOpacity>
+      </View>
+
+      {/* ── 4. Tracker section (flex:4) ─────────────────────────── */}
+      <View style={styles.trackerContainer}>
+        <Tracker
+          quickMarkers={[...quickLogMarkers, ...futureMarkers]}
+          onMarkerPress={handleMarkerPress}
+          showLast24h={showLast24h}
+          onLayout={logLayout('Tracker')}
+        />
+      </View>
+
+      {/* ── 5. Filter section (flex:1) ──────────────────────────── */}
+      <View style={styles.filterContainer} onLayout={logLayout('Filter')}>
         <TrackerFilter showLast24h={showLast24h} onToggle={handleToggleFilter} />
       </View>
 
-      {/* ── new: Fill next-day logs button on Tracker screen ── */}
-      <TouchableOpacity
-        style={[styles.fillButton]}
-        onPress={handleFillNextDay}
-        disabled={isGenerating}
-      >
-        <Text style={styles.fillButtonText}>{isGenerating ? 'Generating…' : 'Fill next-day logs'}</Text>
-      </TouchableOpacity>
-      
-      <View style={{ borderRadius: 25}}>
-       <ShareButton onPress={() => navigation.navigate('EndOfDayExport')}>
-        <ShareLabel>
-          Share Today’s Logs
-        </ShareLabel>
-       </ShareButton>
-      </View>
-
       <QuickLogMenu visible={isQuickLogOpen} onClose={() => setQuickLogOpen(false)} />
-
+ 
       <LogDetailModal
         visible={!!selectedLog}
         entry={selectedLog!}
@@ -379,10 +425,48 @@ export default CareScreen
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
+  // Transparent container allowing its children to float above the tracker
+  overlayContainer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 10,
+  },
+  // The shared rounded box background
+  overlayBox: {
+    position: 'absolute',
+    top: 16,                // adjust as needed so it sits over tracker
+    alignSelf: 'center',
+    backgroundColor: '#E9DAFA',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    // iOS shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    // Android elevation
+    elevation: 3,
+  },
   row: {
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  fillButton: {
+    backgroundColor: '#50E3C2',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    alignSelf: 'center',
+    marginBottom: 8,
+  },
+  fillButtonText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  shareBox: {
+    alignSelf: 'center',
   },
   actionButtonsContainer: {
     position: 'absolute',
@@ -394,18 +478,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 20,
   },
-  fillButton: {
-        backgroundColor: '#50E3C2',
-        paddingVertical: 10,
-        paddingHorizontal: 16,
-        borderRadius: 6,
-        alignSelf: 'center',
-        marginTop: 16,
+  // Buttons section (flex:1)
+  buttonsContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    },
+  // 4. Tracker section (flex:4)
+  trackerContainer: {
+    flex: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  iconWrapper: {
+        marginHorizontal: 12,
       },
-      fillButtonText: {
-        color: '#FFF',
-        fontSize: 14,
-        fontWeight: '600',
-      },
-    
+  // 5. Filter section (flex:1)
+  filterContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  clearButton: {
+    backgroundColor: '#D0021B',
+    marginTop: 8,
+  },
+  clearButtonText: {
+    color: '#FFF',
+    fontSize: 14,
+  }
 })
