@@ -1,5 +1,4 @@
 // ── OnboardingNavigator.tsx ──
-
 import { createStackNavigator } from '@react-navigation/stack'
 import WelcomeScreen from '../screens/onboarding/WelcomeScreen'
 import ParentInfoScreen from '../screens/onboarding/ParentInfoScreen'

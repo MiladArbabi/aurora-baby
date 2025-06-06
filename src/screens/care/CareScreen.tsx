@@ -2,11 +2,13 @@
 import React, { useCallback, useState, useMemo } from 'react'
 import {
   View,
+  Text,
   StyleSheet,
   LayoutChangeEvent,
-  Text,
   TouchableOpacity,
-  Dimensions
+  Dimensions,
+  ActivityIndicator,
+  Platform,
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -16,7 +18,8 @@ import Svg, { Line, Circle } from 'react-native-svg'
 
 import CareLayout from '../../components/carescreen/CareLayout'
 import { MiniTab } from '../../components/carescreen/MiniNavBar'
-import { useTrackerData } from '../../hooks/useTrackerData'
+import { useTrackerSchedule } from 'hooks/useTrackerSchedule'
+import { LogSlice } from '../../models/LogSlice'
 import TrackerFilter from '../../components/carescreen/TrackerFilter'
 import CategoryRing from '../../components/carescreen/CategoryRing'
 import ClockArc from '../../assets/carescreen/tracker-rings/ClockArc'
@@ -54,31 +57,21 @@ const CareScreen: React.FC = () => {
   const [showLast24h, setShowLast24h] = useState(false)
   // Example “isGenerating” flag (for any future‐generation button)
   const [isGenerating, setIsGenerating] = useState(false)
-  // Pull hourlyCategories and nowFrac from our custom hook
-  const { hourlyCategories, nowFrac } = useTrackerData(showLast24h)
-  // Build boolean masks for each category ring
-  const sleepMask: boolean[] = Array(24).fill(false)
-  const feedDiaperMask: boolean[] = Array(24).fill(false)
-  const showerEssMask: boolean[] = Array(24).fill(false)
+  
+  // Pull dynamic slices (LogSlice[]) and nowFrac via the new hook
+  // TODO: replace 'defaultBabyId' with the actual babyId from context or props
+  const babyId = 'defaultBabyId'
+  const { slices, nowFrac, loading, error, refresh } = 
+  useTrackerSchedule(babyId, showLast24h)
 
   const [selectedHour, setSelectedHour] = useState<number | null>(null)
   const [hourEntry, setHourEntry] = useState<QuickLogEntry | null>(null)
 
-  for (let h = 0; h < 24; h++) {
-    switch (hourlyCategories[h]) {
-      case 'sleep':
-        sleepMask[h] = true;
-        break;
-      case 'feedDiaper':
-        feedDiaperMask[h] = true;
-        break;
-      case 'showerEss':
-        showerEssMask[h] = true;
-        break;
-      default:
-        break; // awake/play
-    }
-  }
+  // Memoize category-specific subsets
+  const awakeSlices = useMemo(() => slices.filter(s => s.category === 'awake'), [slices])
+  const sleepSlices = useMemo(() => slices.filter(s => s.category === 'sleep'), [slices])
+  const feedDiaperSlices = useMemo(() => slices.filter(s => s.category === 'feed' || s.category === 'diaper'), [slices])
+  const careSlices = useMemo(() => slices.filter(s => s.category === 'care'), [slices])
 
   // Toggle between “last 24h” and “today”
   const handleToggleFilter = useCallback(() => {
@@ -109,26 +102,21 @@ const CareScreen: React.FC = () => {
   //  ── 4) Slice‐tap handler ─────────────────────────────────────────
   // Lookup logs for that hour and open modal:
   const handleSlicePress = useCallback(
-    async (hourIndex: number) => {
-      console.log(`Slice for hour ${hourIndex} pressed`)
-      setSelectedHour(hourIndex)
-      try {
-        // Example: fetch any log entries between hourIndex:00 and hourIndex+1:00 today
-        const todayStart = new Date()
-        todayStart.setHours(hourIndex, 0, 0, 0)
-        const hourEnd = new Date(todayStart.getTime() + 60 * 60 * 1000)
-        const entries = await getLogsBetween(
-          todayStart.toISOString(),
-          hourEnd.toISOString()
-        )
-        setHourEntry(entries[0] || null)
-      } catch (err) {
-        console.error('Error loading entry for hour', err)
-        setHourEntry(null)
-      }
-    },
-    []
-  )
+        async (slice: LogSlice) => {
+          console.log(`Slice with id ${slice.id} pressed`)
+          setSelectedHour(null)
+          setHourEntry(null)
+          try {
+            // Fetch the entry matching this slice’s time window (if needed)
+            const entries = await getLogsBetween(slice.startTime, slice.endTime)
+            setHourEntry(entries[0] || null)
+          } catch (err) {
+            console.error('Error loading entry for slice', err)
+            setHourEntry(null)
+          }
+        },
+        []
+      )
 
  // Pre-compute tick lines once (they never depend on changing state):
  const clockTicks = useMemo(() => {
@@ -158,53 +146,6 @@ const CareScreen: React.FC = () => {
     );
   });
 }, [CENTER, CLOCK_RADIUS, tickColor]);
-
-/*   // Render the four “00:00 / 06:00 / 12:00 / 18:00” labels
-  const renderTimeLabels = () => {
-    // Total wrapper size = RING_SIZE + 2 * CLOCK_STROKE_EXTRA
-    const wrapperSize = RING_SIZE + CLOCK_STROKE_EXTRA * 2
-    const center = wrapperSize / 2
-
-    // Compute “empty circle” radius inside the innermost ring:
-    const emptyRadius =
-      RING_SIZE / 2.5 - (RING_THICKNESS + GAP) * 2 - RING_THICKNESS / 2
-
-    // Polar → Cartesian helper
-    const toCartesian = (angleDeg: number, radius: number) => {
-      const angleRad = (angleDeg - 90) * (Math.PI / 180)
-      return {
-        x: center + radius * Math.cos(angleRad),
-        y: center + radius * Math.sin(angleRad),
-      }
-    }
-
-    // Place labels at hours 0, 6, 12, 18
-    const labels = [
-      { text: '00:00', idx: 0 },
-      { text: '06:00', idx: 6 },
-      { text: '12:00', idx: 12 },
-      { text: '18:00', idx: 18 },
-    ]
-
-    return labels.map(({ text, idx }) => {
-      const angleDeg = idx * (360 / 24) // 15° × idx
-      const { x, y } = toCartesian(angleDeg, emptyRadius)
-      return (
-        <Text
-          key={text}
-          style={[
-            styles.timeLabel,
-            {
-              left: x - 16, // offset by half of label width (32px)
-              top: y - 8,   // offset by half of label height (16px)
-            },
-          ]}
-        >
-          {text}
-        </Text>
-      )
-    })
-  } */
 
     const outermostRingStyle = {
       position: 'absolute' as const,
@@ -257,6 +198,27 @@ const CareScreen: React.FC = () => {
     navigation.navigate('EndOfDayExport')
   }
 
+    // Show loading or error
+    if (loading) {
+      return (
+        <CareLayout activeTab="tracker" onNavigate={handleNavigate} bgColor={theme.colors.accent}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </CareLayout>
+      )
+    }
+    if (error) {
+      return (
+        <CareLayout activeTab="tracker" onNavigate={handleNavigate} bgColor={theme.colors.accent}>
+          <Text style={{ color: theme.colors.error, textAlign: 'center', marginTop: 20 }}>
+            {error.message}
+          </Text>
+          <TouchableOpacity onPress={refresh} style={{ marginTop: 10 }}>
+            <Text style={{ color: theme.colors.primary }}>Retry</Text>
+          </TouchableOpacity>
+        </CareLayout>
+      )
+    }
+
   return (
     <CareLayout activeTab="tracker" onNavigate={handleNavigate} bgColor={theme.colors.accent}>
       {/* ── 1. Icons ─────────────────────────────────────────── */}
@@ -287,18 +249,25 @@ const CareScreen: React.FC = () => {
               <CategoryRing
                 size={RING_SIZE}
                 strokeWidth={RING_THICKNESS}
-                mask={sleepMask.map((isSleep) => !isSleep)}
+                slices={awakeSlices}
                 fillColor={awakeColor}
                 separatorColor="rgba(0,0,0,0.1)"
                 testID="awake-ring"
+                accessible
+                accessibilityLabel={`Awake slices`}
                 onSlicePress={handleSlicePress}
+                dimFuture={nowFrac}
               />
             </View>
             <View style={{ position: 'absolute', top: 0, left: 0 }}>
               <CategoryRing
                 size={RING_SIZE}
                 strokeWidth={RING_THICKNESS}
-                mask={sleepMask}
+                slices={sleepSlices}
+                onSlicePress={handleSlicePress}
+                dimFuture={nowFrac}
+                accessible
+                accessibilityLabel={`Sleep slices`}
                 fillColor={sleepColor}
                 separatorColor="rgba(0,0,0,0.1)"
                 testID="sleep-ring"
@@ -308,40 +277,35 @@ const CareScreen: React.FC = () => {
 
           {/* 2) Feed/Diaper ring (middle) */}
           <View style={middleRingStyle}>
-            {feedDiaperMask.some(Boolean) && (
               <CategoryRing
                 size={RING_SIZE - 2 * (RING_THICKNESS + GAP)}
                 strokeWidth={RING_THICKNESS}
-                mask={feedDiaperMask}
+                slices={feedDiaperSlices}
                 fillColor={feedColor}
                 separatorColor="rgba(0,0,0,0.1)"
                 testID="feed-ring"
                 onSlicePress={handleSlicePress}
                 accessible
-                accessibilityLabel={`Feed/diaper: ${
-                  feedDiaperMask.filter(Boolean).length
-                  } hours`}
+                accessibilityLabel="Feed/diaper slice"
+                dimFuture={nowFrac}
               />
-            )}
           </View>
 
           {/* 3) Essentials ring (inner) */}
           <View style={innerRingStyle}>
-            {showerEssMask.some(Boolean) && (
+            
               <CategoryRing
                 size={RING_SIZE - 4 * (RING_THICKNESS + GAP)}
                 strokeWidth={RING_THICKNESS}
-                mask={showerEssMask}
+                slices={careSlices}
                 fillColor={essColor}
                 separatorColor="rgba(0,0,0,0.1)"
                 testID="essentials-ring"
                 onSlicePress={handleSlicePress}
                 accessible
-                accessibilityLabel={`Essentials: ${
-                  showerEssMask.filter(Boolean).length
-                } hours`}
+                accessibilityLabel="Care slice"
+                dimFuture={nowFrac}
               />
-            )}
           </View>
 
           {/* 4) Clock arc + ticks (innermost) */}
@@ -353,9 +317,7 @@ const CareScreen: React.FC = () => {
               progress={nowFrac}
               testID="time-arc"
               accessible
-              accessibilityLabel={`Current time indicator at ${Math.floor(
-                nowFrac * 24
-              )}00`}
+              accessibilityLabel={`Current time indicator at ${Math.floor(nowFrac * 24)}:00`}
             />
             <Svg
               width={WRAPPER_SIZE}
@@ -382,13 +344,6 @@ const CareScreen: React.FC = () => {
             </Svg>
           </View>
         </View>
-
-        {/* … optionally time-of-day labels here … */}
-        {/*
-        <View style={[styles.labelsWrapper, { zIndex: 3 }]}>
-          {renderTimeLabels()}
-        </View>
-        */}
       </View>
 
       {/* ── 3. Filter ─────────────────────────────────────────── */}

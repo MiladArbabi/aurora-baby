@@ -1,3 +1,4 @@
+// src/models/LogSlice.ts
 import { z } from 'zod'
 
 export const LogSliceSchema = z.object({

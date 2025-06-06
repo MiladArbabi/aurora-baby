@@ -1,3 +1,4 @@
+// src/models/LogSliceMeta.ts
 import { z } from 'zod'
 
 export const LogSliceMetaSchema = z.object({

@@ -2,18 +2,21 @@
 import React from 'react'
 import Svg, { Path } from 'react-native-svg'
 import { ViewStyle, StyleProp } from 'react-native'
+import type { LogSlice } from '../../models/LogSlice'
 
 interface CategoryRingProps {
   size: number  
   style?: StyleProp<ViewStyle>
   strokeWidth: number        // thickness of this ring
-  mask: boolean[]            // length = 24; true = fill that slice
   fillColor: string           // color to fill when mask[h] === true
   separatorColor?: string    // same faint lines as SliceRing
   testID?: string
   accessible?: boolean       // for accessibility purposes
   accessibilityLabel?: string
-  onSlicePress?: (hourIndex: number) => void
+  slices: LogSlice[];            // ← new: array of LogSlice
+  fallbackMask?: boolean[]; 
+  onSlicePress?: (slice: LogSlice) => void // callback when a slice is pressed
+  dimFuture?: number // if true, dims future slices
 }
 
 const polarToCartesian = (
@@ -55,29 +58,46 @@ const describeSlice = (
 const CategoryRing: React.FC<CategoryRingProps> = ({
   size,
   strokeWidth,
-  mask,
   fillColor,
   separatorColor = 'rgba(0,0,0,0.1)',
   testID,
-  onSlicePress
+  onSlicePress,
+  slices,
+  style,
+  dimFuture
 }) => {
   const center = size / 2
   const outerRadius = size / 2
   const innerRadius = outerRadius - strokeWidth
 
-  // Build each of the 24 slices; only fill if mask[i] === true
-  const filledSlices: React.ReactNode[] = []
+  // Convert a timestamp to angle (in degrees)
+  const timeToAngle = (iso: string) => {
+      const date = new Date(iso)
+      const totalMinutes = date.getHours() * 60 + date.getMinutes() + date.getSeconds() / 60
+      return (totalMinutes / (24 * 60)) * 360
+    }
+  
+    // Build filled slices from LogSlice array
+    const filledSlices: React.ReactNode[] = slices.map((slice) => {
+      const startAngle = timeToAngle(slice.startTime)
+      const endAngle = timeToAngle(slice.endTime)
+      const pathD = describeSlice(center, center, innerRadius, outerRadius, startAngle, endAngle)
+      return (
+        <Path
+          key={slice.id}
+          d={pathD}
+          fill={fillColor}
+          onPress={() => onSlicePress?.(slice)}
+        />
+      )
+    })
+
   const separators: React.ReactNode[] = []
 
   for (let i = 0; i < 24; i++) {
     const startAngle = (i * 360) / 24
     const endAngle   = ((i + 1) * 360) / 24
     const d = describeSlice(center, center, innerRadius, outerRadius, startAngle, endAngle)
-
-    if (mask[i]) {
-      // fill with the ring’s color
-      filledSlices.push(<Path key={`fill-${i}`} d={d} fill={fillColor} stroke="none" />)
-    }
 
     // draw the faint slice border on top
     separators.push(

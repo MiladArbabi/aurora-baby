@@ -13,6 +13,8 @@ import 'react-native-get-random-values';
 import 'react-native-url-polyfill';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './src/localization';
+import CareScreen from './src/screens/care/CareScreen';
+import { NavigationContainer } from '@react-navigation/native';
 
 const App: React.FC = () => {
   const [fontsLoaded] = useFonts({
@@ -41,8 +43,10 @@ const App: React.FC = () => {
       <ThemeProvider theme={rneThemeBase as any}>
         <StyledThemeProvider theme={theme}>
           <I18nextProvider i18n={i18n}>
-          <AppNavigator />
-          <StatusBar style="auto" />
+            <NavigationContainer>
+              <CareScreen />
+              <StatusBar style="auto" />
+          </NavigationContainer>
           </I18nextProvider>
         </StyledThemeProvider>
       </ThemeProvider>

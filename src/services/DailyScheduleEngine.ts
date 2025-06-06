@@ -1,3 +1,4 @@
+// src/services/DailyScheduleEngine.ts
 import type { LogSlice } from '../models/LogSlice'
 
 export class DailyScheduleEngine {
