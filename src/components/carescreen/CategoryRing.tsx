@@ -1,6 +1,6 @@
 // src/components/carescreen/CategoryRing.tsx
 import React, { memo } from 'react'
-import Svg, { Path } from 'react-native-svg'
+import Svg, { Path, Text } from 'react-native-svg'
 import { ViewStyle, StyleProp } from 'react-native'
 import type { LogSlice } from '../../models/LogSlice'
 
@@ -18,6 +18,7 @@ interface CategoryRingProps {
   onSlicePress?: (hourIndex: number) => void // callback when a slice is pressed
   dimFuture?: number // if true, dims future slices
   confirmedIds: Set<string>
+  aiSuggestedIds: Set<string>
 }
 
 /**
@@ -33,6 +34,7 @@ const SlicePath = memo<{
     fillColor: string
     nowAngle: number
     onSlicePress?: (hourIdx: number) => void
+    isAiSuggested: boolean
   }>(function SlicePath({
     slice,
     center,
@@ -41,6 +43,7 @@ const SlicePath = memo<{
     fillColor,
     nowAngle,
     onSlicePress,
+    isAiSuggested
   }) {
     // convert times to angles (degrees)
     const dateStart = new Date(slice.startTime)
@@ -97,13 +100,35 @@ const SlicePath = memo<{
     const hourIndex = Math.floor(startAngle / (360 / 24))
   
     return (
-      <Path
-        key={slice.id}
-        d={pathD}
-        fill={fillColor}
-        fillOpacity={opacity}
-        onPress={() => onSlicePress?.(hourIndex)}
-      />
+      <>
+        <Path
+          key={slice.id}
+          d={pathD}
+          fill={fillColor}
+          fillOpacity={opacity}
+          onPress={() => onSlicePress?.(hourIndex)}
+        />
+        {isAiSuggested && (() => {
+          // compute midpoint of this arc
+          const midAngle = (startAngle + endAngle) / 2
+          const midRadius = (innerRadius + outerRadius) / 2
+          const angleRad = (midAngle - 90) * Math.PI / 180
+          const x = center + midRadius * Math.cos(angleRad)
+          const y = center + midRadius * Math.sin(angleRad)
+    
+          return (
+            <Text
+              x={x}
+              y={y}
+              fontSize={innerRadius * 0.2}
+              textAnchor="middle"
+              alignmentBaseline="middle"
+            >
+              ✨
+            </Text>
+          )
+        })()}
+      </>
     )
   }, (prev, next) => {
     // re-render only if slice timing, fillColor, or nowAngle changed:
@@ -161,7 +186,8 @@ const CategoryRing: React.FC<CategoryRingProps> = ({
   onSlicePress,
   slices,
   style,
-  dimFuture
+  dimFuture,
+  aiSuggestedIds
 }) => {
   const center = size / 2
   const outerRadius = size / 2
@@ -189,6 +215,7 @@ const CategoryRing: React.FC<CategoryRingProps> = ({
             fillColor={fillColor}
             nowAngle={nowAngle}
             onSlicePress={onSlicePress}
+            isAiSuggested={aiSuggestedIds.has(slice.id)}
           />
         ))
       

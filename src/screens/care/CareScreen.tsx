@@ -69,12 +69,13 @@ const CareScreen: React.FC = () => {
   const { slices, nowFrac, loading, error, refresh } = 
   useTrackerSchedule(babyId, showLast24h)
 
+  // HOOKS
   const [selectedHour, setSelectedHour] = useState<number | null>(null)
   const [hourEntry, setHourEntry] = useState<QuickLogEntry | null>(null)
   const [selectedSlice, setSelectedSlice] = useState<LogSlice | null>(null)
-
   const [confirmedIds, setConfirmedIds] = useState<Set<string>>(new Set())
   const [unconfirmedSliceIds, setUnconfirmedSliceIds] = useState<string[]>([])
+  const [aiSuggestedIds, setAiSuggestedIds] = useState<Set<string>>(new Set())
 
   // Memoize category-specific subsets
   const awakeSlices = useMemo(() => slices.filter(s => s.category === 'awake'), [slices])
@@ -89,31 +90,36 @@ const CareScreen: React.FC = () => {
       const nowMs = Date.now()
       const newlyConfirmed = new Set<string>()
       const newlyUnconfirmed: string[] = []
+      const newlyAISuggested = new Set<string>() 
 
       for (const slice of slices) {
         const sliceStartMs = new Date(slice.startTime).getTime()
         const meta = await getLogSliceMeta(babyId, slice.id)
-        
+
         if (meta && meta.confirmed) {
-                   newlyConfirmed.add(slice.id)
-                 }
-        
-        // If this slice is strictly in the past, and either no meta or not confirmed,
-        // mark it as unconfirmed.
+          newlyConfirmed.add(slice.id)
+        }
+
         if (sliceStartMs < nowMs) {
-                   if (!meta || meta.confirmed === false) {
-                     newlyUnconfirmed.push(slice.id)
-                   }
-                 }
-                }
+          if (!meta || meta.confirmed === false) {
+            newlyUnconfirmed.push(slice.id)
+          }
+        }
+
+        // ── NEW: collect AI-suggested slices
+        if (meta && meta.source === 'ai') {
+          newlyAISuggested.add(slice.id)
+        }
+      }
         
       if (!isSubscribed) return
       setConfirmedIds(newlyConfirmed)
       setUnconfirmedSliceIds(newlyUnconfirmed)
+      setAiSuggestedIds(newlyAISuggested) 
     }
     checkMeta()
     return () => {
-      isSubscribed = false // Cleanup to avoid memory leaks
+      isSubscribed = false
     }
   }, [slices, babyId])
 
@@ -348,6 +354,7 @@ const CareScreen: React.FC = () => {
                 onSlicePress={handleSlicePress}
                 dimFuture={nowFrac}
                 confirmedIds={confirmedIds}
+                aiSuggestedIds={aiSuggestedIds} 
               />
             </View>
             <View style={{ position: 'absolute', top: 0, left: 0 }}>
@@ -363,6 +370,7 @@ const CareScreen: React.FC = () => {
                 separatorColor="rgba(0,0,0,0.1)"
                 testID="sleep-ring"
                 confirmedIds={confirmedIds}
+                aiSuggestedIds={aiSuggestedIds} 
               />
             </View>
           </View>
@@ -381,6 +389,7 @@ const CareScreen: React.FC = () => {
                 accessibilityLabel="Feed/diaper slice"
                 dimFuture={nowFrac}
                 confirmedIds={confirmedIds}
+                aiSuggestedIds={aiSuggestedIds} 
               />
           </View>
 
@@ -399,6 +408,7 @@ const CareScreen: React.FC = () => {
                 accessibilityLabel="Care slice"
                 dimFuture={nowFrac}
                 confirmedIds={confirmedIds}
+                aiSuggestedIds={aiSuggestedIds} 
               />
           </View>
 
