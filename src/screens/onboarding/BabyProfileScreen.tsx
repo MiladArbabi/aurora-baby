@@ -1,4 +1,4 @@
-// src/screens/onboarding/ChildProfileScreen.tsx
+// src/screens/onboarding/BabyProfileScreen.tsx
 import React, { useState, useEffect } from 'react'
 import {
   View,
@@ -16,7 +16,7 @@ import * as Speech from 'expo-speech'
 
 type Props = StackScreenProps<OnboardingParamList, 'Child'>
 
-export default function ChildProfileScreen({ navigation }: Props) {
+export default function BabyProfileScreen({ navigation }: Props) {
   const [name, setName] = useState<string>('')
   const [dobText, setDobText] = useState<string>('') // expects YYYY-MM-DD
 

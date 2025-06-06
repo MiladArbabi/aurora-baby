@@ -31,8 +31,8 @@ import TextStoryScreen from '../screens/harmony/TextStoryScreen'
 import VoiceStorytellingScreen from '../screens/harmony/VoiceStorytellingScreen'
 import AnimatedStoryScreen from '../screens/harmony/AnimatedStoryScreen'
 
-import { getChildProfile } from '../services/ChildProfileAccess'
-import { ChildProfile } from '../models/ChildProfile'
+import { getBabyProfile } from '../storage/BabyProfileAccess'
+import { BabyProfile } from '../models/BabyProfile'
 
 export type RootStackParamList = {
   Auth: undefined
@@ -63,7 +63,7 @@ const Stack = createStackNavigator<RootStackParamList>()
 
 export default function AppNavigator() {
   const [user, setUser] = useState<FirebaseUser | null>(null)
-  const [profile, setProfile] = useState<ChildProfile | null | undefined>(undefined)
+  const [profile, setProfile] = useState<BabyProfile | null | undefined>(undefined)
   const [loading, setLoading] = useState(true)
 
   // 0) Initialize any remote config if you have it
@@ -96,7 +96,7 @@ export default function AppNavigator() {
     }
     let mounted = true
     ;(async () => {
-      const stored = await getChildProfile() // ChildProfile | null
+      const stored = await getBabyProfile() // BabyProfile | null
       if (mounted) {
         setProfile(stored)
       }
