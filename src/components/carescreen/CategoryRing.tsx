@@ -1,5 +1,5 @@
 // src/components/carescreen/CategoryRing.tsx
-import React from 'react'
+import React, { memo } from 'react'
 import Svg, { Path } from 'react-native-svg'
 import { ViewStyle, StyleProp } from 'react-native'
 import type { LogSlice } from '../../models/LogSlice'
@@ -15,9 +15,106 @@ interface CategoryRingProps {
   accessibilityLabel?: string
   slices: LogSlice[];            // ← new: array of LogSlice
   fallbackMask?: boolean[]; 
-  onSlicePress?: (slice: LogSlice) => void // callback when a slice is pressed
+  onSlicePress?: (hourIndex: number) => void // callback when a slice is pressed
   dimFuture?: number // if true, dims future slices
+  confirmedIds: Set<string>
 }
+
+/**
+ * A memoized component that draws exactly one slice’s SVG path.
+ * It only re-renders if any of these props actually change:
+ *  - slice.id, slice.startTime, slice.endTime, fillColor or dimFuture.
+ */
+const SlicePath = memo<{
+    slice: LogSlice
+    center: number
+    innerRadius: number
+    outerRadius: number
+    fillColor: string
+    nowAngle: number
+    onSlicePress?: (hourIdx: number) => void
+  }>(function SlicePath({
+    slice,
+    center,
+    innerRadius,
+    outerRadius,
+    fillColor,
+    nowAngle,
+    onSlicePress,
+  }) {
+    // convert times to angles (degrees)
+    const dateStart = new Date(slice.startTime)
+    const totalMinutesStart = dateStart.getHours() * 60 + dateStart.getMinutes() + dateStart.getSeconds()/60
+    const startAngle = (totalMinutesStart / (24 * 60)) * 360
+  
+    const dateEnd = new Date(slice.endTime)
+    const totalMinutesEnd = dateEnd.getHours() * 60 + dateEnd.getMinutes() + dateEnd.getSeconds()/60
+    const endAngle = (totalMinutesEnd / (24 * 60)) * 360
+  
+    // build the “d” attribute for this slice’s path
+    const describeSlice = (
+      centerX: number,
+      centerY: number,
+      innerR: number,
+      outerR: number,
+      startA: number,
+      endA: number
+    ) => {
+      const polarToCartesian = (
+        cx: number,
+        cy: number,
+        r: number,
+        angleDeg: number
+      ) => {
+        const angleRad = (angleDeg - 90) * Math.PI / 180.0
+        return {
+          x: cx + r * Math.cos(angleRad),
+          y: cy + r * Math.sin(angleRad),
+        }
+      }
+  
+      const outerStart = polarToCartesian(centerX, centerY, outerR, endA)
+      const outerEnd   = polarToCartesian(centerX, centerY, outerR, startA)
+      const innerStart = polarToCartesian(centerX, centerY, innerR, startA)
+      const innerEnd   = polarToCartesian(centerX, centerY, innerR, endA)
+      const largeArcFlag = endA - startA <= 180 ? '0' : '1'
+  
+      return [
+        `M ${outerStart.x} ${outerStart.y}`,
+        `A ${outerR} ${outerR} 0 ${largeArcFlag} 0 ${outerEnd.x} ${outerEnd.y}`,
+        `L ${innerStart.x} ${innerStart.y}`,
+        `A ${innerR} ${innerR} 0 ${largeArcFlag} 1 ${innerEnd.x} ${innerEnd.y}`,
+        'Z',
+      ].join(' ')
+    }
+  
+    const pathD = describeSlice(center, center, innerRadius, outerRadius, startAngle, endAngle)
+  
+    const sliceIsFuture = startAngle >= nowAngle
+    const opacity = sliceIsFuture ? 0.6 : 1
+  
+    // compute hourIndex from startAngle
+    const hourIndex = Math.floor(startAngle / (360 / 24))
+  
+    return (
+      <Path
+        key={slice.id}
+        d={pathD}
+        fill={fillColor}
+        fillOpacity={opacity}
+        onPress={() => onSlicePress?.(hourIndex)}
+      />
+    )
+  }, (prev, next) => {
+    // re-render only if slice timing, fillColor, or nowAngle changed:
+    return (
+      prev.slice.id === next.slice.id &&
+      prev.slice.startTime === next.slice.startTime &&
+      prev.slice.endTime === next.slice.endTime &&
+      prev.fillColor === next.fillColor &&
+      prev.nowAngle === next.nowAngle
+    )
+  })
 
 const polarToCartesian = (
   centerX: number,
@@ -77,39 +174,39 @@ const CategoryRing: React.FC<CategoryRingProps> = ({
       return (totalMinutes / (24 * 60)) * 360
     }
   
-    // Build filled slices from LogSlice array
-    const filledSlices: React.ReactNode[] = slices.map((slice) => {
-      const startAngle = timeToAngle(slice.startTime)
-      const endAngle = timeToAngle(slice.endTime)
-      const pathD = describeSlice(center, center, innerRadius, outerRadius, startAngle, endAngle)
-      return (
-        <Path
-          key={slice.id}
-          d={pathD}
-          fill={fillColor}
-          onPress={() => onSlicePress?.(slice)}
-        />
-      )
-    })
+  // Determine the cutoff angle for “now” (in degrees)
+  const nowAngle = (typeof dimFuture === 'number')
+    ? dimFuture * 360
+    : 360 // if dimFuture is undefined, treat everything as “past”
 
-  const separators: React.ReactNode[] = []
-
-  for (let i = 0; i < 24; i++) {
-    const startAngle = (i * 360) / 24
-    const endAngle   = ((i + 1) * 360) / 24
-    const d = describeSlice(center, center, innerRadius, outerRadius, startAngle, endAngle)
-
-    // draw the faint slice border on top
-    separators.push(
-      <Path
-        key={`sep-${i}`}
-        d={d}
-        fill="transparent"
-        stroke={separatorColor}
-        strokeWidth={1}
-      />
-    )
-  }
+    const filledSlices: React.ReactNode[] = slices.map(slice => (
+          <SlicePath
+            key={slice.id}
+            slice={slice}
+            center={center}
+            innerRadius={innerRadius}
+            outerRadius={outerRadius}
+            fillColor={fillColor}
+            nowAngle={nowAngle}
+            onSlicePress={onSlicePress}
+          />
+        ))
+      
+        const separators: React.ReactNode[] = []
+        for (let i = 0; i < 24; i++) {
+          const startAngle = (i * 360) / 24
+          const endAngle   = ((i + 1) * 360) / 24
+          const d = describeSlice(center, center, innerRadius, outerRadius, startAngle, endAngle)
+          separators.push(
+            <Path
+              key={`sep-${i}`}
+              d={d}
+              fill="transparent"
+              stroke={separatorColor}
+              strokeWidth={1}
+            />
+          )
+        }
 
   return (
     <Svg width={size} height={size} testID={testID}>

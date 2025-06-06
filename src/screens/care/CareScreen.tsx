@@ -1,5 +1,5 @@
 // src/screens/CareScreen.tsx
-import React, { useCallback, useState, useMemo } from 'react'
+import React, { useCallback, useState, useMemo, useEffect } from 'react'
 import {
   View,
   Text,
@@ -28,13 +28,15 @@ import LogDetailModal from '../../components/carescreen/LogDetailModal'
 import { QuickLogEntry } from '../../models/QuickLogSchema'
 import { getLogsBetween } from '../../services/QuickLogAccess'
 import { quickLogEmitter } from '../../storage/QuickLogEvents'
+import { getDailySchedule, saveDailySchedule } from '../../storage/ScheduleStorage'
+import { setSliceConfirmed } from '../../services/LogSliceMetaService'
+import { getLogSliceMeta } from '../../storage/LogSliceMetaStorage'
 
 import FillNextDayLogsIcon from '../../assets/carescreen/common/FillNextDayLogsIcon'
 import ClearLogs from '../../assets/carescreen/common/ClearLogs'
 import ShareIcon from '../../assets/carescreen/common/ShareIcon'
 
 type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>
-
 
 const RING_SIZE = Dimensions.get('window').width * 0.9;
 
@@ -46,6 +48,9 @@ const CLOCK_STROKE_EXTRA = CLOCK_STROKE_WIDTH;
 const CareScreen: React.FC = () => {
   const navigation = useNavigation<CareNavProp>()
   const theme = useTheme()
+
+  const today = new Date()
+  const todayISO = today.toISOString().split('T')[0] 
 
     // Derive shared constants:
     const WRAPPER_SIZE = RING_SIZE + CLOCK_STROKE_EXTRA * 2;
@@ -66,12 +71,51 @@ const CareScreen: React.FC = () => {
 
   const [selectedHour, setSelectedHour] = useState<number | null>(null)
   const [hourEntry, setHourEntry] = useState<QuickLogEntry | null>(null)
+  const [selectedSlice, setSelectedSlice] = useState<LogSlice | null>(null)
+
+  const [confirmedIds, setConfirmedIds] = useState<Set<string>>(new Set())
+  const [unconfirmedSliceIds, setUnconfirmedSliceIds] = useState<string[]>([])
 
   // Memoize category-specific subsets
   const awakeSlices = useMemo(() => slices.filter(s => s.category === 'awake'), [slices])
   const sleepSlices = useMemo(() => slices.filter(s => s.category === 'sleep'), [slices])
   const feedDiaperSlices = useMemo(() => slices.filter(s => s.category === 'feed' || s.category === 'diaper'), [slices])
   const careSlices = useMemo(() => slices.filter(s => s.category === 'care'), [slices])
+
+  // Whenever 'slices' changes, load metadata to build the two sets (confirmed and unconfirmed)
+  useEffect(() => {
+    let isSubscribed = true
+    async function checkMeta(){
+      const nowMs = Date.now()
+      const newlyConfirmed = new Set<string>()
+      const newlyUnconfirmed: string[] = []
+
+      for (const slice of slices) {
+        const sliceStartMs = new Date(slice.startTime).getTime()
+        const meta = await getLogSliceMeta(babyId, slice.id)
+        
+        if (meta && meta.confirmed) {
+                   newlyConfirmed.add(slice.id)
+                 }
+        
+        // If this slice is strictly in the past, and either no meta or not confirmed,
+        // mark it as unconfirmed.
+        if (sliceStartMs < nowMs) {
+                   if (!meta || meta.confirmed === false) {
+                     newlyUnconfirmed.push(slice.id)
+                   }
+                 }
+                }
+        
+      if (!isSubscribed) return
+      setConfirmedIds(newlyConfirmed)
+      setUnconfirmedSliceIds(newlyUnconfirmed)
+    }
+    checkMeta()
+    return () => {
+      isSubscribed = false // Cleanup to avoid memory leaks
+    }
+  }, [slices, babyId])
 
   // Toggle between “last 24h” and “today”
   const handleToggleFilter = useCallback(() => {
@@ -100,23 +144,40 @@ const CareScreen: React.FC = () => {
   const tickColor       = theme.colors.trackerTick;
 
   //  ── 4) Slice‐tap handler ─────────────────────────────────────────
-  // Lookup logs for that hour and open modal:
   const handleSlicePress = useCallback(
-        async (slice: LogSlice) => {
-          console.log(`Slice with id ${slice.id} pressed`)
-          setSelectedHour(null)
-          setHourEntry(null)
-          try {
-            // Fetch the entry matching this slice’s time window (if needed)
-            const entries = await getLogsBetween(slice.startTime, slice.endTime)
-            setHourEntry(entries[0] || null)
-          } catch (err) {
-            console.error('Error loading entry for slice', err)
-            setHourEntry(null)
+        async (hourIndex: number) => { 
+    
+          // 1) See if there’s already a LogSlice whose startTime hour == hourIndex
+          const existing = slices.find(s => {
+            const h = new Date(s.startTime).getHours()
+            return h === hourIndex
+          })
+    
+          if (existing) {
+            // Already‐logged slice → show it
+            setSelectedSlice(existing)
+            return
           }
+    
+          // 2) If no existing slice, create a “new” placeholder slice for that hour window
+          const pad = (n: number) => n.toString().padStart(2, '0')
+          const startIso = `${todayISO}T${pad(hourIndex)}:00:00.000Z`
+          const endIso   = `${todayISO}T${pad(hourIndex+1 <= 23 ? hourIndex+1 : 23)}:00:00.000Z`
+          const nowIso   = new Date().toISOString()
+          const newSlice: LogSlice = {
+            id: `new-${todayISO}-${hourIndex}`,         // a temporary ID
+            babyId: babyId,                             // replace with actual babyId
+            category: 'other',                          // default until user edits
+            startTime: startIso,
+            endTime: endIso,
+            createdAt: nowIso,
+            updatedAt: nowIso,
+          }
+          setSelectedSlice(newSlice)
         },
-        []
+        [slices]
       )
+
 
  // Pre-compute tick lines once (they never depend on changing state):
  const clockTicks = useMemo(() => {
@@ -198,6 +259,23 @@ const CareScreen: React.FC = () => {
     navigation.navigate('EndOfDayExport')
   }
 
+  const handleConfirmAll = useCallback(async () => {
+       // Optimistically clear the banner
+       setUnconfirmedSliceIds([])
+    
+       // Mark each past slice as confirmed
+       await Promise.all(
+         unconfirmedSliceIds.map(id => setSliceConfirmed(babyId, id, true))
+       )
+    
+       // Merge into confirmedIds set
+       setConfirmedIds(prev => {
+         const updated = new Set(prev)
+         unconfirmedSliceIds.forEach(id => updated.add(id))
+         return updated
+       })
+   }, [babyId, unconfirmedSliceIds])
+
     // Show loading or error
     if (loading) {
       return (
@@ -221,6 +299,18 @@ const CareScreen: React.FC = () => {
 
   return (
     <CareLayout activeTab="tracker" onNavigate={handleNavigate} bgColor={theme.colors.accent}>
+      {/* ── 0. CONFIRM‐ALL BANNER ────────────────────────────────────────── */}
+     {unconfirmedSliceIds.length > 0 && (
+       <View style={styles.confirmBanner}>
+         <Text style={styles.confirmText}>
+           You have {unconfirmedSliceIds.length} past slice
+           {unconfirmedSliceIds.length > 1 ? 's' : ''} to confirm.
+         </Text>
+         <TouchableOpacity onPress={handleConfirmAll} style={styles.confirmButton}>
+           <Text style={styles.confirmButtonText}>Confirm All</Text>
+         </TouchableOpacity>
+       </View>
+     )}
       {/* ── 1. Icons ─────────────────────────────────────────── */}
       <View style={styles.buttonsContainer}>
         <TouchableOpacity onPress={handleClearAll} style={styles.iconWrapper}>
@@ -257,6 +347,7 @@ const CareScreen: React.FC = () => {
                 accessibilityLabel={`Awake slices`}
                 onSlicePress={handleSlicePress}
                 dimFuture={nowFrac}
+                confirmedIds={confirmedIds}
               />
             </View>
             <View style={{ position: 'absolute', top: 0, left: 0 }}>
@@ -271,6 +362,7 @@ const CareScreen: React.FC = () => {
                 fillColor={sleepColor}
                 separatorColor="rgba(0,0,0,0.1)"
                 testID="sleep-ring"
+                confirmedIds={confirmedIds}
               />
             </View>
           </View>
@@ -288,6 +380,7 @@ const CareScreen: React.FC = () => {
                 accessible
                 accessibilityLabel="Feed/diaper slice"
                 dimFuture={nowFrac}
+                confirmedIds={confirmedIds}
               />
           </View>
 
@@ -305,6 +398,7 @@ const CareScreen: React.FC = () => {
                 accessible
                 accessibilityLabel="Care slice"
                 dimFuture={nowFrac}
+                confirmedIds={confirmedIds}
               />
           </View>
 
@@ -351,16 +445,26 @@ const CareScreen: React.FC = () => {
         <TrackerFilter showLast24h={showLast24h} onToggle={handleToggleFilter} />
       </View>
 
-      {selectedHour !== null && hourEntry !== null && (
-      <LogDetailModal
-        visible={true}
-        entry={hourEntry}
-        onClose={() => {
-          setSelectedHour(null)
-          setHourEntry(null)
-        }}
-      />
-    )}
+      {selectedSlice !== null && (
+        <LogDetailModal
+          visible={true}
+          slice={selectedSlice}
+          onClose={() => setSelectedSlice(null)}
+          onDelete={async (sliceId) => {
+            // If it was an “existing” slice, remove it from today’s schedule:
+            if (!sliceId.startsWith('new-')) {
+              // 1) fetch the full array
+              const schedule = await getDailySchedule(todayISO, babyId)
+              if (schedule) {
+                const filtered = schedule.filter(s => s.id !== sliceId)
+                await saveDailySchedule(todayISO, babyId, filtered)
+                refresh()
+              }
+            }
+            setSelectedSlice(null)
+          }}
+        />
+      )}
     </CareLayout>
   );
 };
@@ -423,5 +527,33 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+
+  // ── CONFIRM‐ALL BANNER STYLES ──────────────────────────────────────
+  confirmBanner: {
+    flexDirection: 'row',
+    backgroundColor: '#FFF3CD',
+    borderColor: '#FFEEBA',
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  confirmText: {
+    color: '#856404',
+    fontFamily: 'Inter',
+    fontSize: 14,
+  },
+  confirmButton: {
+    backgroundColor: '#856404',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+  },
+  confirmButtonText: {
+    color: '#FFFFFF',
+    fontFamily: 'Inter',
+    fontSize: 14,
   },
 })

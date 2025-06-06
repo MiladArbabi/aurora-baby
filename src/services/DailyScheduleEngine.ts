@@ -21,6 +21,7 @@ export class DailyScheduleEngine {
     return [
       {
         id: 'slice-1',
+        babyId,
         category: 'sleep',
         startTime: startOfDay.toISOString(),
         endTime: new Date(startOfDay.getTime() + 2 * 60 * 60 * 1000).toISOString(), // +2h
@@ -29,6 +30,7 @@ export class DailyScheduleEngine {
       },
       {
         id: 'slice-2',
+        babyId,
         category: 'feed',
         startTime: new Date(startOfDay.getTime() + 2 * 60 * 60 * 1000).toISOString(),
         endTime: new Date(startOfDay.getTime() + 2.5 * 60 * 60 * 1000).toISOString(), // +30m
