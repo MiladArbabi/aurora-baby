@@ -11,7 +11,7 @@ import {
 } from 'react-native'
 import MainArc    from '../../assets/carescreen/tracker-rings/MainArc'
 import Core       from '../../assets/carescreen/tracker-rings/Core'
-import OutterRim  from '../../assets/carescreen/tracker-rings/OutterRim'
+import OutterRim  from '../../assets/carescreen/tracker-rings/ClockArc'
 import EventMarker from './EventMarker'
 import { useTrackerData } from '../../hooks/useTrackerData'
 import { QuickLogEntry } from '../../models/QuickLogSchema'

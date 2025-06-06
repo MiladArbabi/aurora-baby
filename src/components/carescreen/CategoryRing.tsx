@@ -13,6 +13,7 @@ interface CategoryRingProps {
   testID?: string
   accessible?: boolean       // for accessibility purposes
   accessibilityLabel?: string
+  onSlicePress?: (hourIndex: number) => void
 }
 
 const polarToCartesian = (
@@ -58,6 +59,7 @@ const CategoryRing: React.FC<CategoryRingProps> = ({
   fillColor,
   separatorColor = 'rgba(0,0,0,0.1)',
   testID,
+  onSlicePress
 }) => {
   const center = size / 2
   const outerRadius = size / 2

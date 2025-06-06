@@ -9,6 +9,7 @@ interface RimProps {
   progress?: number
   accessible?: boolean
   accessibilityLabel?: string
+  onSlicePress?: (hourIndex: number) => void
 }
 
 const ClockArc: React.FC<RimProps> = ({

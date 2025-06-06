@@ -13,14 +13,18 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useTheme } from 'styled-components/native'
 import { RootStackParamList } from '../../navigation/AppNavigator'
 import Svg, { Line, Circle } from 'react-native-svg'
-import { useWindowDimensions } from 'react-native'
 
 import CareLayout from '../../components/carescreen/CareLayout'
 import { MiniTab } from '../../components/carescreen/MiniNavBar'
 import { useTrackerData } from '../../hooks/useTrackerData'
 import TrackerFilter from '../../components/carescreen/TrackerFilter'
 import CategoryRing from '../../components/carescreen/CategoryRing'
-import ClockArc from '../../assets/carescreen/tracker-rings/OutterRim'
+import ClockArc from '../../assets/carescreen/tracker-rings/ClockArc'
+
+import LogDetailModal from '../../components/carescreen/LogDetailModal'
+import { QuickLogEntry } from '../../models/QuickLogSchema'
+import { getLogsBetween } from '../../services/QuickLogAccess'
+import { quickLogEmitter } from '../../storage/QuickLogEvents'
 
 import FillNextDayLogsIcon from '../../assets/carescreen/common/FillNextDayLogsIcon'
 import ClearLogs from '../../assets/carescreen/common/ClearLogs'
@@ -56,6 +60,9 @@ const CareScreen: React.FC = () => {
   const sleepMask: boolean[] = Array(24).fill(false)
   const feedDiaperMask: boolean[] = Array(24).fill(false)
   const showerEssMask: boolean[] = Array(24).fill(false)
+
+  const [selectedHour, setSelectedHour] = useState<number | null>(null)
+  const [hourEntry, setHourEntry] = useState<QuickLogEntry | null>(null)
 
   for (let h = 0; h < 24; h++) {
     switch (hourlyCategories[h]) {
@@ -99,6 +106,30 @@ const CareScreen: React.FC = () => {
   const arcColor        = theme.colors.trackerArc;
   const tickColor       = theme.colors.trackerTick;
 
+  //  ── 4) Slice‐tap handler ─────────────────────────────────────────
+  // Lookup logs for that hour and open modal:
+  const handleSlicePress = useCallback(
+    async (hourIndex: number) => {
+      console.log(`Slice for hour ${hourIndex} pressed`)
+      setSelectedHour(hourIndex)
+      try {
+        // Example: fetch any log entries between hourIndex:00 and hourIndex+1:00 today
+        const todayStart = new Date()
+        todayStart.setHours(hourIndex, 0, 0, 0)
+        const hourEnd = new Date(todayStart.getTime() + 60 * 60 * 1000)
+        const entries = await getLogsBetween(
+          todayStart.toISOString(),
+          hourEnd.toISOString()
+        )
+        setHourEntry(entries[0] || null)
+      } catch (err) {
+        console.error('Error loading entry for hour', err)
+        setHourEntry(null)
+      }
+    },
+    []
+  )
+
  // Pre-compute tick lines once (they never depend on changing state):
  const clockTicks = useMemo(() => {
   return Array.from({ length: 24 }).map((_, i) => {
@@ -123,16 +154,10 @@ const CareScreen: React.FC = () => {
         y2={y2}
         stroke={tickColor}
         strokeWidth={1}
-        onPress={() => handleTickPress(i)}
       />
     );
   });
 }, [CENTER, CLOCK_RADIUS, tickColor]);
-
-const handleTickPress = useCallback((hourIndex: number) => {
-      console.log(`Tick ${hourIndex} pressed`);
-      // TODO: implement any desired interaction (e.g., drill-down, log entry)
-    }, []);
 
 /*   // Render the four “00:00 / 06:00 / 12:00 / 18:00” labels
   const renderTimeLabels = () => {
@@ -266,6 +291,7 @@ const handleTickPress = useCallback((hourIndex: number) => {
                 fillColor={awakeColor}
                 separatorColor="rgba(0,0,0,0.1)"
                 testID="awake-ring"
+                onSlicePress={handleSlicePress}
               />
             </View>
             <View style={{ position: 'absolute', top: 0, left: 0 }}>
@@ -290,6 +316,7 @@ const handleTickPress = useCallback((hourIndex: number) => {
                 fillColor={feedColor}
                 separatorColor="rgba(0,0,0,0.1)"
                 testID="feed-ring"
+                onSlicePress={handleSlicePress}
                 accessible
                 accessibilityLabel={`Feed/diaper: ${
                   feedDiaperMask.filter(Boolean).length
@@ -308,6 +335,7 @@ const handleTickPress = useCallback((hourIndex: number) => {
                 fillColor={essColor}
                 separatorColor="rgba(0,0,0,0.1)"
                 testID="essentials-ring"
+                onSlicePress={handleSlicePress}
                 accessible
                 accessibilityLabel={`Essentials: ${
                   showerEssMask.filter(Boolean).length
@@ -367,6 +395,17 @@ const handleTickPress = useCallback((hourIndex: number) => {
       <View style={styles.filterContainer} onLayout={logLayout('Filter')}>
         <TrackerFilter showLast24h={showLast24h} onToggle={handleToggleFilter} />
       </View>
+
+      {selectedHour !== null && hourEntry !== null && (
+      <LogDetailModal
+        visible={true}
+        entry={hourEntry}
+        onClose={() => {
+          setSelectedHour(null)
+          setHourEntry(null)
+        }}
+      />
+    )}
     </CareLayout>
   );
 };
