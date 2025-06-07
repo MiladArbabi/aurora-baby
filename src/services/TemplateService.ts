@@ -23,7 +23,14 @@ export async function getTemplate(
   babyId: string,
   templateId: string
 ): Promise<ScheduleTemplate> {
-  const t = await TemplateStorage.getTemplate(babyId, templateId)
+  let t = null
+  try {
+    t = await TemplateStorage.getTemplate(babyId, templateId)
+  } catch (err) {
+    console.error('[TemplateService] storage.getTemplate threw', err)
+    throw err
+  }
+  console.log(`[TemplateService] loaded template (${templateId}) for ${babyId}:`, t)
   if (!t) throw new Error(`Template ${templateId} not found`)
   return t
 }

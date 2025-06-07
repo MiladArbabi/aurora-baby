@@ -34,6 +34,7 @@ export function useTrackerSchedule(
   const [nowFrac, setNowFrac] = useState<number>(computeNowFrac())
 
   const fetchSchedule = useCallback(async () => {
+    console.log('[useTrackerSchedule] fetching schedule (showLast24h=', showLast24h, ')')
     setLoading(true)
     setError(null)
 
@@ -47,10 +48,11 @@ export function useTrackerSchedule(
       } else {
         dateISO = today.toISOString().split('T')[0]
       }
-
       const result = await ensureScheduleForDate(babyId, dateISO)
+      console.log('[useTrackerSchedule] got slices:', result)
       setSlices(result)
     } catch (err: any) {
+      console.error('[useTrackerSchedule] error:', err)
       setError(err)
     } finally {
       setLoading(false)

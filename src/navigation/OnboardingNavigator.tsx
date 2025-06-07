@@ -9,7 +9,7 @@ import OnboardingFinished from '../screens/onboarding/OnboardingFinished'
 export type OnboardingParamList = {
   Welcome: undefined
   Parent: undefined
-  Child: undefined
+  Baby: undefined
   Themes: undefined
   Done: undefined
 }
@@ -21,7 +21,7 @@ export default function OnboardingNavigator() {
     <Onboarding.Navigator screenOptions={{ headerShown: false }}>
       <Onboarding.Screen name="Welcome" component={WelcomeScreen} />
       <Onboarding.Screen name="Parent" component={ParentInfoScreen} />
-      <Onboarding.Screen name="Child" component={BabyProfileScreen} />
+      <Onboarding.Screen name="Baby" component={BabyProfileScreen} />
       <Onboarding.Screen name="Themes" component={ThemePreferencesScreen} />
       <Onboarding.Screen name="Done" component={OnboardingFinished} />
     </Onboarding.Navigator>

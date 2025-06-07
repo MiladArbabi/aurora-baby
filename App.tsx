@@ -16,7 +16,8 @@ import i18n from './src/localization';
 import CareScreen from './src/screens/care/CareScreen';
 import { NavigationContainer } from '@react-navigation/native';
 import { bootstrapTemplates } from './src/services/TemplateService'
-import { getChildProfile } from './src/storage/BabyProfileStorage';
+import { getBabyProfile } from './src/storage/BabyProfileStorage';
+import { clearAllSchedules } from './src/storage/ScheduleStorage';
 
 const App: React.FC = () => {
   const [fontsLoaded] = useFonts({
@@ -25,12 +26,14 @@ const App: React.FC = () => {
 
   useEffect(() => {
     (async () => {
-      try {
-        const profile = await getChildProfile()
-        if (profile) await bootstrapTemplates(profile.id)
-      } catch (err) {
-        console.warn('Failed to bootstrap templates', err)
-      }
+      // either use the saved profile…
+      const profile = await getBabyProfile()
+      const babyId = profile?.id ?? 'defaultBabyId'
+  
+      console.log('[App] resetting schedules for babyId=', babyId)
+      /* await clearAllSchedules(babyId) */
+      await bootstrapTemplates(babyId)
+      console.log('[App] cleared old schedules & bootstrapped templates')
     })()
   }, [])
 

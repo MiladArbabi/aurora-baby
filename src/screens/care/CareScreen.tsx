@@ -25,6 +25,7 @@ import { LogSlice } from '../../models/LogSlice'
 import TrackerFilter from '../../components/carescreen/TrackerFilter'
 import CategoryRing from '../../components/carescreen/CategoryRing'
 import ClockArc from '../../assets/carescreen/tracker-rings/ClockArc'
+import ResizableSliceOverlay from '../../components/carescreen/ResizableSliceOverlay'
 
 import LogDetailModal from '../../components/carescreen/LogDetailModal'
 import { QuickLogEntry } from '../../models/QuickLogSchema'
@@ -355,13 +356,44 @@ function onRingTouch(evt: GestureResponderEvent) {
          unconfirmedSliceIds.map(id => setSliceConfirmed(babyId, id, true))
        )
     
-       // Merge into confirmedIds set
-       setConfirmedIds(prev => {
-         const updated = new Set(prev)
-         unconfirmedSliceIds.forEach(id => updated.add(id))
+  // Merge into confirmedIds set
+    setConfirmedIds(prev => {
+      const updated = new Set(prev)
+      unconfirmedSliceIds.forEach(id => updated.add(id))
          return updated
        })
    }, [babyId, unconfirmedSliceIds])
+
+   const handleResize = useCallback(
+    async (id: string, newStartAngle?: number, newEndAngle?: number) => {
+      // find the slice
+      const orig = slices.find(s => s.id === id)
+      if (!orig) return
+  
+      // compute new ISO times from angles
+      const angleToTime = (angle: number) => {
+        const totalMinutes = (angle / 360) * 24 * 60
+        const hours = Math.floor(totalMinutes / 60)
+        const minutes = Math.round(totalMinutes % 60)
+        const pad2 = (n: number) => n.toString().padStart(2,'0')
+        return `${todayISO}T${pad2(hours)}:${pad2(minutes)}:00.000`
+      }
+  
+      const updated: LogSlice = {
+        ...orig,
+       startTime: newStartAngle != null ? angleToTime(newStartAngle) : orig.startTime,
+       endTime:   newEndAngle   != null ? angleToTime(newEndAngle)   : orig.endTime,
+      }
+      // persist
+      const sched = (await getDailySchedule(todayISO, babyId)) || []
+      const idx = sched.findIndex(s => s.id === id)
+      if (idx >= 0) sched[idx] = updated
+      else sched.push(updated)
+      await saveDailySchedule(todayISO, babyId, sched)
+      refresh()
+    },
+    [slices, todayISO, babyId, refresh],
+  )
 
     // Show loading or error
     if (loading) {
@@ -383,7 +415,9 @@ function onRingTouch(evt: GestureResponderEvent) {
         </CareLayout>
       )
     }
-
+  
+    
+  console.log(`[CareScreen] isEditingSchedule=${isEditingSchedule}  sliceMode=${sliceMode}`);
   return (
     <>
     <CareLayout activeTab="tracker" onNavigate={handleNavigate} bgColor={theme.colors.accent}>
@@ -425,8 +459,14 @@ function onRingTouch(evt: GestureResponderEvent) {
       {/* ── 2. Tracker ───────────────────────────────────────── */}
       <View style={styles.trackerContainer}>
         <View style={styles.ringWrapper}
-        onStartShouldSetResponder={() => true}
-        onResponderRelease={onRingTouch}
+        onStartShouldSetResponder={() => {
+          console.log(`[ringWrapper] shouldResponder? edit=${isEditingSchedule}`);
+          return !isEditingSchedule;
+        }}
+        onResponderRelease={evt => {
+          console.log(`[ringWrapper] responderRelease edit=${isEditingSchedule}`);
+            if (!isEditingSchedule) onRingTouch(evt)
+          }}
         >
           {/* 1) Awake/Sleep ring pair (outermost) */}
           <View style={outermostRingStyle}>
@@ -440,7 +480,14 @@ function onRingTouch(evt: GestureResponderEvent) {
                 testID="awake-ring"
                 accessible
                 accessibilityLabel={`Awake slices`}
-                onSlicePress={handleSlicePress}
+                onSlicePress={!isEditingSchedule ? handleSlicePress : undefined}
+                onSliceLongPress={!isEditingSchedule ? (hour) => {
+                    console.log('[CareScreen] slice long-press → edit mode', hour)
+                    setSliceMode('edit')
+                    // find the slice and setSelectedSlice(...)
+                    const s = slices.find(s => new Date(s.startTime).getHours() === hour)
+                    if (s) setSelectedSlice(s)
+                  } : undefined}
                 dimFuture={nowFrac}
                 confirmedIds={confirmedIds}
                 aiSuggestedIds={aiSuggestedIds} 
@@ -451,7 +498,12 @@ function onRingTouch(evt: GestureResponderEvent) {
                 size={RING_SIZE}
                 strokeWidth={RING_THICKNESS}
                 slices={sleepSlices}
-                onSlicePress={handleSlicePress}
+                onSlicePress={!isEditingSchedule
+                  ? (hour: number) => {
+                      console.log(`[CategoryRing] tap hour=${hour} edit=${isEditingSchedule}`);
+                      handleSlicePress(hour);
+                    }
+                  : undefined}
                 dimFuture={nowFrac}
                 accessible
                 accessibilityLabel={`Sleep slices`}
@@ -473,7 +525,12 @@ function onRingTouch(evt: GestureResponderEvent) {
                 fillColor={feedColor}
                 separatorColor="rgba(0,0,0,0.1)"
                 testID="feed-ring"
-                onSlicePress={handleSlicePress}
+                onSlicePress={!isEditingSchedule
+                  ? (hour: number) => {
+                      console.log(`[CategoryRing] tap hour=${hour} edit=${isEditingSchedule}`);
+                      handleSlicePress(hour);
+                    }
+                  : undefined}
                 accessible
                 accessibilityLabel="Feed/diaper slice"
                 dimFuture={nowFrac}
@@ -492,7 +549,12 @@ function onRingTouch(evt: GestureResponderEvent) {
                 fillColor={essColor}
                 separatorColor="rgba(0,0,0,0.1)"
                 testID="essentials-ring"
-                onSlicePress={handleSlicePress}
+                onSlicePress={!isEditingSchedule
+                  ? (hour: number) => {
+                      console.log(`[CategoryRing] tap hour=${hour} edit=${isEditingSchedule}`);
+                      handleSlicePress(hour);
+                    }
+                  : undefined}
                 accessible
                 accessibilityLabel="Care slice"
                 dimFuture={nowFrac}
@@ -501,6 +563,19 @@ function onRingTouch(evt: GestureResponderEvent) {
               />
           </View>
 
+          {/* draggable handles overlay */}
+          <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+          {isEditingSchedule && (
+          <ResizableSliceOverlay
+            size={RING_SIZE + CLOCK_STROKE_EXTRA * 2}
+            strokeWidth={RING_THICKNESS}
+            slices={slices}
+            onResize={handleResize}
+          />
+        )}
+          </View>
+          
+          
           {/* 4) Clock arc + ticks (innermost) */}
           <View style={arcContainerStyle}>
             <ClockArc

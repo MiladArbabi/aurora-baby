@@ -11,10 +11,10 @@ import {
 } from 'react-native'
 import { StackScreenProps } from '@react-navigation/stack'
 import { OnboardingParamList } from '../../navigation/OnboardingNavigator'
-import { saveChildProfile } from '../../services/ChildProfileAccess'
+import { createProfile } from 'services/BabyProfileAccess'
 import * as Speech from 'expo-speech'
 
-type Props = StackScreenProps<OnboardingParamList, 'Child'>
+type Props = StackScreenProps<OnboardingParamList, 'Baby'>
 
 export default function BabyProfileScreen({ navigation }: Props) {
   const [name, setName] = useState<string>('')
@@ -47,11 +47,14 @@ export default function BabyProfileScreen({ navigation }: Props) {
     }
 
     const isoString = new Date(dobText.trim() + 'T00:00:00').toISOString()
-    await saveChildProfile({
+
+    await createProfile({
       id: Date.now().toString(),
       name: name.trim(),
-      dob: isoString,
-      themePreferences: [],
+      birthDate: dobText.trim(),
+      sleepType: 'regular',
+      createdAt: new Date().toISOString(),
+      personality: undefined, // Optional field, can be set later
     })
     navigation.navigate('Themes')
   }

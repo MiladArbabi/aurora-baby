@@ -19,20 +19,19 @@ export class DailyScheduleEngine {
     babyId: string
     date: string // ISO string like "2025-06-05"
   }): Promise<LogSlice[]> {
+    console.log('[DailyScheduleEngine] generating for', babyId, date)
     // 1) Load the template (or bootstrap the default)
     let template
     try {
       template = await getTemplate(babyId, DEFAULT_TEMPLATE_ID)
     } catch {
+      console.warn('[DailyScheduleEngine] template missing, bootstrapping & retrying')
       await ensureDefaultTemplateExists(babyId)
       template = await getTemplate(babyId, DEFAULT_TEMPLATE_ID)
     }
-
-    // 2) Turn it into concrete LogSlices
-    return DefaultScheduleGenerator.generateFromTemplate({
-      babyId,
-      dateISO: date,
-      template,
-    })
+    console.log('[DailyScheduleEngine] using template.entries=', template.entries)
+    const slices = DefaultScheduleGenerator.generateFromTemplate({ babyId, dateISO: date, template })
+    console.log('[DailyScheduleEngine] generated slices=', slices)
+    return slices
   }
 }

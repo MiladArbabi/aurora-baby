@@ -17,10 +17,11 @@ interface CategoryRingProps {
   slices: LogSlice[];            // ← new: array of LogSlice
   fallbackMask?: boolean[]; 
   onSlicePress?: (hourIndex: number) => void // callback when a slice is pressed
+  onSliceLongPress?: (hourIndex: number) => void // long-press
   dimFuture?: number // if true, dims future slices
   confirmedIds: Set<string>
   aiSuggestedIds: Set<string>
-  mode?: 'normal' | 'edit' | 'view' // mode for rendering (e.g. edit mode)
+  mode?: 'edit' | 'view' // mode for rendering (e.g. edit mode)
 }
 
 /**
@@ -36,8 +37,9 @@ const SlicePath = memo<{
     fillColor: string
     nowAngle: number
     onSlicePress?: (hourIdx: number) => void
+    onSliceLongPress?: (hourIdx: number) => void
     isAiSuggested: boolean
-    mode?: 'normal' | 'edit' | 'view'
+    mode?:'edit' | 'view'
   }>(function SlicePath({
     slice,
     center,
@@ -46,8 +48,9 @@ const SlicePath = memo<{
     fillColor,
     nowAngle,
     onSlicePress,
+    onSliceLongPress,
     isAiSuggested,
-    mode,
+    mode = 'view',
   }) {
     // convert times to angles (degrees)
     const dateStart = new Date(slice.startTime)
@@ -112,8 +115,14 @@ const SlicePath = memo<{
           fillOpacity={opacity}
           onPress={() => {
             console.log('[CategoryRing] slice pressed', slice.id, '→ hourIndex', hourIndex)
-            onSlicePress?.(hourIndex)
+            mode === 'edit' 
+            ? undefined : () => 
+              onSlicePress?.(hourIndex)
           }}
+          onLongPress={() => {
+                  console.log('[CategoryRing] slice long-pressed', slice.id, '→ hourIndex', hourIndex)
+                  onSliceLongPress?.(hourIndex)
+                }}
         />
         {isAiSuggested && (() => {
           // compute midpoint of this arc
@@ -241,11 +250,14 @@ const CategoryRing: React.FC<CategoryRingProps> = ({
   separatorColor = 'rgba(74, 74, 74, 0.05)',
   testID,
   onSlicePress,
+  onSliceLongPress,
   slices,
   style,
   dimFuture,
   aiSuggestedIds,
+  mode = 'view',
 }) => {
+  const isEdit = mode === 'edit'
   const center = size / 2
   const outerRadius = size / 2
   const innerRadius = outerRadius - strokeWidth
@@ -271,8 +283,10 @@ const CategoryRing: React.FC<CategoryRingProps> = ({
             outerRadius={outerRadius}
             fillColor={fillColor}
             nowAngle={nowAngle}
-            onSlicePress={onSlicePress}
+            onSlicePress={isEdit ? undefined : onSlicePress}
+            onSliceLongPress={isEdit ? undefined : onSliceLongPress}
             isAiSuggested={aiSuggestedIds.has(slice.id)}
+            mode={mode}
           />
         ))
     // 1) Build and sort slice intervals
@@ -337,7 +351,8 @@ const CategoryRing: React.FC<CategoryRingProps> = ({
           outerRadius={outerRadius}
           color={fillColor}
           opacity={isFuture ? 0.6 : 1}
-          onPress={() => onSlicePress?.(Math.floor(startAngle / (360 / 24)))}
+          onPress={isEdit ? undefined : () => 
+            onSlicePress?.(Math.floor(startAngle / (360 / 24)))}
           showMarker={aiSuggestedIds.has(id)}
         />
       )

@@ -6,7 +6,7 @@ import {
 } from '../storage/ScheduleStorage';
 import { DefaultScheduleGenerator } from './DefaultScheduleGenerator'
 import { DEFAULT_TEMPLATE }         from '../config/defaultScheduleTemplates'
-
+import { DailyScheduleEngine } from './DailyScheduleEngine'
 
 /**
  * If a schedule already exists for (babyId, dateISO), returns it.
@@ -17,21 +17,15 @@ export async function ensureScheduleForDate(
   dateISO: string // e.g. "2025-06-05"
 ): Promise<LogSlice[]> {
   // 1) Try to load an existing schedule
-  const existing = await getDailySchedule(dateISO, babyId);
+  console.log('[ScheduleService] ensureScheduleForDate', babyId, dateISO)
+  const existing = await getDailySchedule(dateISO, babyId)
   if (existing) {
-    return existing;
+    console.log('[ScheduleService] found existing schedule:', existing)
+    return existing
   }
-
-  // 2) None found → generate via the engine
-  const generated = DefaultScheduleGenerator.generateFromTemplate({
-    babyId,
-    dateISO,
-    template: DEFAULT_TEMPLATE
-  })
-
-  // 3) Persist it for future use
-  await saveDailySchedule(dateISO, babyId, generated);
-
-  // 4) Return the newly created array
-  return generated;
+  console.log('[ScheduleService] no existing → generating new')
+  const generated = await DailyScheduleEngine.generateScheduleForDate({ babyId, date: dateISO })
+  await saveDailySchedule(dateISO, babyId, generated)
+  console.log('[ScheduleService] saved new schedule')
+  return generated
 }
