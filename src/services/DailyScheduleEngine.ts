@@ -1,44 +1,38 @@
 // src/services/DailyScheduleEngine.ts
 import type { LogSlice } from '../models/LogSlice'
+import { DefaultScheduleGenerator } from './DefaultScheduleGenerator'
+import { getTemplate, ensureDefaultTemplateExists } from './TemplateService'
+import { DEFAULT_TEMPLATE } from '../config/defaultScheduleTemplates'
+
+const DEFAULT_TEMPLATE_ID = DEFAULT_TEMPLATE.templateId!
+/**
+ * Generates the day’s schedule by loading the baby’s template
+ * (falling back to the default if missing) and then running
+ * DefaultScheduleGenerator over it.
+ */
 
 export class DailyScheduleEngine {
-  static generateScheduleForDate({
+  static async generateScheduleForDate({
     babyId,
     date,
   }: {
     babyId: string
     date: string // ISO string like "2025-06-05"
-  }): LogSlice[] {
-    // TODO: Pull BabyProfile
-    // TODO: Run rules engine or fallback to defaults
-    // TODO: Optionally inject AI personalizations
-    // For now, return hardcoded mock for structure
+  }): Promise<LogSlice[]> {
+    // 1) Load the template (or bootstrap the default)
+    let template
+    try {
+      template = await getTemplate(babyId, DEFAULT_TEMPLATE_ID)
+    } catch {
+      await ensureDefaultTemplateExists(babyId)
+      template = await getTemplate(babyId, DEFAULT_TEMPLATE_ID)
+    }
 
-    const now = new Date()
-    const startOfDay = new Date(date)
-    startOfDay.setHours(8, 0, 0, 0)
-
-    return [
-      {
-        id: 'slice-1',
-        babyId,
-        category: 'sleep',
-        startTime: startOfDay.toISOString(),
-        endTime: new Date(startOfDay.getTime() + 2 * 60 * 60 * 1000).toISOString(), // +2h
-        createdAt: now.toISOString(),
-        updatedAt: now.toISOString(),
-        version: 1, 
-      },
-      {
-        id: 'slice-2',
-        babyId,
-        category: 'feed',
-        startTime: new Date(startOfDay.getTime() + 2 * 60 * 60 * 1000).toISOString(),
-        endTime: new Date(startOfDay.getTime() + 2.5 * 60 * 60 * 1000).toISOString(), // +30m
-        createdAt: now.toISOString(),
-        updatedAt: now.toISOString(),
-        version: 1,
-      },
-    ]
+    // 2) Turn it into concrete LogSlices
+    return DefaultScheduleGenerator.generateFromTemplate({
+      babyId,
+      dateISO: date,
+      template,
+    })
   }
 }
