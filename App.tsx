@@ -15,11 +15,24 @@ import { I18nextProvider } from 'react-i18next';
 import i18n from './src/localization';
 import CareScreen from './src/screens/care/CareScreen';
 import { NavigationContainer } from '@react-navigation/native';
+import { bootstrapTemplates } from './src/services/TemplateService'
+import { getChildProfile } from './src/storage/BabyProfileStorage';
 
 const App: React.FC = () => {
   const [fontsLoaded] = useFonts({
     Edrosa: require('./src/assets/fonts/Edrosa.otf'),
   });
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const profile = await getChildProfile()
+        if (profile) await bootstrapTemplates(profile.id)
+      } catch (err) {
+        console.warn('Failed to bootstrap templates', err)
+      }
+    })()
+  }, [])
 
   // Run syncPendingLogs on app launch and when regaining connectivity
   useEffect(() => {

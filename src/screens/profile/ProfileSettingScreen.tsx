@@ -10,7 +10,7 @@ import { getAuth, signOut } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useTranslation } from 'react-i18next';
 
-import { getChildProfile } from '../../storage/ChildProfileStorage'
+import { getChildProfile } from '../../storage/BabyProfileStorage'
 import { getParentProfile } from '../../storage/ParentProfileStorage'
 import { PrivacySettings, getPrivacySettings, savePrivacySettings } from '../../services/PrivacySettingsStorage';
 

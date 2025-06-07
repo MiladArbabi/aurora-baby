@@ -1,11 +1,11 @@
 // src/storage/ChildProfileStorage.ts
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { ChildProfile } from '../models/ChildProfile'
+import { BabyProfile } from '../models/BabyProfile'
 
-const KEY = '@child_profile'
-export const saveChildProfile = async (p: ChildProfile) =>
+const KEY = '@baby_profile'
+export const saveChildProfile = async (p: BabyProfile) =>
   AsyncStorage.setItem(KEY, JSON.stringify(p))
-export const getChildProfile = async (): Promise<ChildProfile | null> => {
+export const getChildProfile = async (): Promise<BabyProfile | null> => {
   const json = await AsyncStorage.getItem(KEY)
   return json ? JSON.parse(json) : null
 }
