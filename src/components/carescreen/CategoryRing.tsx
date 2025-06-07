@@ -19,6 +19,7 @@ interface CategoryRingProps {
   dimFuture?: number // if true, dims future slices
   confirmedIds: Set<string>
   aiSuggestedIds: Set<string>
+  mode?: 'normal' | 'edit' | 'view' // mode for rendering (e.g. edit mode)
 }
 
 /**
@@ -35,6 +36,7 @@ const SlicePath = memo<{
     nowAngle: number
     onSlicePress?: (hourIdx: number) => void
     isAiSuggested: boolean
+    mode?: 'normal' | 'edit' | 'view'
   }>(function SlicePath({
     slice,
     center,
@@ -43,7 +45,8 @@ const SlicePath = memo<{
     fillColor,
     nowAngle,
     onSlicePress,
-    isAiSuggested
+    isAiSuggested,
+    mode,
   }) {
     // convert times to angles (degrees)
     const dateStart = new Date(slice.startTime)
@@ -106,7 +109,10 @@ const SlicePath = memo<{
           d={pathD}
           fill={fillColor}
           fillOpacity={opacity}
-          onPress={() => onSlicePress?.(hourIndex)}
+          onPress={() => {
+            console.log('[CategoryRing] slice pressed', slice.id, '→ hourIndex', hourIndex)
+            onSlicePress?.(hourIndex)
+          }}
         />
         {isAiSuggested && (() => {
           // compute midpoint of this arc
@@ -237,8 +243,8 @@ const CategoryRing: React.FC<CategoryRingProps> = ({
 
   return (
     <Svg width={size} height={size} testID={testID}>
+       {separators}
       {filledSlices}
-      {separators}
     </Svg>
   )
 }

@@ -10,6 +10,7 @@ import {
   Dimensions,
   PixelRatio,
 } from 'react-native'
+import { bumpSliceVersionForEdit } from 'services/SliceVersioningService'
 import { LogSlice } from '../../models/LogSlice'
 import DeleteButton from '../../assets/icons/common/DeleteButton'
 
@@ -18,7 +19,9 @@ interface Props {
   slice: LogSlice
   onClose: () => void
   onDelete?: (id: string) => void
-  // onSave?: (updated: LogSlice) => void  // you can add this later
+  onSave: (updated: LogSlice) => void
+  mode: 'view' | 'confirm' | 'edit'
+  onConfirm?: (id: string) => void
 }
 
 const FormField: React.FC<{ label: string; value: string }> = ({ label, value }) => (
@@ -28,7 +31,15 @@ const FormField: React.FC<{ label: string; value: string }> = ({ label, value })
   </View>
 )
 
-const LogDetailModal: React.FC<Props> = ({ visible, slice, onClose, onDelete }) => {
+const LogDetailModal: React.FC<Props> = ({ 
+  visible, 
+  slice, 
+  onClose, 
+  onDelete,
+  onSave,
+  onConfirm,
+  mode,
+ }) => {
   if (!visible) return null
 
   // sizing
@@ -79,11 +90,33 @@ const LogDetailModal: React.FC<Props> = ({ visible, slice, onClose, onDelete }) 
 
         <View style={styles.actions}>
           <TouchableOpacity onPress={onClose} style={styles.actionBtn}>
-            <Text style={styles.actionText}>Cancel</Text>
+            <Text style={styles.actionText}>
+              {mode === 'view' ? 'Close' : 'Cancel'}
+            </Text>
           </TouchableOpacity>
-          {/* <TouchableOpacity onPress={...} style={styles.actionBtn}>
-            <Text style={styles.actionText}>Save</Text>
-          </TouchableOpacity> */}
+
+          {mode === 'edit' && (
+            <TouchableOpacity
+              onPress={() => {
+                const bumped = bumpSliceVersionForEdit(slice)
+                onSave(bumped)
+              }}
+              style={styles.actionBtn}
+              testID="log-detail-save"
+            >
+              <Text style={styles.actionText}>Save</Text>
+            </TouchableOpacity>
+          )}
+
+          {mode === 'confirm' && onConfirm && (
+            <TouchableOpacity
+              onPress={() => onConfirm(slice.id)}
+              style={styles.actionBtn}
+              testID="log-detail-confirm"
+            >
+              <Text style={styles.actionText}>Confirm</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     </Modal>

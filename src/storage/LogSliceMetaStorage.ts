@@ -1,4 +1,4 @@
-
+// src/storage/LogSliceMetaStorage.ts
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import type { LogSliceMeta } from '../models/LogSliceMeta'
 

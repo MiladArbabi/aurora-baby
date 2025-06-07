@@ -9,6 +9,7 @@ export const LogSliceSchema = z.object({
   endTime: z.string(),            // ISO timestamp
   createdAt: z.string(),          // ISO timestamp
   updatedAt: z.string(),          // ISO timestamp
+  version: z.number().optional().default(1),
 })
 
 export type LogSlice = z.infer<typeof LogSliceSchema>
