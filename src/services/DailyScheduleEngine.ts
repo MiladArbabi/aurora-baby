@@ -27,6 +27,7 @@ export class DailyScheduleEngine {
         endTime: new Date(startOfDay.getTime() + 2 * 60 * 60 * 1000).toISOString(), // +2h
         createdAt: now.toISOString(),
         updatedAt: now.toISOString(),
+        version: 1, 
       },
       {
         id: 'slice-2',
@@ -36,6 +37,7 @@ export class DailyScheduleEngine {
         endTime: new Date(startOfDay.getTime() + 2.5 * 60 * 60 * 1000).toISOString(), // +30m
         createdAt: now.toISOString(),
         updatedAt: now.toISOString(),
+        version: 1,
       },
     ]
   }

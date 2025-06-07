@@ -1,10 +1,12 @@
 // src/services/ScheduleService.ts
 import { LogSlice } from '../models/LogSlice';
-import { DailyScheduleEngine } from '../services/DailyScheduleEngine';
 import {
   getDailySchedule,
   saveDailySchedule,
 } from '../storage/ScheduleStorage';
+import { DefaultScheduleGenerator } from './DefaultScheduleGenerator'
+import { DEFAULT_TEMPLATE }         from '../config/defaultScheduleTemplates'
+
 
 /**
  * If a schedule already exists for (babyId, dateISO), returns it.
@@ -21,10 +23,11 @@ export async function ensureScheduleForDate(
   }
 
   // 2) None found → generate via the engine
-  const generated: LogSlice[] = DailyScheduleEngine.generateScheduleForDate({
+  const generated = DefaultScheduleGenerator.generateFromTemplate({
     babyId,
-    date: dateISO,
-  });
+    dateISO,
+    template: DEFAULT_TEMPLATE
+  })
 
   // 3) Persist it for future use
   await saveDailySchedule(dateISO, babyId, generated);

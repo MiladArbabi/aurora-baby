@@ -1,3 +1,4 @@
+// src/models/ScheduleTemplate.ts
 import { z } from 'zod'
 
 // One block in the default daily schedule
