@@ -11,6 +11,7 @@ interface CategoryRingProps {
   fillColor: string           // color to fill when mask[h] === true
   separatorColor?: string    // same faint lines as SliceRing
   testID?: string
+  placeholderColor?: string // color to fill when mask[h] === false
   accessible?: boolean       // for accessibility purposes
   accessibilityLabel?: string
   slices: LogSlice[];            // ← new: array of LogSlice
@@ -183,17 +184,67 @@ const describeSlice = (
   ].join(' ')
 }
 
+// Single arc component (for both real slices and placeholders)
+const ArcPath = memo<{
+  startAngle: number
+  endAngle: number
+  center: number
+  innerRadius: number
+  outerRadius: number
+  color: string
+  opacity: number
+  onPress?: () => void
+  showMarker?: boolean
+}>(
+  ({
+    startAngle,
+    endAngle,
+    center,
+    innerRadius,
+    outerRadius,
+    color,
+    opacity,
+    onPress,
+    showMarker,
+  }) => {
+    const d = describeSlice(center, center, innerRadius, outerRadius, startAngle, endAngle)
+    return (
+      <>
+        <Path d={d} fill={color} fillOpacity={opacity} onPress={onPress} />
+        {showMarker && (() => {
+          // ✨ AI marker
+          const mid = (startAngle + endAngle) / 2
+          const midR = (innerRadius + outerRadius) / 2
+          const { x, y } = polarToCartesian(center, center, midR, mid)
+          return (
+            <Text x={x} y={y} textAnchor="middle" alignmentBaseline="middle">
+              ✨
+            </Text>
+          )
+        })()}
+      </>
+    )
+  },
+  // only re-render if key props change
+  (a, b) =>
+    a.startAngle === b.startAngle &&
+    a.endAngle === b.endAngle &&
+    a.color === b.color &&
+    a.opacity === b.opacity
+)
+
 const CategoryRing: React.FC<CategoryRingProps> = ({
   size,
   strokeWidth,
   fillColor,
-  separatorColor = 'rgba(0,0,0,0.1)',
+  placeholderColor = 'rgba(113, 1, 218, 0.15)',
+  separatorColor = 'rgba(74, 74, 74, 0.05)',
   testID,
   onSlicePress,
   slices,
   style,
   dimFuture,
-  aiSuggestedIds
+  aiSuggestedIds,
 }) => {
   const center = size / 2
   const outerRadius = size / 2
@@ -224,26 +275,95 @@ const CategoryRing: React.FC<CategoryRingProps> = ({
             isAiSuggested={aiSuggestedIds.has(slice.id)}
           />
         ))
+    // 1) Build and sort slice intervals
+  const intervals = slices
+  .map(s => {
+    const start = new Date(s.startTime)
+    const end   = new Date(s.endTime)
+    const toAngle = (d: Date) =>
+      ((d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60) / (24 * 60)) * 360
+    return { startAngle: toAngle(start), endAngle: toAngle(end), id: s.id }
+  })
+  .sort((a, b) => a.startAngle - b.startAngle)    
+
+   // 2) Compute gaps BETWEEN intervals (and before/after)
+   const gaps: { startAngle: number; endAngle: number }[] = []
+   if (intervals.length === 0) {
+     // entire circle empty
+     gaps.push({ startAngle: 0, endAngle: 360 })
+   } else {
+     // gap before first
+     if (intervals[0].startAngle > 0) {
+       gaps.push({ startAngle: 0, endAngle: intervals[0].startAngle })
+     }
+     // between slices
+     intervals.forEach((cur, i) => {
+       const next = intervals[i + 1]
+       if (next && next.startAngle > cur.endAngle) {
+         gaps.push({ startAngle: cur.endAngle, endAngle: next.startAngle })
+       }
+     })
+     // after last
+     const last = intervals[intervals.length - 1]
+     if (last.endAngle < 360) {
+       gaps.push({ startAngle: last.endAngle, endAngle: 360 })
+     }
+   }      
+
+      // 3) Render placeholder arcs first
+  const placeholderArcs = gaps.map((gap, i) => (
+    <ArcPath
+      key={`gap-${i}`}
+      startAngle={gap.startAngle}
+      endAngle={gap.endAngle}
+      center={center}
+      innerRadius={innerRadius}
+      outerRadius={outerRadius}
+      color={placeholderColor}        // using the new prop
+      opacity={0.3}
+    />
+  ))    
+  
+    // 4) Render actual slice arcs on top
+    const sliceArcs = intervals.map(({ startAngle, endAngle, id }) => {
+      const isFuture = startAngle >= nowAngle
+      return (
+        <ArcPath
+          key={id}
+          startAngle={startAngle}
+          endAngle={endAngle}
+          center={center}
+          innerRadius={innerRadius}
+          outerRadius={outerRadius}
+          color={fillColor}
+          opacity={isFuture ? 0.6 : 1}
+          onPress={() => onSlicePress?.(Math.floor(startAngle / (360 / 24)))}
+          showMarker={aiSuggestedIds.has(id)}
+        />
+      )
+    })      
       
-        const separators: React.ReactNode[] = []
-        for (let i = 0; i < 24; i++) {
-          const startAngle = (i * 360) / 24
-          const endAngle   = ((i + 1) * 360) / 24
-          const d = describeSlice(center, center, innerRadius, outerRadius, startAngle, endAngle)
-          separators.push(
-            <Path
-              key={`sep-${i}`}
-              d={d}
-              fill="transparent"
-              stroke={separatorColor}
-              strokeWidth={1}
-            />
-          )
-        }
+   // 5) Hourly separators
+   const separators = Array.from({ length: 24 }).map((_, i) => {
+    const sA = (i * 360) / 24
+    const eA = ((i + 1) * 360) / 24
+    const d = describeSlice(center, center, innerRadius, outerRadius, sA, eA)
+    return (
+      <Path
+        key={`sep-${i}`}
+        d={d}
+        fill="transparent"
+        stroke={separatorColor}
+        strokeWidth={1}
+      />
+    )
+  })
 
   return (
     <Svg width={size} height={size} testID={testID}>
-       {separators}
+      {placeholderArcs} 
+      {sliceArcs}
+      {separators}  
       {filledSlices}
     </Svg>
   )

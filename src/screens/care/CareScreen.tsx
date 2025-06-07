@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Platform,
   GestureResponderEvent,
+  Modal,
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -34,6 +35,7 @@ import { setSliceConfirmed } from '../../services/LogSliceMetaService'
 import { getLogSliceMeta } from '../../storage/LogSliceMetaStorage'
 import { saveLogSliceMeta } from '../../storage/LogSliceMetaStorage'
 import { LogSliceMeta } from '../../models/LogSliceMeta'
+import ScheduleEditor from '../../components/carescreen/ScheduleEditor'
 
 import FillNextDayLogsIcon from '../../assets/carescreen/common/FillNextDayLogsIcon'
 import ClearLogs from '../../assets/carescreen/common/ClearLogs'
@@ -84,6 +86,7 @@ const CareScreen: React.FC = () => {
   const [confirmedIds, setConfirmedIds] = useState<Set<string>>(new Set())
   const [unconfirmedSliceIds, setUnconfirmedSliceIds] = useState<string[]>([])
   const [aiSuggestedIds, setAiSuggestedIds] = useState<Set<string>>(new Set())
+  const [isEditingSchedule, setIsEditingSchedule] = useState(false)
 
   // Memoize category-specific subsets
   const awakeSlices = useMemo(() => slices.filter(s => s.category === 'awake'), [slices])
@@ -413,6 +416,10 @@ function onRingTouch(evt: GestureResponderEvent) {
         <TouchableOpacity onPress={handleShare} style={styles.iconWrapper}>
           <ShareIcon width={75} height={75} fill={theme.colors.background || '#453F4E'} />
         </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => setIsEditingSchedule(true)} style={styles.iconWrapper}>
+          <Text style={styles.confirmButtonText}>Edit Schedule</Text>
+        </TouchableOpacity>
       </View>
 
       {/* ── 2. Tracker ───────────────────────────────────────── */}
@@ -536,7 +543,22 @@ function onRingTouch(evt: GestureResponderEvent) {
       <View style={styles.filterContainer} onLayout={logLayout('Filter')}>
         <TrackerFilter showLast24h={showLast24h} onToggle={handleToggleFilter} />
       </View>
-    </CareLayout> 
+    </CareLayout>
+
+    {isEditingSchedule && (
+      <Modal animationType="slide" transparent>
+        <ScheduleEditor
+          slices={slices}
+          onSave={async updated => {
+            // persist whole‐day schedule
+            await saveDailySchedule(todayISO, babyId, updated)
+            setIsEditingSchedule(false)
+            refresh()
+          }}
+          onCancel={() => setIsEditingSchedule(false)}
+        />
+      </Modal>
+    )} 
    {/* ── 4. Detail Modal ───────────────────────────────────── */}
    {selectedSlice && (
     <LogDetailModal
@@ -563,11 +585,11 @@ function onRingTouch(evt: GestureResponderEvent) {
           }
         }
         setSelectedSlice(null)
-      }}
-    />
-  )}
-</>
-) 
+        }}
+      />
+    )}
+  </>
+  ) 
 }
 
 export default CareScreen
@@ -651,7 +673,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   confirmButtonText: {
-    color: '#FFFFFF',
+    color: '#000000',
     fontFamily: 'Inter',
     fontSize: 14,
   },
