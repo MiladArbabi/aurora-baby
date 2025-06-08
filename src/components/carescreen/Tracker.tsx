@@ -18,6 +18,9 @@ import LogDetailModal from './LogDetailModal'
 
 import { setSliceConfirmed } from '../../services/LogSliceMetaService'
 import { getTodayISO } from '../../utils/date'
+import { RING_THICKNESS, RING_SIZE, GAP, CLOCK_STROKE_WIDTH, CLOCK_STROKE_EXTRA, OUTER_RADIUS,
+  WRAPPER_SIZE, CENTER, INNERMOST_DIAMETER, CLOCK_RADIUS, T, G
+ } from 'utils/trackerConstants'
 
 export type TrackerProps = {
   slices: LogSlice[]
@@ -29,16 +32,6 @@ export type TrackerProps = {
   onResize: (id: string, newStartAngle?: number, newEndAngle?: number) => void
 }
 
-const RING_SIZE = Dimensions.get('window').width * 0.9;
-
-const RING_THICKNESS = 30;
-const GAP = 1;
-const CLOCK_STROKE_WIDTH = 5;
-const CLOCK_STROKE_EXTRA = CLOCK_STROKE_WIDTH;
-
-const OUTER_RADIUS = RING_SIZE / 2
-const T = RING_THICKNESS
-const G = GAP
 
 export default function Tracker({ slices, nowFrac, isEditingSchedule, aiSuggestedIds, onSlicePress, onResize }: TrackerProps) {
   // Derive subsets
@@ -47,13 +40,11 @@ export default function Tracker({ slices, nowFrac, isEditingSchedule, aiSuggeste
 
   const awakeSlices = useMemo(() => slices.filter(s => s.category === 'awake'), [slices])
   const sleepSlices = useMemo(() => slices.filter(s => s.category === 'sleep'), [slices])
-  const feedDiaperSlices = useMemo(() => slices.filter(s => s.category === 'feed' || s.category === 'diaper'), [slices])
+  const diaperSlices = useMemo(() => slices.filter(s => s.category === 'diaper' ), [slices])
+  const feedSlices = useMemo(() => slices.filter(s => s.category === 'feed' ), [slices])
   const careSlices = useMemo(() => slices.filter(s => s.category === 'care'), [slices])
-  
-  const WRAPPER_SIZE = RING_SIZE + CLOCK_STROKE_EXTRA * 2;
-  const CENTER = WRAPPER_SIZE / 2;
-  const INNERMOST_DIAMETER = RING_SIZE - 4 * (RING_THICKNESS + GAP);
-  const CLOCK_RADIUS = INNERMOST_DIAMETER / 2 - RING_THICKNESS;
+  const talkSlices  = useMemo(() => slices.filter(s => s.category === 'talk'),  [slices])
+  const otherSlices = useMemo(() => slices.filter(s => s.category === 'other'), [slices])
 
   const [sliceMode, setSliceMode] = useState<'view' | 'edit' | 'confirm'>('view')
   const [selectedSlice, setSelectedSlice] = useState<LogSlice | null>(null)
@@ -81,29 +72,30 @@ export default function Tracker({ slices, nowFrac, isEditingSchedule, aiSuggeste
   }, [CENTER, CLOCK_RADIUS])
 
   // Handler for ring touch events
-function onRingTouch(evt: GestureResponderEvent) {
-  const { locationX, locationY } = evt.nativeEvent
-  const dx = locationX - CENTER
-  const dy = locationY - CENTER
-  const r = Math.hypot(dx, dy)
-
-  // exactly match the three rings you drew:
-  const inOuter = r >= OUTER_RADIUS - T && r <= OUTER_RADIUS
-  const inMiddle = r >= OUTER_RADIUS - 2*T - G && r <= OUTER_RADIUS - T - G
-  const inInner = r >= OUTER_RADIUS - 3*T - 2*G && r <= OUTER_RADIUS - 2*T - 2*G
-
-  if (!inOuter && !inMiddle && !inInner) {
-    // ignore taps in the center (clock/arc) or outside
-    return
-  }
-
-  // if we made it here, it’s one of the colored rings – compute the hour:
-  let angle = Math.atan2(dy, dx) + Math.PI/2
-  if (angle < 0) angle += 2*Math.PI
-  const hour = Math.floor((angle * 180/Math.PI)/(360/24))
-  console.log('ring tapped at hour', hour)
-  handleSlicePress(hour)
-}
+  const onRingTouch = useCallback((evt: GestureResponderEvent) => {
+        const { locationX, locationY } = evt.nativeEvent
+        const dx = locationX - CENTER
+        const dy = locationY - CENTER
+        const r = Math.hypot(dx, dy)
+    
+        const inOuter = r >= OUTER_RADIUS - T && r <= OUTER_RADIUS
+        const inMiddle = r >= OUTER_RADIUS - 2*T - G && r <= OUTER_RADIUS - T - G
+        const inInner = r >= OUTER_RADIUS - 3*T - 2*G && r <= OUTER_RADIUS - 2*T - 2*G
+        if (!inOuter && !inMiddle && !inInner) return
+    
+        let angle = Math.atan2(dy, dx) + Math.PI/2
+        if (angle < 0) angle += 2*Math.PI
+        const hour = Math.floor((angle * 180/Math.PI)/(360/24))
+        onSlicePress(hour)
+      }, [CENTER, OUTER_RADIUS, T, G, onSlicePress])
+    
+      // Responder “should we handle this touch?”
+      const shouldSetResponder = useCallback(() => !isEditingSchedule, [isEditingSchedule])
+    
+      // Only fire onRingTouch if we’re not in edit mode
+      const onResponderRelease = useCallback((evt: GestureResponderEvent) => {
+        if (!isEditingSchedule) onRingTouch(evt)
+      }, [isEditingSchedule, onRingTouch])
 
   //  ── 4) Slice‐tap handler ─────────────────────────────────────────
   const handleSlicePress = useCallback(
@@ -187,23 +179,6 @@ function onRingTouch(evt: GestureResponderEvent) {
                 refresh()
               }
       
-        const handleConfirmAll = useCallback(async () => {
-             // Optimistically clear the banner
-             setUnconfirmedSliceIds([])
-          
-             // Mark each past slice as confirmed
-             await Promise.all(
-               unconfirmedSliceIds.map(id => setSliceConfirmed(babyId, id, true))
-             )
-          
-        // Merge into confirmedIds set
-          setConfirmedIds(prev => {
-            const updated = new Set(prev)
-            unconfirmedSliceIds.forEach(id => updated.add(id))
-               return updated
-             })
-         }, [babyId, unconfirmedSliceIds])
-      
          const handleResize = useCallback(
           async (id: string, newStartAngle?: number, newEndAngle?: number) => {
             // find the slice
@@ -235,60 +210,63 @@ function onRingTouch(evt: GestureResponderEvent) {
           [slices, todayISO, babyId, refresh],
         ) 
 
-            const outermostRingStyle = {
-              position: 'absolute' as const,
-              width: RING_SIZE,
-              height: RING_SIZE,
-              top: CLOCK_STROKE_EXTRA,
-              left: CLOCK_STROKE_EXTRA,
-              zIndex: 1,
-            };
+
+        const ringStyles = useMemo(() => ({
+              outermost: {
+                position: 'absolute' as const,
+                width: RING_SIZE,
+                height: RING_SIZE,
+                top: CLOCK_STROKE_EXTRA,
+                left: CLOCK_STROKE_EXTRA,
+                zIndex: 1,
+              },
+              middle: {
+                position: 'absolute' as const,
+                width: RING_SIZE - 2 * (RING_THICKNESS + GAP),
+                height: RING_SIZE - 2 * (RING_THICKNESS + GAP),
+                top: CLOCK_STROKE_EXTRA + (RING_THICKNESS + GAP),
+                left: CLOCK_STROKE_EXTRA + (RING_THICKNESS + GAP),
+                zIndex: 0,
+              },
+              inner: {
+                position: 'absolute' as const,
+                width: RING_SIZE - 4 * (RING_THICKNESS + GAP),
+                height: RING_SIZE - 4 * (RING_THICKNESS + GAP),
+                top: CLOCK_STROKE_EXTRA + 2 * (RING_THICKNESS + GAP),
+                left: CLOCK_STROKE_EXTRA + 2 * (RING_THICKNESS + GAP),
+              },
+              arcContainer: {
+                ...StyleSheet.absoluteFillObject,
+                justifyContent: 'center' as const,
+                alignItems: 'center' as const,
+              },
+              absolute: {
+                position: 'absolute' as const,
+                top: 0,
+                left: 0,
+              },
+            }), [])
             
-            const middleRingStyle = {
-              position: 'absolute' as const,
-              width: RING_SIZE - 2 * (RING_THICKNESS + GAP),
-              height: RING_SIZE - 2 * (RING_THICKNESS + GAP),
-              top: CLOCK_STROKE_EXTRA + (RING_THICKNESS + GAP),
-              left: CLOCK_STROKE_EXTRA + (RING_THICKNESS + GAP),
-              zIndex: 0,
-            };
-            
-            const innerRingStyle = {
-              position: 'absolute' as const,
-              width: RING_SIZE - 4 * (RING_THICKNESS + GAP),
-              height: RING_SIZE - 4 * (RING_THICKNESS + GAP),
-              top: CLOCK_STROKE_EXTRA + 2 * (RING_THICKNESS + GAP),
-              left: CLOCK_STROKE_EXTRA + 2 * (RING_THICKNESS + GAP),
-            };
-            
-            const arcContainerStyle = {
-              ...StyleSheet.absoluteFillObject,
-              justifyContent: 'center' as const,
-              alignItems: 'center' as const,
-            };
 
   // ── Colors for each category ───────────────────────────────────────    // Colors from theme
     const awakeColor      = theme.colors.trackerAwake;
     const sleepColor      = theme.colors.trackerSleep;
     const feedColor       = theme.colors.trackerFeed;
+    const diaperColor    = theme.colors.trackerDiaper;
     const essColor        = theme.colors.trackerEssentials;
+    const talkColor      = theme.colors.trackerTalk;
+    const otherColor     = theme.colors.trackerEssentials;
     const arcColor        = theme.colors.trackerArc;
     const tickColor       = theme.colors.trackerTick;
         
   return (
     <View style={styles.trackerContainer}>
             <View style={styles.ringWrapper}
-            onStartShouldSetResponder={() => {
-              console.log(`[ringWrapper] shouldResponder? edit=${isEditingSchedule}`);
-              return !isEditingSchedule;
-            }}
-            onResponderRelease={evt => {
-              console.log(`[ringWrapper] responderRelease edit=${isEditingSchedule}`);
-                if (!isEditingSchedule) onRingTouch(evt)
-              }}
+            onStartShouldSetResponder={shouldSetResponder}
+            onResponderRelease={onResponderRelease}
             >
         {/* 1) Awake/Sleep ring pair (outermost) */}
-        <View style={outermostRingStyle}>
+        <View style={ringStyles.outermost}>
             <View style={{ position: 'absolute', top: 0, left: 0 }}>
               <CategoryRing
                 size={RING_SIZE}
@@ -335,51 +313,77 @@ function onRingTouch(evt: GestureResponderEvent) {
             </View>
           </View>
 
-          {/* 2) Feed/Diaper ring (middle) */}
-          <View style={middleRingStyle}>
+          {/* 2) Feed + Diaper rings (middle band) */}
+          <View style={ringStyles.middle}>
+            <View style={{ position: 'absolute', top: 0, left: 0 }}>
               <CategoryRing
-                size={RING_SIZE - 2 * (RING_THICKNESS + GAP)}
+                size={RING_SIZE - 2*(RING_THICKNESS+GAP)}
                 strokeWidth={RING_THICKNESS}
-                slices={feedDiaperSlices}
+                slices={feedSlices}
                 fillColor={feedColor}
                 separatorColor="rgba(0,0,0,0.1)"
-                testID="feed-ring"
-                onSlicePress={!isEditingSchedule
-                  ? (hour: number) => {
-                      console.log(`[CategoryRing] tap hour=${hour} edit=${isEditingSchedule}`);
-                      handleSlicePress(hour);
-                    }
-                  : undefined}
-                accessible
-                accessibilityLabel="Feed/diaper slice"
+                onSlicePress={!isEditingSchedule ? handleSlicePress : undefined}
                 dimFuture={nowFrac}
                 confirmedIds={confirmedIds}
-                aiSuggestedIds={aiSuggestedIds} 
+                aiSuggestedIds={aiSuggestedIds}
               />
+            </View>
+            <View style={{ position: 'absolute', top: 0, left: 0 }}>
+              <CategoryRing
+                size={RING_SIZE - 2*(RING_THICKNESS+GAP)}
+                strokeWidth={RING_THICKNESS}
+                slices={diaperSlices}
+                fillColor={diaperColor}
+                separatorColor="rgba(0,0,0,0.1)"
+                onSlicePress={!isEditingSchedule ? handleSlicePress : undefined}
+                dimFuture={nowFrac}
+                confirmedIds={confirmedIds}
+                aiSuggestedIds={aiSuggestedIds}
+              />
+            </View>
           </View>
 
-          {/* 3) Essentials ring (inner) */}
-          <View style={innerRingStyle}>
-            
+          {/* 3) Care + Talk + Other rings (inner band) */}
+          <View style={ringStyles.inner}>
+            <View style={{ position: 'absolute', top: 0, left: 0 }}>
               <CategoryRing
-                size={RING_SIZE - 4 * (RING_THICKNESS + GAP)}
+                size={RING_SIZE - 4*(RING_THICKNESS+GAP)}
                 strokeWidth={RING_THICKNESS}
                 slices={careSlices}
                 fillColor={essColor}
                 separatorColor="rgba(0,0,0,0.1)"
-                testID="essentials-ring"
-                onSlicePress={!isEditingSchedule
-                  ? (hour: number) => {
-                      console.log(`[CategoryRing] tap hour=${hour} edit=${isEditingSchedule}`);
-                      handleSlicePress(hour);
-                    }
-                  : undefined}
-                accessible
-                accessibilityLabel="Care slice"
+                onSlicePress={!isEditingSchedule ? handleSlicePress : undefined}
                 dimFuture={nowFrac}
                 confirmedIds={confirmedIds}
-                aiSuggestedIds={aiSuggestedIds} 
+                aiSuggestedIds={aiSuggestedIds}
               />
+            </View>
+            <View style={{ position: 'absolute', top: 0, left: 0 }}>
+              <CategoryRing
+                size={RING_SIZE - 4*(RING_THICKNESS+GAP)}
+                strokeWidth={RING_THICKNESS}
+                slices={talkSlices}
+                fillColor={talkColor}
+                separatorColor="rgba(0,0,0,0.1)"
+                onSlicePress={!isEditingSchedule ? handleSlicePress : undefined}
+                dimFuture={nowFrac}
+                confirmedIds={confirmedIds}
+                aiSuggestedIds={aiSuggestedIds}
+              />
+            </View>
+            <View style={{ position: 'absolute', top: 0, left: 0 }}>
+              <CategoryRing
+                size={RING_SIZE - 4*(RING_THICKNESS+GAP)}
+                strokeWidth={RING_THICKNESS}
+                slices={otherSlices}
+                fillColor={otherColor}
+                separatorColor="rgba(0,0,0,0.1)"
+                onSlicePress={!isEditingSchedule ? handleSlicePress : undefined}
+                dimFuture={nowFrac}
+                confirmedIds={confirmedIds}
+                aiSuggestedIds={aiSuggestedIds}
+              />
+            </View>
           </View>
 
           {/* draggable handles overlay */}
@@ -395,7 +399,7 @@ function onRingTouch(evt: GestureResponderEvent) {
           </View>
           
           {/* 4) Clock arc + ticks (innermost) */}
-          <View style={arcContainerStyle}>
+          <View style={ringStyles.arcContainer}>
             <ClockArc
               size={INNERMOST_DIAMETER - 2 * RING_THICKNESS}
               strokeWidth={CLOCK_STROKE_WIDTH}

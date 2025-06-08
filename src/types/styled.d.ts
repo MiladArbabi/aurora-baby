@@ -28,7 +28,10 @@ declare module 'styled-components/native' {
       trackerAwake: string;
       trackerSleep: string;
       trackerFeed: string;
+      trackerDiaper: string;
       trackerEssentials: string;
+      trackerTalk: string;
+      trackerCare: string;
       trackerArc: string;
       trackerTick: string;
     };

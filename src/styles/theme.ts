@@ -32,12 +32,16 @@ export const colors = {
   iconInactive:  '#A9A9A9',
 
   // ───── Tracker-specific palette ─────────────────────────────
-  trackerAwake:      '#FFD54F',         // warm yellow for awake/play
-  trackerSleep:      '#A3B1E0',         // light blue for sleep
-  trackerFeed:       '#FFE0B2',         // pale orange for feed/diaper
-  trackerEssentials: '#F0F4C3',         // pale pastel green for essentials
-  trackerArc:        '#FFFFFF',         // white (clock‐arc)
-  trackerTick:       'rgba(0,0,0,0.8)',  // dark/opaque ticks
+trackerAwake:     '#B3A5C4',        // Lavender   
+trackerSleep:      '#008080',         // Teal  
+trackerFeed:       '#6699CC',         // Dusty Blue  
+trackerDiaper:     '#FFDAB9',         // Peaches  
+trackerEssentials: '#FDD835',         // Sunny Gold  
+trackerTalk:       '#E6E6FA',         // Lavender  
+trackerCare:       '#D2B48C',         // Pastel Brown  
+trackerArc:        '#FFFFFF',  
+trackerTick:       'rgba(0,0,0,0.8)'  
+
 } as const;
 
 export const fonts = {

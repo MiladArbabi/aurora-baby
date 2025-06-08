@@ -101,7 +101,7 @@ const SlicePath = memo<{
     const pathD = describeSlice(center, center, innerRadius, outerRadius, startAngle, endAngle)
   
     const sliceIsFuture = startAngle >= nowAngle
-    const opacity = sliceIsFuture ? 0.6 : 1
+    const opacity = sliceIsFuture ? 0.3 : 1
   
     // compute hourIndex from startAngle
     const hourIndex = Math.floor(startAngle / (360 / 24))
@@ -113,16 +113,20 @@ const SlicePath = memo<{
           d={pathD}
           fill={fillColor}
           fillOpacity={opacity}
-          onPress={() => {
-            console.log('[CategoryRing] slice pressed', slice.id, '→ hourIndex', hourIndex)
-            mode === 'edit' 
-            ? undefined : () => 
-              onSlicePress?.(hourIndex)
-          }}
-          onLongPress={() => {
-                  console.log('[CategoryRing] slice long-pressed', slice.id, '→ hourIndex', hourIndex)
-                  onSliceLongPress?.(hourIndex)
-                }}
+          onPress={mode === 'edit'
+                  ? undefined
+                  : () => {
+                    console.log('[CategoryRing] slice pressed', slice.id, '→ hourIndex', hourIndex)
+                  onSlicePress?.(hourIndex)
+                }
+              }
+              onLongPress={mode === 'edit'
+              ? undefined
+              : () => {
+                console.log('[CategoryRing] slice long-pressed', slice.id, '→ hourIndex', hourIndex)
+              onSliceLongPress?.(hourIndex)
+            }
+          }
         />
         {isAiSuggested && (() => {
           // compute midpoint of this arc
@@ -351,8 +355,9 @@ const CategoryRing: React.FC<CategoryRingProps> = ({
           outerRadius={outerRadius}
           color={fillColor}
           opacity={isFuture ? 0.6 : 1}
-          onPress={isEdit ? undefined : () => 
-            onSlicePress?.(Math.floor(startAngle / (360 / 24)))}
+          onPress={isEdit 
+            ? undefined 
+            : () => onSlicePress?.(Math.floor(startAngle / (360 / 24)))}
           showMarker={aiSuggestedIds.has(id)}
         />
       )

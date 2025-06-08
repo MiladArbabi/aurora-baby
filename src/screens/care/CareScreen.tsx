@@ -5,7 +5,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Dimensions,
   ActivityIndicator,
   Modal,
 } from 'react-native'
@@ -30,50 +29,35 @@ import Tracker from '../../components/carescreen/Tracker'
 import ScheduleEditor from '../../components/carescreen/ScheduleEditor'
 import { getTodayISO } from '../../utils/date'
 import { useSliceMeta } from 'hooks/useSliceMeta'
+import { RING_THICKNESS, RING_SIZE, GAP, CLOCK_STROKE_WIDTH, CLOCK_STROKE_EXTRA, OUTER_RADIUS,
+  WRAPPER_SIZE, CENTER, INNERMOST_DIAMETER, CLOCK_RADIUS
+ } from 'utils/trackerConstants'
 
 type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>
-
-const RING_SIZE = Dimensions.get('window').width * 0.9;
-const RING_THICKNESS = 30;
-const GAP = 1;
-const CLOCK_STROKE_WIDTH = 5;
-const CLOCK_STROKE_EXTRA = CLOCK_STROKE_WIDTH;
-const OUTER_RADIUS = RING_SIZE / 2
-const T = RING_THICKNESS
-const G = GAP
 
 const CareScreen: React.FC = () => {
   const navigation = useNavigation<CareNavProp>()
   const theme = useTheme()
-
   const todayISO = getTodayISO() // Get today's date in 'YYYY-MM-DD' format 
-
-    // Derive shared constants:
-    const WRAPPER_SIZE = RING_SIZE + CLOCK_STROKE_EXTRA * 2;
-    const CENTER = WRAPPER_SIZE / 2;
-    const INNERMOST_DIAMETER = RING_SIZE - 4 * (RING_THICKNESS + GAP);
-    const CLOCK_RADIUS = INNERMOST_DIAMETER / 2 - RING_THICKNESS;
   
   // and for generating AI‐suggested slices
   const [showLast24h, setShowLast24h] = useState(false)
   const babyId = 'defaultBabyId'
   const { slices, nowFrac, loading, error, refresh } = 
   useTrackerSchedule(babyId, showLast24h)
-
   const [selectedSlice, setSelectedSlice] = useState<LogSlice | null>(null)
   const [sliceMode, setSliceMode] = useState<'view'|'confirm'|'edit'>('edit')
 
   const { confirmedIds, unconfirmedIds, aiSuggestedIds, reloadMeta } = useSliceMeta(slices, babyId)
   const [isEditingSchedule, setIsEditingSchedule] = useState(false)
 
-  
   // Bottom‐tab navigation handler
-  const handleNavigate = (tab: MiniTab) => {
+  const handleNavigate = useCallback((tab: MiniTab) => {
     if (tab === 'cards') navigation.navigate('PastLogs')
     else if (tab === 'tracker') return // already here
     else if (tab === 'graph') navigation.navigate('Insights')
     else if (tab === 'future') navigation.navigate('InferredLogs')
-  }
+  }, [navigation])
 
   //  ── 4) Slice‐tap handler ─────────────────────────────────────────
   const handleSlicePress = useCallback(
@@ -123,39 +107,40 @@ const CareScreen: React.FC = () => {
         },
         [slices]
       )
-  
-    const handleSave = async (updated: LogSlice) => {
-          // ── A) Update today's schedule array ───────────────────────────────
-          const schedule = (await getDailySchedule(todayISO, babyId)) || []
-          // If a slice with the same ID exists, replace it; otherwise append.
-          const foundIdx = schedule.findIndex(s => s.id === updated.id)
-          let newSchedule: LogSlice[]
-          if (foundIdx >= 0) {
-            newSchedule = [
-              ...schedule.slice(0, foundIdx),
-              updated,
-              ...schedule.slice(foundIdx + 1),
-            ]
-          } else {
-            newSchedule = [...schedule, updated]
-          }
-          await saveDailySchedule(todayISO, babyId, newSchedule)
-      
-          // ── B) Mark this slice as “edited” in metadata ─────────────────────
-          const nowISO = new Date().toISOString()
-          const sliceMeta: LogSliceMeta = {
-            id: updated.id,
-            source: 'user',
-            confirmed: false,
-            edited: true,
-            lastModified: nowISO,
-          }
-          await saveLogSliceMeta(babyId, sliceMeta)
-      
-          // Close the modal and refresh the view
-          setSelectedSlice(null)
-          refresh()
-        }
+
+      const handleSave = async (updated: LogSlice) => {
+                      // ── A) Update today's schedule array ───────────────────────────────
+                      const schedule = (await getDailySchedule(todayISO, babyId)) || []
+                      // If a slice with the same ID exists, replace it; otherwise append.
+                      const foundIdx = schedule.findIndex(s => s.id === updated.id)
+                      let newSchedule: LogSlice[]
+                      if (foundIdx >= 0) {
+                        newSchedule = [
+                          ...schedule.slice(0, foundIdx),
+                          updated,
+                          ...schedule.slice(foundIdx + 1),
+                        ]
+                      } else {
+                        newSchedule = [...schedule, updated]
+                      }
+                      await saveDailySchedule(todayISO, babyId, newSchedule)
+                  
+                      // ── B) Mark this slice as “edited” in metadata ─────────────────────
+                      const nowISO = new Date().toISOString()
+                      const sliceMeta: LogSliceMeta = {
+                        id: updated.id,
+                        source: 'user',
+                        confirmed: false,
+                        edited: true,
+                        lastModified: nowISO,
+                      }
+                      await saveLogSliceMeta(babyId, sliceMeta)
+                  
+                      // Close the modal and refresh the view
+                      setSelectedSlice(null)
+                      refresh()
+                    }
+            
 
         const handleConfirmAll = useCallback(async () => {
               await Promise.all(
@@ -185,7 +170,6 @@ const CareScreen: React.FC = () => {
         </CareLayout>
       )
     }
-  
     
   console.log(`[CareScreen] isEditingSchedule=${isEditingSchedule}  sliceMode=${sliceMode}`);
   return (
@@ -238,6 +222,37 @@ const CareScreen: React.FC = () => {
         />
       </Modal>
     )} 
+
+    {selectedSlice && (
+      <LogDetailModal
+        visible
+        slice={selectedSlice}
+        mode={sliceMode}
+        onClose={() => setSelectedSlice(null)}
+        onSave={handleSave}
+        onConfirm={async id => {
+          await setSliceConfirmed(babyId, id, true)
+          setSelectedSlice(null)
+          refresh()
+          reloadMeta()
+        }}
+        onDelete={async id => {
+          if (!id.startsWith('new-')) {
+            const sched = await getDailySchedule(todayISO, babyId)
+            if (sched) {
+              await saveDailySchedule(
+                todayISO,
+                babyId,
+                sched.filter(s => s.id !== id)
+              )
+              refresh()
+              reloadMeta()
+            }
+          }
+          setSelectedSlice(null)
+        }}
+      />
+    )}
   </>
   ) 
 }
