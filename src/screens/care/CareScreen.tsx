@@ -1,52 +1,43 @@
 // src/screens/CareScreen.tsx
-import React, { useCallback, useState, useMemo, useEffect } from 'react'
+import React, { useCallback, useState, useEffect } from 'react'
 import {
   View,
   Text,
   StyleSheet,
-  LayoutChangeEvent,
   TouchableOpacity,
   Dimensions,
   ActivityIndicator,
-  Platform,
-  GestureResponderEvent,
   Modal,
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTheme } from 'styled-components/native'
 import { RootStackParamList } from '../../navigation/AppNavigator'
-import Svg, { Line, Circle } from 'react-native-svg'
 
 import CareLayout from '../../components/carescreen/CareLayout'
-import { MiniTab } from '../../components/carescreen/MiniNavBar'
+import MiniNavBar, { MiniTab } from '../../components/carescreen/MiniNavBar'
 import { useTrackerSchedule } from 'hooks/useTrackerSchedule'
 import { LogSlice } from '../../models/LogSlice'
-/* import TrackerFilter from '../../components/carescreen/TrackerFilter'
- */import CategoryRing from '../../components/carescreen/CategoryRing'
-import ClockArc from '../../assets/carescreen/tracker-rings/ClockArc'
-import ResizableSliceOverlay from '../../components/carescreen/ResizableSliceOverlay'
 
 import LogDetailModal from '../../components/carescreen/LogDetailModal'
-import { QuickLogEntry } from '../../models/QuickLogSchema'
-import { getLogsBetween } from '../../services/QuickLogAccess'
-import { quickLogEmitter } from '../../storage/QuickLogEvents'
 import { getDailySchedule, saveDailySchedule } from '../../storage/ScheduleStorage'
 import { setSliceConfirmed } from '../../services/LogSliceMetaService'
 import { getLogSliceMeta } from '../../storage/LogSliceMetaStorage'
 import { saveLogSliceMeta } from '../../storage/LogSliceMetaStorage'
 import { LogSliceMeta } from '../../models/LogSliceMeta'
+
+import Tracker from '../../components/carescreen/Tracker'
 import ScheduleEditor from '../../components/carescreen/ScheduleEditor'
+import { getTodayISO } from '../../utils/date'
+import { useSliceMeta } from 'hooks/useSliceMeta'
 
 type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>
 
 const RING_SIZE = Dimensions.get('window').width * 0.9;
-
 const RING_THICKNESS = 30;
 const GAP = 1;
 const CLOCK_STROKE_WIDTH = 5;
 const CLOCK_STROKE_EXTRA = CLOCK_STROKE_WIDTH;
-
 const OUTER_RADIUS = RING_SIZE / 2
 const T = RING_THICKNESS
 const G = GAP
@@ -55,11 +46,7 @@ const CareScreen: React.FC = () => {
   const navigation = useNavigation<CareNavProp>()
   const theme = useTheme()
 
-  const today = new Date()
-  const year  = today.getFullYear()
-  const month = (today.getMonth() + 1).toString().padStart(2, '0')
-  const day   = today.getDate().toString().padStart(2, '0')
-  const todayISO = `${year}-${month}-${day}` 
+  const todayISO = getTodayISO() // Get today's date in 'YYYY-MM-DD' format 
 
     // Derive shared constants:
     const WRAPPER_SIZE = RING_SIZE + CLOCK_STROKE_EXTRA * 2;
@@ -67,73 +54,19 @@ const CareScreen: React.FC = () => {
     const INNERMOST_DIAMETER = RING_SIZE - 4 * (RING_THICKNESS + GAP);
     const CLOCK_RADIUS = INNERMOST_DIAMETER / 2 - RING_THICKNESS;
   
-  // State for toggling between “last 24h” and “today”
   // and for generating AI‐suggested slices
   const [showLast24h, setShowLast24h] = useState(false)
-  const [isGenerating, setIsGenerating] = useState(false)
-  // Fetch the schedule for the default babyId
   const babyId = 'defaultBabyId'
   const { slices, nowFrac, loading, error, refresh } = 
   useTrackerSchedule(babyId, showLast24h)
-  // State for selected hour, entry, slice, and slice mode
+
   const [selectedSlice, setSelectedSlice] = useState<LogSlice | null>(null)
   const [sliceMode, setSliceMode] = useState<'view'|'confirm'|'edit'>('edit')
-  const [confirmedIds, setConfirmedIds] = useState<Set<string>>(new Set())
-  const [unconfirmedSliceIds, setUnconfirmedSliceIds] = useState<string[]>([])
-  const [aiSuggestedIds, setAiSuggestedIds] = useState<Set<string>>(new Set())
+
+  const { confirmedIds, unconfirmedIds, aiSuggestedIds, reloadMeta } = useSliceMeta(slices, babyId)
   const [isEditingSchedule, setIsEditingSchedule] = useState(false)
 
-  // Memoize category-specific subsets
-  const awakeSlices = useMemo(() => slices.filter(s => s.category === 'awake'), [slices])
-  const sleepSlices = useMemo(() => slices.filter(s => s.category === 'sleep'), [slices])
-  const feedDiaperSlices = useMemo(() => slices.filter(s => s.category === 'feed' || s.category === 'diaper'), [slices])
-  const careSlices = useMemo(() => slices.filter(s => s.category === 'care'), [slices])
-
-  // Whenever 'slices' changes, load metadata to build the two sets (confirmed and unconfirmed)
-  useEffect(() => {
-    let isSubscribed = true
-    async function checkMeta(){
-      const nowMs = Date.now()
-      const newlyConfirmed = new Set<string>()
-      const newlyUnconfirmed: string[] = []
-      const newlyAISuggested = new Set<string>() 
-
-      for (const slice of slices) {
-        const sliceStartMs = new Date(slice.startTime).getTime()
-        const meta = await getLogSliceMeta(babyId, slice.id)
-
-        if (meta && meta.confirmed) {
-          newlyConfirmed.add(slice.id)
-        }
-
-        if (sliceStartMs < nowMs) {
-          if (!meta || meta.confirmed === false) {
-            newlyUnconfirmed.push(slice.id)
-          }
-        }
-
-        // ── NEW: collect AI-suggested slices
-        if (meta && meta.source === 'ai') {
-          newlyAISuggested.add(slice.id)
-        }
-      }
-        
-      if (!isSubscribed) return
-      setConfirmedIds(newlyConfirmed)
-      setUnconfirmedSliceIds(newlyUnconfirmed)
-      setAiSuggestedIds(newlyAISuggested) 
-    }
-    checkMeta()
-    return () => {
-      isSubscribed = false
-    }
-  }, [slices, babyId])
-
-  // Toggle between “last 24h” and “today”
-  const handleToggleFilter = useCallback(() => {
-    setShowLast24h((v) => !v)
-  }, [])
-
+  
   // Bottom‐tab navigation handler
   const handleNavigate = (tab: MiniTab) => {
     if (tab === 'cards') navigation.navigate('PastLogs')
@@ -141,19 +74,6 @@ const CareScreen: React.FC = () => {
     else if (tab === 'graph') navigation.navigate('Insights')
     else if (tab === 'future') navigation.navigate('InferredLogs')
   }
-
-  // Log container heights (if needed)
-  const logLayout = (name: string) => (e: LayoutChangeEvent) => {
-    console.log(`${name} row height:`, e.nativeEvent.layout.height)
-  }
-
-  // Colors from theme
-  const awakeColor      = theme.colors.trackerAwake;
-  const sleepColor      = theme.colors.trackerSleep;
-  const feedColor       = theme.colors.trackerFeed;
-  const essColor        = theme.colors.trackerEssentials;
-  const arcColor        = theme.colors.trackerArc;
-  const tickColor       = theme.colors.trackerTick;
 
   //  ── 4) Slice‐tap handler ─────────────────────────────────────────
   const handleSlicePress = useCallback(
@@ -203,91 +123,6 @@ const CareScreen: React.FC = () => {
         },
         [slices]
       )
-
- // Pre-compute tick lines once (they never depend on changing state):
- const clockTicks = useMemo(() => {
-  return Array.from({ length: 24 }).map((_, i) => {
-    const tickOuter = CLOCK_RADIUS + CLOCK_STROKE_WIDTH / 2;
-    const isMajor = [0, 6, 12, 18].includes(i);
-    const tickInner = tickOuter - (isMajor ? 12 : 6);
-
-    const angleDeg = (i * 360) / 24;
-    const angleRad = ((angleDeg - 90) * Math.PI) / 180;
-
-    const x1 = CENTER + tickOuter * Math.cos(angleRad);
-    const y1 = CENTER + tickOuter * Math.sin(angleRad);
-    const x2 = CENTER + tickInner * Math.cos(angleRad);
-    const y2 = CENTER + tickInner * Math.sin(angleRad);
-
-    return (
-      <Line
-        key={`tick-${i}`}
-        x1={x1}
-        y1={y1}
-        x2={x2}
-        y2={y2}
-        stroke={tickColor}
-        strokeWidth={1}
-      />
-    );
-  });
-}, [CENTER, CLOCK_RADIUS, tickColor]);
-
-function onRingTouch(evt: GestureResponderEvent) {
-  const { locationX, locationY } = evt.nativeEvent
-  const dx = locationX - CENTER
-  const dy = locationY - CENTER
-  const r = Math.hypot(dx, dy)
-
-  // exactly match the three rings you drew:
-  const inOuter = r >= OUTER_RADIUS - T && r <= OUTER_RADIUS
-  const inMiddle = r >= OUTER_RADIUS - 2*T - G && r <= OUTER_RADIUS - T - G
-  const inInner = r >= OUTER_RADIUS - 3*T - 2*G && r <= OUTER_RADIUS - 2*T - 2*G
-
-  if (!inOuter && !inMiddle && !inInner) {
-    // ignore taps in the center (clock/arc) or outside
-    return
-  }
-
-  // if we made it here, it’s one of the colored rings – compute the hour:
-  let angle = Math.atan2(dy, dx) + Math.PI/2
-  if (angle < 0) angle += 2*Math.PI
-  const hour = Math.floor((angle * 180/Math.PI)/(360/24))
-  console.log('ring tapped at hour', hour)
-  handleSlicePress(hour)
-}
-
-    const outermostRingStyle = {
-      position: 'absolute' as const,
-      width: RING_SIZE,
-      height: RING_SIZE,
-      top: CLOCK_STROKE_EXTRA,
-      left: CLOCK_STROKE_EXTRA,
-      zIndex: 1,
-    };
-    
-    const middleRingStyle = {
-      position: 'absolute' as const,
-      width: RING_SIZE - 2 * (RING_THICKNESS + GAP),
-      height: RING_SIZE - 2 * (RING_THICKNESS + GAP),
-      top: CLOCK_STROKE_EXTRA + (RING_THICKNESS + GAP),
-      left: CLOCK_STROKE_EXTRA + (RING_THICKNESS + GAP),
-      zIndex: 0,
-    };
-    
-    const innerRingStyle = {
-      position: 'absolute' as const,
-      width: RING_SIZE - 4 * (RING_THICKNESS + GAP),
-      height: RING_SIZE - 4 * (RING_THICKNESS + GAP),
-      top: CLOCK_STROKE_EXTRA + 2 * (RING_THICKNESS + GAP),
-      left: CLOCK_STROKE_EXTRA + 2 * (RING_THICKNESS + GAP),
-    };
-    
-    const arcContainerStyle = {
-      ...StyleSheet.absoluteFillObject,
-      justifyContent: 'center' as const,
-      alignItems: 'center' as const,
-    };
   
     const handleSave = async (updated: LogSlice) => {
           // ── A) Update today's schedule array ───────────────────────────────
@@ -322,53 +157,13 @@ function onRingTouch(evt: GestureResponderEvent) {
           refresh()
         }
 
-  const handleConfirmAll = useCallback(async () => {
-       // Optimistically clear the banner
-       setUnconfirmedSliceIds([])
-    
-       // Mark each past slice as confirmed
-       await Promise.all(
-         unconfirmedSliceIds.map(id => setSliceConfirmed(babyId, id, true))
-       )
-    
-  // Merge into confirmedIds set
-    setConfirmedIds(prev => {
-      const updated = new Set(prev)
-      unconfirmedSliceIds.forEach(id => updated.add(id))
-         return updated
-       })
-   }, [babyId, unconfirmedSliceIds])
-
-   const handleResize = useCallback(
-    async (id: string, newStartAngle?: number, newEndAngle?: number) => {
-      // find the slice
-      const orig = slices.find(s => s.id === id)
-      if (!orig) return
-  
-      // compute new ISO times from angles
-      const angleToTime = (angle: number) => {
-        const totalMinutes = (angle / 360) * 24 * 60
-        const hours = Math.floor(totalMinutes / 60)
-        const minutes = Math.round(totalMinutes % 60)
-        const pad2 = (n: number) => n.toString().padStart(2,'0')
-        return `${todayISO}T${pad2(hours)}:${pad2(minutes)}:00.000`
-      }
-  
-      const updated: LogSlice = {
-        ...orig,
-       startTime: newStartAngle != null ? angleToTime(newStartAngle) : orig.startTime,
-       endTime:   newEndAngle   != null ? angleToTime(newEndAngle)   : orig.endTime,
-      }
-      // persist
-      const sched = (await getDailySchedule(todayISO, babyId)) || []
-      const idx = sched.findIndex(s => s.id === id)
-      if (idx >= 0) sched[idx] = updated
-      else sched.push(updated)
-      await saveDailySchedule(todayISO, babyId, sched)
-      refresh()
-    },
-    [slices, todayISO, babyId, refresh],
-  )
+        const handleConfirmAll = useCallback(async () => {
+              await Promise.all(
+                unconfirmedIds.map(id => setSliceConfirmed(babyId, id, true))
+              )
+              // Refresh metadata after bulk confirm
+              reloadMeta()
+            }, [babyId, unconfirmedIds, reloadMeta])
 
     // Show loading or error
     if (loading) {
@@ -397,11 +192,11 @@ function onRingTouch(evt: GestureResponderEvent) {
     <>
     <CareLayout activeTab="tracker" onNavigate={handleNavigate} bgColor={theme.colors.accent}>
       {/* ── 0. CONFIRM‐ALL BANNER ────────────────────────────────────────── */}
-     {unconfirmedSliceIds.length > 0 && (
+     {unconfirmedIds.length > 0 && (
        <View style={styles.confirmBanner}>
          <Text style={styles.confirmText}>
-           You have {unconfirmedSliceIds.length} past slice
-           {unconfirmedSliceIds.length > 1 ? 's' : ''} to confirm.
+           You have {unconfirmedIds.length} past slice
+           {unconfirmedIds.length > 1 ? 's' : ''} to confirm.
          </Text>
          <TouchableOpacity onPress={handleConfirmAll} style={styles.confirmButton}>
            <Text style={styles.confirmButtonText}>Confirm All</Text>
@@ -409,162 +204,17 @@ function onRingTouch(evt: GestureResponderEvent) {
        </View>
      )}
 
-      {/* ── 1. Tracker ───────────────────────────────────────── */}
-      <View style={styles.trackerContainer}>
-        <View style={styles.ringWrapper}
-        onStartShouldSetResponder={() => {
-          console.log(`[ringWrapper] shouldResponder? edit=${isEditingSchedule}`);
-          return !isEditingSchedule;
+     <Tracker
+        slices={slices}
+        nowFrac={nowFrac}
+        onSlicePress={handleSlicePress}
+        confirmedIds={confirmedIds}
+        aiSuggestedIds={aiSuggestedIds}
+        onResize={() => {
+          // This is a no-op, but you can implement resizing logic if needed
         }}
-        onResponderRelease={evt => {
-          console.log(`[ringWrapper] responderRelease edit=${isEditingSchedule}`);
-            if (!isEditingSchedule) onRingTouch(evt)
-          }}
-        >
-          {/* 1) Awake/Sleep ring pair (outermost) */}
-          <View style={outermostRingStyle}>
-            <View style={{ position: 'absolute', top: 0, left: 0 }}>
-              <CategoryRing
-                size={RING_SIZE}
-                strokeWidth={RING_THICKNESS}
-                slices={awakeSlices}
-                fillColor={awakeColor}
-                separatorColor="rgba(0,0,0,0.1)"
-                testID="awake-ring"
-                accessible
-                accessibilityLabel={`Awake slices`}
-                onSlicePress={!isEditingSchedule ? handleSlicePress : undefined}
-                onSliceLongPress={!isEditingSchedule ? (hour) => {
-                    console.log('[CareScreen] slice long-press → edit mode', hour)
-                    setSliceMode('edit')
-                    // find the slice and setSelectedSlice(...)
-                    const s = slices.find(s => new Date(s.startTime).getHours() === hour)
-                    if (s) setSelectedSlice(s)
-                  } : undefined}
-                dimFuture={nowFrac}
-                confirmedIds={confirmedIds}
-                aiSuggestedIds={aiSuggestedIds} 
-              />
-            </View>
-            <View style={{ position: 'absolute', top: 0, left: 0 }}>
-              <CategoryRing
-                size={RING_SIZE}
-                strokeWidth={RING_THICKNESS}
-                slices={sleepSlices}
-                onSlicePress={!isEditingSchedule
-                  ? (hour: number) => {
-                      console.log(`[CategoryRing] tap hour=${hour} edit=${isEditingSchedule}`);
-                      handleSlicePress(hour);
-                    }
-                  : undefined}
-                dimFuture={nowFrac}
-                accessible
-                accessibilityLabel={`Sleep slices`}
-                fillColor={sleepColor}
-                separatorColor="rgba(0,0,0,0.1)"
-                testID="sleep-ring"
-                confirmedIds={confirmedIds}
-                aiSuggestedIds={aiSuggestedIds} 
-              />
-            </View>
-          </View>
-
-          {/* 2) Feed/Diaper ring (middle) */}
-          <View style={middleRingStyle}>
-              <CategoryRing
-                size={RING_SIZE - 2 * (RING_THICKNESS + GAP)}
-                strokeWidth={RING_THICKNESS}
-                slices={feedDiaperSlices}
-                fillColor={feedColor}
-                separatorColor="rgba(0,0,0,0.1)"
-                testID="feed-ring"
-                onSlicePress={!isEditingSchedule
-                  ? (hour: number) => {
-                      console.log(`[CategoryRing] tap hour=${hour} edit=${isEditingSchedule}`);
-                      handleSlicePress(hour);
-                    }
-                  : undefined}
-                accessible
-                accessibilityLabel="Feed/diaper slice"
-                dimFuture={nowFrac}
-                confirmedIds={confirmedIds}
-                aiSuggestedIds={aiSuggestedIds} 
-              />
-          </View>
-
-          {/* 3) Essentials ring (inner) */}
-          <View style={innerRingStyle}>
-            
-              <CategoryRing
-                size={RING_SIZE - 4 * (RING_THICKNESS + GAP)}
-                strokeWidth={RING_THICKNESS}
-                slices={careSlices}
-                fillColor={essColor}
-                separatorColor="rgba(0,0,0,0.1)"
-                testID="essentials-ring"
-                onSlicePress={!isEditingSchedule
-                  ? (hour: number) => {
-                      console.log(`[CategoryRing] tap hour=${hour} edit=${isEditingSchedule}`);
-                      handleSlicePress(hour);
-                    }
-                  : undefined}
-                accessible
-                accessibilityLabel="Care slice"
-                dimFuture={nowFrac}
-                confirmedIds={confirmedIds}
-                aiSuggestedIds={aiSuggestedIds} 
-              />
-          </View>
-
-          {/* draggable handles overlay */}
-          <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-          {isEditingSchedule && (
-          <ResizableSliceOverlay
-            size={RING_SIZE + CLOCK_STROKE_EXTRA * 2}
-            strokeWidth={RING_THICKNESS}
-            slices={slices}
-            onResize={handleResize}
-          />
-        )}
-          </View>
-          
-          {/* 4) Clock arc + ticks (innermost) */}
-          <View style={arcContainerStyle}>
-            <ClockArc
-              size={INNERMOST_DIAMETER - 2 * RING_THICKNESS}
-              strokeWidth={CLOCK_STROKE_WIDTH}
-              color={arcColor}
-              progress={nowFrac}
-              testID="time-arc"
-              accessible
-              accessibilityLabel={`Current time indicator at ${Math.floor(nowFrac * 24)}:00`}
-            />
-            <Svg
-              width={WRAPPER_SIZE}
-              height={WRAPPER_SIZE}
-              style={styles.tickSvg}
-            >
-              {clockTicks}
-
-              {/* Now‐marker dot at end of arc */}
-              <Circle
-                cx={
-                  CENTER +
-                  (CLOCK_RADIUS + CLOCK_STROKE_WIDTH / 2) *
-                    Math.cos(nowFrac * 2 * Math.PI - Math.PI / 2)
-                }
-                cy={
-                  CENTER +
-                  (CLOCK_RADIUS + CLOCK_STROKE_WIDTH / 2) *
-                    Math.sin(nowFrac * 2 * Math.PI - Math.PI / 2)
-                }
-                r={4}
-                fill={theme.colors.highlight || '#FF4081'}
-              />
-            </Svg>
-          </View>
-        </View>
-      </View>
+        isEditingSchedule={isEditingSchedule}
+      />
 
       {/* ── 2. Edit Schedule ─────────────────────────────────────────── */}
       <View style={styles.buttonsContainer}>
@@ -588,35 +238,6 @@ function onRingTouch(evt: GestureResponderEvent) {
         />
       </Modal>
     )} 
-   {/* ── 4. Detail Modal ───────────────────────────────────── */}
-   {selectedSlice && (
-    <LogDetailModal
-      visible={true}
-      slice={selectedSlice}
-      mode={sliceMode}
-      onClose={() => setSelectedSlice(null)}
-      onSave={handleSave}
-      onConfirm={async (id) => {
-        await setSliceConfirmed(babyId, id, true)
-        setSelectedSlice(null)
-        refresh()
-      }}
-      onDelete={async (id) => {
-        if (!id.startsWith('new-')) {
-          const sched = await getDailySchedule(todayISO, babyId)
-          if (sched) {
-            await saveDailySchedule(
-              todayISO,
-              babyId,
-              sched.filter((s) => s.id !== id)
-            )
-            refresh()
-          }
-        }
-        setSelectedSlice(null)
-        }}
-      />
-    )}
   </>
   ) 
 }

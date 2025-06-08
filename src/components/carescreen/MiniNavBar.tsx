@@ -1,6 +1,5 @@
 import React from 'react'
 import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native'
-import { SvgProps } from 'react-native-svg'
 import TrackerIcon from '../../assets/carescreen/mini-navbar/TrackerIcon'
 import GraphIcon   from '../../assets/carescreen/mini-navbar/GraphIcon'
 import CardsIcon   from '../../assets/carescreen/mini-navbar/CardsIcon'
