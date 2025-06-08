@@ -22,8 +22,8 @@ import CareLayout from '../../components/carescreen/CareLayout'
 import { MiniTab } from '../../components/carescreen/MiniNavBar'
 import { useTrackerSchedule } from 'hooks/useTrackerSchedule'
 import { LogSlice } from '../../models/LogSlice'
-import TrackerFilter from '../../components/carescreen/TrackerFilter'
-import CategoryRing from '../../components/carescreen/CategoryRing'
+/* import TrackerFilter from '../../components/carescreen/TrackerFilter'
+ */import CategoryRing from '../../components/carescreen/CategoryRing'
 import ClockArc from '../../assets/carescreen/tracker-rings/ClockArc'
 import ResizableSliceOverlay from '../../components/carescreen/ResizableSliceOverlay'
 
@@ -37,10 +37,6 @@ import { getLogSliceMeta } from '../../storage/LogSliceMetaStorage'
 import { saveLogSliceMeta } from '../../storage/LogSliceMetaStorage'
 import { LogSliceMeta } from '../../models/LogSliceMeta'
 import ScheduleEditor from '../../components/carescreen/ScheduleEditor'
-
-import FillNextDayLogsIcon from '../../assets/carescreen/common/FillNextDayLogsIcon'
-import ClearLogs from '../../assets/carescreen/common/ClearLogs'
-import ShareIcon from '../../assets/carescreen/common/ShareIcon'
 
 type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>
 
@@ -80,8 +76,6 @@ const CareScreen: React.FC = () => {
   const { slices, nowFrac, loading, error, refresh } = 
   useTrackerSchedule(babyId, showLast24h)
   // State for selected hour, entry, slice, and slice mode
-  const [selectedHour, setSelectedHour] = useState<number | null>(null)
-  const [hourEntry, setHourEntry] = useState<QuickLogEntry | null>(null)
   const [selectedSlice, setSelectedSlice] = useState<LogSlice | null>(null)
   const [sliceMode, setSliceMode] = useState<'view'|'confirm'|'edit'>('edit')
   const [confirmedIds, setConfirmedIds] = useState<Set<string>>(new Set())
@@ -327,25 +321,6 @@ function onRingTouch(evt: GestureResponderEvent) {
           setSelectedSlice(null)
           refresh()
         }
-    
-  // Example handlers for the three icons (Clear, Fill, Share)
-  // Currently, they log to console or toggle a flag.
-  const handleClearAll = () => {
-    console.log('Clear‐all icon pressed')
-    // TODO: implement logic (if still needed) or remove
-  }
-
-  const handleFillNextDay = () => {
-    console.log('Fill Next‐Day icon pressed')
-    setIsGenerating(true)
-    // TODO: trigger AI/rule‐based generation if still desired
-    setTimeout(() => setIsGenerating(false), 1000)
-  }
-
-  const handleShare = () => {
-    console.log('Share icon pressed')
-    navigation.navigate('EndOfDayExport')
-  }
 
   const handleConfirmAll = useCallback(async () => {
        // Optimistically clear the banner
@@ -433,30 +408,8 @@ function onRingTouch(evt: GestureResponderEvent) {
          </TouchableOpacity>
        </View>
      )}
-      {/* ── 1. Icons ─────────────────────────────────────────── */}
-      <View style={styles.buttonsContainer}>
-        <TouchableOpacity onPress={handleClearAll} style={styles.iconWrapper}>
-          <ClearLogs width={50} height={50} fill={theme.colors.error || '#D0021B'} />
-        </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={handleFillNextDay}
-          disabled={isGenerating}
-          style={styles.iconWrapper}
-        >
-          <FillNextDayLogsIcon width={50} height={50} fill={theme.colors.primary || '#50E3C2'} />
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={handleShare} style={styles.iconWrapper}>
-          <ShareIcon width={75} height={75} fill={theme.colors.background || '#453F4E'} />
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => setIsEditingSchedule(true)} style={styles.iconWrapper}>
-          <Text style={styles.confirmButtonText}>Edit Schedule</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* ── 2. Tracker ───────────────────────────────────────── */}
+      {/* ── 1. Tracker ───────────────────────────────────────── */}
       <View style={styles.trackerContainer}>
         <View style={styles.ringWrapper}
         onStartShouldSetResponder={() => {
@@ -575,7 +528,6 @@ function onRingTouch(evt: GestureResponderEvent) {
         )}
           </View>
           
-          
           {/* 4) Clock arc + ticks (innermost) */}
           <View style={arcContainerStyle}>
             <ClockArc
@@ -614,9 +566,11 @@ function onRingTouch(evt: GestureResponderEvent) {
         </View>
       </View>
 
-      {/* ── 3. Filter ─────────────────────────────────────────── */}
-      <View style={styles.filterContainer} onLayout={logLayout('Filter')}>
-        <TrackerFilter showLast24h={showLast24h} onToggle={handleToggleFilter} />
+      {/* ── 2. Edit Schedule ─────────────────────────────────────────── */}
+      <View style={styles.buttonsContainer}>
+        <TouchableOpacity onPress={() => setIsEditingSchedule(true)} style={styles.iconWrapper}>
+          <Text style={styles.confirmButtonText}>Edit Schedule</Text>
+        </TouchableOpacity>
       </View>
     </CareLayout>
 
@@ -678,6 +632,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     marginHorizontal: 16,
+    marginBottom: 32,
   },
   iconWrapper: {
     marginHorizontal: 12,

@@ -2821,10 +2821,60 @@
   resolved "https://registry.npmmirror.com/@noble/hashes/-/hashes-1.8.0.tgz"
   integrity sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==
 
+"@node-llama-cpp/linux-arm64@3.8.1":
+  version "3.8.1"
+  resolved "https://registry.npmmirror.com/@node-llama-cpp/linux-arm64/-/linux-arm64-3.8.1.tgz"
+  integrity sha512-pH05r6za1uIGl6fR5QVgY40ZYPmyFiat2b6TF088DLn/1BntP12dG8EtYntKbogxZvXGniJAmPMqqlZugrj44g==
+
+"@node-llama-cpp/linux-armv7l@3.8.1":
+  version "3.8.1"
+  resolved "https://registry.npmmirror.com/@node-llama-cpp/linux-armv7l/-/linux-armv7l-3.8.1.tgz"
+  integrity sha512-7DFiYyVQpccGATmfBZ5x8hlhPR8Kz9UhQvC4rsXttBI/VLFJk7JyVm93wmgO2acn1TDQ8FbCNvetxF9Llgvkfw==
+
+"@node-llama-cpp/linux-x64-cuda@3.8.1":
+  version "3.8.1"
+  resolved "https://registry.npmmirror.com/@node-llama-cpp/linux-x64-cuda/-/linux-x64-cuda-3.8.1.tgz"
+  integrity sha512-KU/soUE+Z538YvzbRDq+FryqPuIJ9Y6C7/SjMIkg5PwAdPxv4QtWnHusM6PjTPWBoKqUmhePCq+4iluPmgN65Q==
+
+"@node-llama-cpp/linux-x64-vulkan@3.8.1":
+  version "3.8.1"
+  resolved "https://registry.npmmirror.com/@node-llama-cpp/linux-x64-vulkan/-/linux-x64-vulkan-3.8.1.tgz"
+  integrity sha512-QYYnxx8demLlG7DlbZyb9m/3VbJbt2JBHpU9eyHIvBocf1mMF7gXEVLuHpIGCdKLNx0XbDk/NqTLbDTa6SlmCw==
+
+"@node-llama-cpp/linux-x64@3.8.1":
+  version "3.8.1"
+  resolved "https://registry.npmmirror.com/@node-llama-cpp/linux-x64/-/linux-x64-3.8.1.tgz"
+  integrity sha512-UAEGJSG4zgA8UjzhKp1xA17QBd2QjmfXgzXmRBbxapn2B/SxwvqF77MTmZwQiP5949IHX/aB4eWkRz3lSMAfVw==
+
 "@node-llama-cpp/mac-arm64-metal@3.8.1":
   version "3.8.1"
   resolved "https://registry.npmmirror.com/@node-llama-cpp/mac-arm64-metal/-/mac-arm64-metal-3.8.1.tgz"
   integrity sha512-aE9nHqCIN854/kR3EXwpexfVMTggWmN+gHDdmYf6Og255H9UOXg05TdNEGRCPL+nWGLMQTV/FyyPwtl6g3Hdng==
+
+"@node-llama-cpp/mac-x64@3.8.1":
+  version "3.8.1"
+  resolved "https://registry.npmmirror.com/@node-llama-cpp/mac-x64/-/mac-x64-3.8.1.tgz"
+  integrity sha512-QKLLR7HwRjuW7k5c/z6kU2eX7gHdDJySUJ4Htrzw3waYwk49mrCn4OwaSuWmiozZxwg1AxdEaHU9nW7ttu2pNA==
+
+"@node-llama-cpp/win-arm64@3.8.1":
+  version "3.8.1"
+  resolved "https://registry.npmmirror.com/@node-llama-cpp/win-arm64/-/win-arm64-3.8.1.tgz"
+  integrity sha512-EhPBSYZbOrPfabfplDBmpiFbJ4k4Cs5uIQx6fyHt20vKRUYfdnUeqAGkRx3dJzfZRkCj6FgRXBtiWfCBuvf/OA==
+
+"@node-llama-cpp/win-x64-cuda@3.8.1":
+  version "3.8.1"
+  resolved "https://registry.npmmirror.com/@node-llama-cpp/win-x64-cuda/-/win-x64-cuda-3.8.1.tgz"
+  integrity sha512-OO9zsg/lhpt/UqtlpSm4V3GfW+bDIOoeotyJaUu6ffLAODFggK6WVGgLXTxgqZD8Ak0A/boEpRl/ptY2o95kRw==
+
+"@node-llama-cpp/win-x64-vulkan@3.8.1":
+  version "3.8.1"
+  resolved "https://registry.npmmirror.com/@node-llama-cpp/win-x64-vulkan/-/win-x64-vulkan-3.8.1.tgz"
+  integrity sha512-7BDM3FvQqkBz8cUJnYU3ZZWhTiSxkOCyQNujgZt/gIxCGqZBUzYwzxTqoDAwuJkNbIUsIjjSjp0bAJKvE79dMQ==
+
+"@node-llama-cpp/win-x64@3.8.1":
+  version "3.8.1"
+  resolved "https://registry.npmmirror.com/@node-llama-cpp/win-x64/-/win-x64-3.8.1.tgz"
+  integrity sha512-bouBIsStSQPbY5vlGm9Pl48NkQBO7KPxKc+rtbLh6doMpfaDkJIpZQEjefzyI6fpmaskhvWAFZEKWh6gdlguwQ==
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
@@ -3381,6 +3431,11 @@
   resolved "https://registry.npmmirror.com/@react-native-firebase/remote-config/-/remote-config-22.2.0.tgz"
   integrity sha512-D5DEeHnO8+a1MsB6E4HZbSUr4hbmiGfI/P+rqy4gWTN1aPkiPEUmMnqAnCHBKYWp3btDf4fKE0/93/GKsaUb3w==
 
+"@react-native-picker/picker@2.9.0":
+  version "2.9.0"
+  resolved "https://registry.npmmirror.com/@react-native-picker/picker/-/picker-2.9.0.tgz"
+  integrity sha512-khEhIW/uhfMqq/+tvg4rEAiPGT8GX+Y6QydlP2TSMSmRHoSJK+ShXvXZXSr4Sii4imkj4BwvLunGywwtQDODqg==
+
 "@react-native/assets-registry@0.76.7":
   version "0.76.7"
   resolved "https://registry.npmmirror.com/@react-native/assets-registry/-/assets-registry-0.76.7.tgz"
@@ -3797,6 +3852,41 @@
   version "0.1.19"
   resolved "https://registry.npmmirror.com/@reflink/reflink-darwin-arm64/-/reflink-darwin-arm64-0.1.19.tgz"
   integrity sha512-ruy44Lpepdk1FqDz38vExBY/PVUsjxZA+chd9wozjUH9JjuDT/HEaQYA6wYN9mf041l0yLVar6BCZuWABJvHSA==
+
+"@reflink/reflink-darwin-x64@0.1.19":
+  version "0.1.19"
+  resolved "https://registry.npmmirror.com/@reflink/reflink-darwin-x64/-/reflink-darwin-x64-0.1.19.tgz"
+  integrity sha512-By85MSWrMZa+c26TcnAy8SDk0sTUkYlNnwknSchkhHpGXOtjNDUOxJE9oByBnGbeuIE1PiQsxDG3Ud+IVV9yuA==
+
+"@reflink/reflink-linux-arm64-gnu@0.1.19":
+  version "0.1.19"
+  resolved "https://registry.npmmirror.com/@reflink/reflink-linux-arm64-gnu/-/reflink-linux-arm64-gnu-0.1.19.tgz"
+  integrity sha512-7P+er8+rP9iNeN+bfmccM4hTAaLP6PQJPKWSA4iSk2bNvo6KU6RyPgYeHxXmzNKzPVRcypZQTpFgstHam6maVg==
+
+"@reflink/reflink-linux-arm64-musl@0.1.19":
+  version "0.1.19"
+  resolved "https://registry.npmmirror.com/@reflink/reflink-linux-arm64-musl/-/reflink-linux-arm64-musl-0.1.19.tgz"
+  integrity sha512-37iO/Dp6m5DDaC2sf3zPtx/hl9FV3Xze4xoYidrxxS9bgP3S8ALroxRK6xBG/1TtfXKTvolvp+IjrUU6ujIGmA==
+
+"@reflink/reflink-linux-x64-gnu@0.1.19":
+  version "0.1.19"
+  resolved "https://registry.npmmirror.com/@reflink/reflink-linux-x64-gnu/-/reflink-linux-x64-gnu-0.1.19.tgz"
+  integrity sha512-jbI8jvuYCaA3MVUdu8vLoLAFqC+iNMpiSuLbxlAgg7x3K5bsS8nOpTRnkLF7vISJ+rVR8W+7ThXlXlUQ93ulkw==
+
+"@reflink/reflink-linux-x64-musl@0.1.19":
+  version "0.1.19"
+  resolved "https://registry.npmmirror.com/@reflink/reflink-linux-x64-musl/-/reflink-linux-x64-musl-0.1.19.tgz"
+  integrity sha512-e9FBWDe+lv7QKAwtKOt6A2W/fyy/aEEfr0g6j/hWzvQcrzHCsz07BNQYlNOjTfeytrtLU7k449H1PI95jA4OjQ==
+
+"@reflink/reflink-win32-arm64-msvc@0.1.19":
+  version "0.1.19"
+  resolved "https://registry.npmmirror.com/@reflink/reflink-win32-arm64-msvc/-/reflink-win32-arm64-msvc-0.1.19.tgz"
+  integrity sha512-09PxnVIQcd+UOn4WAW73WU6PXL7DwGS6wPlkMhMg2zlHHG65F3vHepOw06HFCq+N42qkaNAc8AKIabWvtk6cIQ==
+
+"@reflink/reflink-win32-x64-msvc@0.1.19":
+  version "0.1.19"
+  resolved "https://registry.npmmirror.com/@reflink/reflink-win32-x64-msvc/-/reflink-win32-x64-msvc-0.1.19.tgz"
+  integrity sha512-E//yT4ni2SyhwP8JRjVGWr3cbnhWDiPLgnQ66qqaanjjnMiu3O/2tjCPQXlcGc/DEYofpDc9fvhv6tALQsMV9w==
 
 "@reflink/reflink@^0.1.16":
   version "0.1.19"
@@ -11035,6 +11125,51 @@ lightningcss-darwin-arm64@1.27.0:
   version "1.27.0"
   resolved "https://registry.npmmirror.com/lightningcss-darwin-arm64/-/lightningcss-darwin-arm64-1.27.0.tgz"
   integrity sha512-Gl/lqIXY+d+ySmMbgDf0pgaWSqrWYxVHoc88q+Vhf2YNzZ8DwoRzGt5NZDVqqIW5ScpSnmmjcgXP87Dn2ylSSQ==
+
+lightningcss-darwin-x64@1.27.0:
+  version "1.27.0"
+  resolved "https://registry.npmmirror.com/lightningcss-darwin-x64/-/lightningcss-darwin-x64-1.27.0.tgz"
+  integrity sha512-0+mZa54IlcNAoQS9E0+niovhyjjQWEMrwW0p2sSdLRhLDc8LMQ/b67z7+B5q4VmjYCMSfnFi3djAAQFIDuj/Tg==
+
+lightningcss-freebsd-x64@1.27.0:
+  version "1.27.0"
+  resolved "https://registry.npmmirror.com/lightningcss-freebsd-x64/-/lightningcss-freebsd-x64-1.27.0.tgz"
+  integrity sha512-n1sEf85fePoU2aDN2PzYjoI8gbBqnmLGEhKq7q0DKLj0UTVmOTwDC7PtLcy/zFxzASTSBlVQYJUhwIStQMIpRA==
+
+lightningcss-linux-arm-gnueabihf@1.27.0:
+  version "1.27.0"
+  resolved "https://registry.npmmirror.com/lightningcss-linux-arm-gnueabihf/-/lightningcss-linux-arm-gnueabihf-1.27.0.tgz"
+  integrity sha512-MUMRmtdRkOkd5z3h986HOuNBD1c2lq2BSQA1Jg88d9I7bmPGx08bwGcnB75dvr17CwxjxD6XPi3Qh8ArmKFqCA==
+
+lightningcss-linux-arm64-gnu@1.27.0:
+  version "1.27.0"
+  resolved "https://registry.npmmirror.com/lightningcss-linux-arm64-gnu/-/lightningcss-linux-arm64-gnu-1.27.0.tgz"
+  integrity sha512-cPsxo1QEWq2sfKkSq2Bq5feQDHdUEwgtA9KaB27J5AX22+l4l0ptgjMZZtYtUnteBofjee+0oW1wQ1guv04a7A==
+
+lightningcss-linux-arm64-musl@1.27.0:
+  version "1.27.0"
+  resolved "https://registry.npmmirror.com/lightningcss-linux-arm64-musl/-/lightningcss-linux-arm64-musl-1.27.0.tgz"
+  integrity sha512-rCGBm2ax7kQ9pBSeITfCW9XSVF69VX+fm5DIpvDZQl4NnQoMQyRwhZQm9pd59m8leZ1IesRqWk2v/DntMo26lg==
+
+lightningcss-linux-x64-gnu@1.27.0:
+  version "1.27.0"
+  resolved "https://registry.npmmirror.com/lightningcss-linux-x64-gnu/-/lightningcss-linux-x64-gnu-1.27.0.tgz"
+  integrity sha512-Dk/jovSI7qqhJDiUibvaikNKI2x6kWPN79AQiD/E/KeQWMjdGe9kw51RAgoWFDi0coP4jinaH14Nrt/J8z3U4A==
+
+lightningcss-linux-x64-musl@1.27.0:
+  version "1.27.0"
+  resolved "https://registry.npmmirror.com/lightningcss-linux-x64-musl/-/lightningcss-linux-x64-musl-1.27.0.tgz"
+  integrity sha512-QKjTxXm8A9s6v9Tg3Fk0gscCQA1t/HMoF7Woy1u68wCk5kS4fR+q3vXa1p3++REW784cRAtkYKrPy6JKibrEZA==
+
+lightningcss-win32-arm64-msvc@1.27.0:
+  version "1.27.0"
+  resolved "https://registry.npmmirror.com/lightningcss-win32-arm64-msvc/-/lightningcss-win32-arm64-msvc-1.27.0.tgz"
+  integrity sha512-/wXegPS1hnhkeG4OXQKEMQeJd48RDC3qdh+OA8pCuOPCyvnm/yEayrJdJVqzBsqpy1aJklRCVxscpFur80o6iQ==
+
+lightningcss-win32-x64-msvc@1.27.0:
+  version "1.27.0"
+  resolved "https://registry.npmmirror.com/lightningcss-win32-x64-msvc/-/lightningcss-win32-x64-msvc-1.27.0.tgz"
+  integrity sha512-/OJLj94Zm/waZShL8nB5jsNj3CfNATLCTyFxZyouilfTmSoLDX7VlVAmhPHoZWVFp4vdmoiEbPEYC8HID3m6yw==
 
 lightningcss@~1.27.0:
   version "1.27.0"
