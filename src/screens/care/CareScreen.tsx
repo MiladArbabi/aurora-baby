@@ -196,12 +196,11 @@ const CareScreen: React.FC = () => {
       )
     }
     
-  console.log(`[CareScreen] isEditingSchedule=${isEditingSchedule}  sliceMode=${sliceMode}`);
   return (
     <>
     <CareLayout activeTab="tracker" onNavigate={handleNavigate} bgColor={theme.colors.accent}>
       {/* ── 0. CONFIRM‐ALL BANNER ────────────────────────────────────────── */}
-     {unconfirmedIds.length > 0 && (
+{/*      {unconfirmedIds.length > 0 && (
        <View style={styles.confirmBanner}>
          <Text style={styles.confirmText}>
            You have {unconfirmedIds.length} past slice
@@ -211,7 +210,7 @@ const CareScreen: React.FC = () => {
            <Text style={styles.confirmButtonText}>Confirm All</Text>
          </TouchableOpacity>
        </View>
-     )}
+     )} */}
 
       {/* ── TRACKER ───────────────────────────────────────────── */}
      <Tracker
@@ -235,8 +234,8 @@ const CareScreen: React.FC = () => {
       </View>
 
       {/* ── DAILY SUMMARY ───────────────────────────────────────────── */}
-      {snapshot && <DailySnapshotSummary snapshot={snapshot} />}
-
+{/*       {snapshot && <DailySnapshotSummary snapshot={snapshot} />}
+ */}
       {/* ToolTip for Time Preview */ }
       {preview && Date.now() < preview.expiresAt && (() => {
         // midpoint math:

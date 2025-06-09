@@ -10,6 +10,7 @@ import {
   Dimensions,
   PixelRatio,
 } from 'react-native'
+import { suggestTagsForSlice } from '../../services/TagSuggestionService'
 import { bumpSliceVersionForEdit } from 'services/SliceVersioningService'
 import { LogSlice } from '../../models/LogSlice'
 import DeleteButton from '../../assets/icons/common/DeleteButton'
@@ -22,6 +23,8 @@ interface Props {
   onSave: (updated: LogSlice) => void
   mode: 'view' | 'confirm' | 'edit'
   onConfirm?: (id: string) => void
+  suggestedTags?: string[]
+  onAddTag?: (tag: string) => void
 }
 
 const FormField: React.FC<{ label: string; value: string }> = ({ label, value }) => (
@@ -39,6 +42,8 @@ const LogDetailModal: React.FC<Props> = ({
   onSave,
   onConfirm,
   mode,
+  suggestedTags = [],
+  onAddTag = () => {},
  }) => {
   if (!visible) return null
 
@@ -117,6 +122,15 @@ const LogDetailModal: React.FC<Props> = ({
               <Text style={styles.actionText}>Confirm</Text>
             </TouchableOpacity>
           )}
+
+        <View style={styles.chipContainer}>
+          {suggestedTags.map(tag => (
+            <TouchableOpacity key={tag} style={styles.tagChip} 
+            onPress={() => onAddTag(tag)}>
+              <Text style={styles.tagText}>#{tag}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
         </View>
       </View>
     </Modal>
@@ -144,7 +158,6 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   deleteBtn: { position: 'absolute', top: 12, right: 12, zIndex: 10 },
-
   title: {
     marginTop: 24,
     fontFamily: 'Edrosa',
@@ -194,6 +207,24 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actionText: { fontFamily: 'Edrosa', fontSize: 16, color: '#000' },
+  chipContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 12,
+    gap: 8,              // or use margin on tagChip
+  },
+  tagChip: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: '#E9DAFA',
+    borderRadius: 16,
+    marginRight: 6,
+    marginBottom: 6,
+  },
+  tagText: {
+    fontSize: 12,
+    color: '#38004D',
+  },
 })
 
 export default LogDetailModal
