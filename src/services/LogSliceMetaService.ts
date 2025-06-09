@@ -1,3 +1,4 @@
+// src/services/LogSliceMetaService.ts
 import { LogSliceMeta, LogSliceMetaSchema } from '../models/LogSliceMeta'
 import {
   getLogSliceMeta,
@@ -7,17 +8,21 @@ import {
 } from '../storage/LogSliceMetaStorage'
 
 /**
- * If no metadata exists yet for this slice, create a default one (with source = "rule" by default).
- * Otherwise, return the existing one.
+ * If no metadata exists yet for this slice, create a default one (with source = "rule").
+ * Otherwise, return the existing one (parsed/validated).
  */
 export async function ensureLogSliceMeta(
   babyId: string,
   sliceId: string
 ): Promise<LogSliceMeta> {
+  // Try load existing
   const existing = await getLogSliceMeta(babyId, sliceId)
-  if (existing) return existing
+  if (existing) {
+    // Validate & normalize
+    return LogSliceMetaSchema.parse(existing)
+  }
 
-  // Default new meta:
+  // Create default meta
   const now = new Date().toISOString()
   const newMeta: LogSliceMeta = {
     id: sliceId,
@@ -25,9 +30,9 @@ export async function ensureLogSliceMeta(
     confirmed: false,
     edited: false,
     lastModified: now,
-    // createdBy is optional; omit here
+    overlap: false,
+    incomplete: false,
   }
-  // Validate against Zod schema:
   const parsed = LogSliceMetaSchema.parse(newMeta)
   await saveLogSliceMeta(babyId, parsed)
   return parsed
@@ -35,16 +40,14 @@ export async function ensureLogSliceMeta(
 
 /**
  * Mark a given slice as “confirmed” (or un‐confirm).
- * If no meta exists, this will create one with `confirmed = true`.
+ * Ensures the result conforms to the schema.
  */
 export async function setSliceConfirmed(
   babyId: string,
   sliceId: string,
   confirmed: boolean
 ): Promise<LogSliceMeta> {
-  // Fetch or create meta
   let meta = await ensureLogSliceMeta(babyId, sliceId)
-  // If already the requested state, just return
   if (meta.confirmed === confirmed) return meta
 
   const now = new Date().toISOString()
@@ -59,7 +62,8 @@ export async function setSliceConfirmed(
 }
 
 /**
- * When a user edits a slice’s category/time, we can mark “edited” = true.
+ * Mark a slice as “edited” or roll it back.
+ * Runs through the schema for safety.
  */
 export async function setSliceEdited(
   babyId: string,
@@ -81,7 +85,7 @@ export async function setSliceEdited(
 }
 
 /**
- * Force‐remove a slice’s metadata entirely (if you had to roll back, for instance).
+ * Remove a slice’s metadata completely.
  */
 export async function removeSliceMeta(
   babyId: string,

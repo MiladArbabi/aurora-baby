@@ -148,6 +148,8 @@ const CareScreen: React.FC = () => {
                         confirmed: false,
                         edited: true,
                         lastModified: nowISO,
+                        overlap: false,
+                        incomplete: false,
                       }
                       await saveLogSliceMeta(babyId, sliceMeta)
                   
