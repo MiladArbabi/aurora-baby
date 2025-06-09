@@ -1,5 +1,4 @@
-// src/components/carescreen/LogDetailModal.tsx
-import React from 'react'
+import React, { useState } from 'react'
 import {
   Modal,
   View,
@@ -9,11 +8,13 @@ import {
   StyleSheet,
   Dimensions,
   PixelRatio,
+  ScrollView,
 } from 'react-native'
-import { suggestTagsForSlice } from '../../services/TagSuggestionService'
-import { bumpSliceVersionForEdit } from 'services/SliceVersioningService'
-import { LogSlice } from '../../models/LogSlice'
 import DeleteButton from '../../assets/icons/common/DeleteButton'
+import { LogSlice } from '../../models/LogSlice'
+import { DateTimeDropdown } from 'components/common/DateTimeDropdown'
+import { MoodSelector, Mood } from 'components/common/MoodSelector'
+import { SwipeableModal } from 'components/common/SwipeableModal'
 
 interface Props {
   visible: boolean
@@ -27,204 +28,128 @@ interface Props {
   onAddTag?: (tag: string) => void
 }
 
-const FormField: React.FC<{ label: string; value: string }> = ({ label, value }) => (
-  <View style={styles.field}>
-    <Text style={styles.fieldLabel}>{label}</Text>
-    <Text style={styles.fieldValue}>{value}</Text>
-  </View>
-)
-
-const LogDetailModal: React.FC<Props> = ({ 
-  visible, 
-  slice, 
-  onClose, 
+const LogDetailModal: React.FC<Props> = ({
+  visible,
+  slice,
+  onClose,
   onDelete,
   onSave,
   onConfirm,
   mode,
   suggestedTags = [],
   onAddTag = () => {},
- }) => {
-  if (!visible) return null
+}) => {
 
-  // sizing
   const screenWidth = Dimensions.get('window').width
-  const modalWidth  = screenWidth * 0.9
-  const modalHeight = (modalWidth * 300) / 373
-  const scale       = screenWidth / 375
-  const scaledSize  = (n: number) => Math.round(PixelRatio.roundToNearestPixel(n * scale))
-
-  // compute display strings
-  const startDt = new Date(slice.startTime)
-  const endDt   = new Date(slice.endTime)
-
-  const dateStringStart = startDt.toLocaleDateString()
-  const timeStringStart = startDt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  const dateStringEnd   = endDt.toLocaleDateString()
-  const timeStringEnd   = endDt.toLocaleTimeString([],   { hour: '2-digit', minute: '2-digit' })
+  const screenHeight = Dimensions.get('window').height
+  const scale = screenWidth / 375
+  const scaled = (n: number) => Math.round(PixelRatio.roundToNearestPixel(n * scale))
 
   return (
-    <Modal visible={visible} transparent animationType="slide">
-      <TouchableWithoutFeedback onPress={onClose} testID="log-detail-backdrop">
-        <View style={styles.backdrop} />
-      </TouchableWithoutFeedback>
+    <SwipeableModal visible={visible} onClose={onClose}>
 
-      <View style={[styles.modal, { width: modalWidth, height: modalHeight }]}>
-        {/* Delete icon top-right */}
-        <TouchableOpacity
-          style={styles.deleteBtn}
-          onPress={() => onDelete?.(slice.id)}
-          testID="log-detail-delete"
-        >
-          <DeleteButton fill={'#FFF'} width={scaledSize(30)} height={scaledSize(30)} />
+        {/* Delete button */}
+        <TouchableOpacity onPress={() => onDelete?.(slice.id)} style={styles.deleteBtn}>
+          <DeleteButton fill="#FFF" width={scaled(24)} height={scaled(24)} />
         </TouchableOpacity>
 
-        {/* “Close” (✕) at top center */}
-        <TouchableOpacity onPress={onClose} testID="log-detail-close">
-          <Text style={styles.title}>✕</Text>
-        </TouchableOpacity>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Category icon + name */}
+          <View style={styles.categoryHeader}>
+            {/* Replace with your category-icon mapping */}
+            <Text style={styles.categoryIcon}>🌅</Text>
+            <Text style={styles.categoryText}>{slice.category.toUpperCase()}</Text>
+          </View>
 
-        <Text style={styles.title}>Log Details</Text>
-        <View style={styles.formContainer}>
-          <FormField label="Category"   value={slice.category} />
-          <FormField label="Start Date" value={dateStringStart} />
-          <FormField label="Start Time" value={timeStringStart} />
-          <FormField label="End Date"   value={dateStringEnd} />
-          <FormField label="End Time"   value={timeStringEnd} />
-        </View>
+          {/* Time section */}
+            <DateTimeDropdown
+              label="Start"
+              value={new Date(slice.startTime)}
+              disabled={mode !== 'edit'}
+              onChange={(newDate: Date) =>
+                onSave({ ...slice, startTime: newDate.toISOString() })
+              }
+            />
 
-        <View style={styles.actions}>
-          <TouchableOpacity onPress={onClose} style={styles.actionBtn}>
-            <Text style={styles.actionText}>
-              {mode === 'view' ? 'Close' : 'Cancel'}
-            </Text>
-          </TouchableOpacity>
+            <DateTimeDropdown
+              label="End"
+              value={new Date(slice.endTime)}
+              disabled={mode !== 'edit'}
+              onChange={(newDate: Date) =>
+                onSave({ ...slice, endTime: newDate.toISOString() })
+              }
+            />
 
-          {mode === 'edit' && (
-            <TouchableOpacity
-              onPress={() => {
-                const bumped = bumpSliceVersionForEdit(slice)
-                onSave(bumped)
-              }}
-              style={styles.actionBtn}
-              testID="log-detail-save"
-            >
-              <Text style={styles.actionText}>Save</Text>
-            </TouchableOpacity>
+          {/* Category-specific fields */}
+          {slice.category === 'awake' && (
+            <>
+              <Text style={styles.sectionTitle}>Wake-up Mood</Text>
+              <MoodSelector
+                label="Wake-up Mood"
+                value={'neutral'} 
+                onSelect={(m: Mood) => {
+                       /* update your slice.meta.mood and save via saveLogSliceMeta(...) */
+                     }}
+                disabled={mode !== 'edit'}
+              />
+              <Text style={styles.sectionTitle}>Wake Method</Text>
+              {/* Could be radio buttons: Child vs Natural */}
+              <View style={styles.radioGroup}>
+                <TouchableOpacity style={styles.radioBtn}><Text>Child</Text></TouchableOpacity>
+                <TouchableOpacity style={styles.radioBtn}><Text>Natural</Text></TouchableOpacity>
+              </View>
+            </>
           )}
 
-          {mode === 'confirm' && onConfirm && (
-            <TouchableOpacity
-              onPress={() => onConfirm(slice.id)}
-              style={styles.actionBtn}
-              testID="log-detail-confirm"
-            >
-              <Text style={styles.actionText}>Confirm</Text>
-            </TouchableOpacity>
-          )}
+          {/* Comments field placeholder */}
+          <Text style={styles.sectionTitle}>Comments</Text>
+          <View style={styles.textInputPlaceholder}>
+            <Text style={styles.sectionTitle} >Tap to add comments...</Text>
+          </View>
 
-        <View style={styles.chipContainer}>
-          {suggestedTags.map(tag => (
-            <TouchableOpacity key={tag} style={styles.tagChip} 
-            onPress={() => onAddTag(tag)}>
-              <Text style={styles.tagText}>#{tag}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-        </View>
-      </View>
-    </Modal>
+          {/* Tags */}
+          <View style={styles.separator} />
+          <Text style={styles.sectionTitle}>Tags</Text>
+          <View style={styles.chipContainer}>
+            {suggestedTags.map(tag => (
+              <TouchableOpacity key={tag} style={styles.tagChip} onPress={() => onAddTag(tag)}>
+                <Text style={styles.tagText}>#{tag}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+    </SwipeableModal>
   )
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' },
-  modal: {
-    position: 'absolute',
-    bottom: 6,
+  handle: {
     alignSelf: 'center',
-    backgroundColor: '#38004D',
-    borderColor: '#E9DAFA',
-    borderWidth: 1,
-    borderTopLeftRadius: 50,
-    borderTopRightRadius: 50,
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 10,
+    width: 40,
+    height: 4,
+    backgroundColor: 'rgba(255,255,255,0.6)',
+    borderRadius: 2,
+    marginVertical: 2,
+  },
+  separator: {
+    width: '90%', 
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    alignSelf: 'center',
+    marginVertical: 6,
   },
   deleteBtn: { position: 'absolute', top: 12, right: 12, zIndex: 10 },
-  title: {
-    marginTop: 24,
-    fontFamily: 'Edrosa',
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#E9DAFA',
-    alignSelf: 'center',
-  },
-  formContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginTop: 32,
-    marginBottom: 12,
-  },
-  field: {
-    width: '48%',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#D7D7D7',
-    borderColor: '#E9DAFA',
-    borderWidth: 3,
-    borderRadius: 25,
-    paddingHorizontal: 16,
-    height: 35,
-    marginBottom: 15,
-  },
-  fieldLabel: { fontFamily: 'Edrosa', fontSize: 12, color: '#000' },
-  fieldValue: { fontFamily: 'Inter', fontSize: 12, color: '#000' },
-  actions: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 30,
-    marginTop: 12,
-  },
-  actionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E9DAFA',
-    borderRadius: 25,
-    borderColor: '#FFF',
-    borderWidth: 2,
-    width: 75,
-    height: 30,
-    justifyContent: 'center',
-    gap: 8,
-  },
-  actionText: { fontFamily: 'Edrosa', fontSize: 16, color: '#000' },
-  chipContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: 12,
-    gap: 8,              // or use margin on tagChip
-  },
-  tagChip: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    backgroundColor: '#E9DAFA',
-    borderRadius: 16,
-    marginRight: 6,
-    marginBottom: 6,
-  },
-  tagText: {
-    fontSize: 12,
-    color: '#38004D',
-  },
+  content: { paddingBottom: 24, paddingVertical: 8 },
+  categoryHeader: { alignItems: 'center', marginVertical: 6 },
+  categoryIcon: { fontSize: 36 },
+  categoryText: { color: '#E9DAFA', fontSize: 20, fontWeight: '600', marginTop: 6 },
+  sectionTitle: { color: '#E9DAFA', fontSize: 14, fontWeight: '500', marginBottom: 4 },
+  radioGroup: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 8 },
+  radioBtn: { padding: 8, borderWidth: 1, borderColor: '#E9DAFA', borderRadius: 12 },
+  textInputPlaceholder: { height: 40, borderWidth: 1, borderColor: '#FFFFFF', borderRadius: 8, justifyContent: 'center', paddingHorizontal: 8, marginVertical: 8 },
+  chipContainer: { flexDirection: 'row', flexWrap: 'wrap', marginVertical: 18 },
+  tagChip: { paddingHorizontal: 8, paddingVertical: 4, backgroundColor: '#E9DAFA', borderRadius: 16, margin: 4 },
+  tagText: { fontSize: 12, color: '#FFFFFF' },
 })
 
 export default LogDetailModal

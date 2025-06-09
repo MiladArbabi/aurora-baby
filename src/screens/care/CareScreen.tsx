@@ -50,9 +50,11 @@ const CareScreen: React.FC = () => {
   useTrackerSchedule(babyId, showLast24h)
   const [selectedSlice, setSelectedSlice] = useState<LogSlice | null>(null)
   const [sliceMode, setSliceMode] = useState<'view'|'confirm'|'edit'>('edit')
-  const { confirmedIds, unconfirmedIds, aiSuggestedIds, reloadMeta } = useSliceMeta(slices, babyId)
   const [isEditingSchedule, setIsEditingSchedule] = useState(false)
   const [snapshot, setSnapshot] = useState<DailySnapshot | null>(null)
+
+  const { confirmedIds, unconfirmedIds, aiSuggestedIds, reloadMeta, suggestedTags } =
+    useSliceMeta(slices, babyId)
 
   const [preview, setPreview] = useState<{
     hour: number
@@ -305,6 +307,32 @@ const CareScreen: React.FC = () => {
             }
           }
           setSelectedSlice(null)
+        }}
+
+        suggestedTags={suggestedTags[selectedSlice.id] ?? []}
+        onAddTag={async (tag: string) => {
+          // load or initialize metadata
+          const now = new Date().toISOString()
+          const existing =
+            (await getLogSliceMeta(babyId, selectedSlice.id)) ?? {
+              id: selectedSlice.id,
+              source: 'user',
+              confirmed: false,
+              edited: false,
+              lastModified: now,
+              overlap: false,
+              incomplete: false,
+              tags: [] as string[],
+            }
+          // add without dupes
+          const newTags = Array.from(new Set([...(existing.tags || []), tag]))
+          // persist
+          await saveLogSliceMeta(babyId, {
+            ...existing,
+            tags: newTags,
+            lastModified: now,
+          })
+          await reloadMeta()
         }}
       />
     )}
