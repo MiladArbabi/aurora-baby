@@ -32,15 +32,15 @@ export const colors = {
   iconInactive:  '#A9A9A9',
 
   // ───── Tracker-specific palette ─────────────────────────────
-trackerAwake:     '#B3A5C4',        // Lavender   
-trackerSleep:      '#008080',         // Teal  
-trackerFeed:       '#6699CC',         // Dusty Blue  
-trackerDiaper:     '#FFDAB9',         // Peaches  
-trackerEssentials: '#FDD835',         // Sunny Gold  
-trackerTalk:       '#E6E6FA',         // Lavender  
-trackerCare:       '#D2B48C',         // Pastel Brown  
-trackerArc:        '#FFFFFF',  
-trackerTick:       'rgba(0,0,0,0.8)'  
+  trackerAwake:     '#497cc9',        // Sky Blue (outer rim – wake)
+  trackerSleep:     '#734F96',        // Dark Lavender (Aurora – outer rim sleep)
+  trackerFeed:      '#228B22',        // Forest Green (2nd rim – feed/food)
+  trackerDiaper:    '#00BFFF',        // Deep Sky Blue (2nd rim – diaper/water)
+  trackerCare:      '#F8F8FF',        // Off White (inner rim – care)
+  trackerEssentials:'#8a7475',        // Brown (inner rim – essentials)
+  trackerTalk:      '#AFEEEE',        // Pale Turquoise (inner rim – talk/clear water)
+  trackerArc:       '#E6E6FA', 
+  trackerTick:       'rgba(0,0,0,0.8)'  
 
 } as const;
 
