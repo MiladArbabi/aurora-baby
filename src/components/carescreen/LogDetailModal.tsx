@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   View,
   Text,
@@ -16,6 +16,9 @@ import { LogSlice } from '../../models/LogSlice'
 import { DateTimeDropdown } from 'components/common/DateTimeDropdown'
 import { MoodSelector, Mood } from 'components/common/MoodSelector'
 import { SwipeableModal } from 'components/common/SwipeableModal'
+import { getLogSliceMeta } from 'storage/LogSliceMetaStorage'
+import type { LogSliceMeta } from 'models/LogSliceMeta'
+import { saveLogSliceMeta } from 'storage/LogSliceMetaStorage'
 
 const CATEGORY_ICONS: Record<LogSlice['category'], string> = {
   awake: '🌅',
@@ -50,7 +53,24 @@ const LogDetailModal: React.FC<Props> = ({
   suggestedTags = [],
   onAddTag = () => {},
 }) => {
-  const [comments, setComments] = useState('')
+  const [meta, setMeta] = useState<LogSliceMeta | null>(null)
+  const [comments, setComments] = useState<string>('')
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [showPicker, setShowPicker] = useState<boolean>(false)
+
+  const commonTags = ['play','nap','feed','happy','wet','messy']
+
+  useEffect(() => {
+        let cancelled = false
+        getLogSliceMeta(slice.babyId, slice.id).then(m => {
+          if (cancelled) return
+          setMeta(m ?? null)
+          setComments(m?.notes || '')
+          setSelectedTags(m?.tags || [])
+        })
+        return () => { cancelled = true }
+      }, [slice.babyId, slice.id])
+
   const screenWidth = Dimensions.get('window').width
   const scale = screenWidth / 375
   const scaled = (n: number) => Math.round(PixelRatio.roundToNearestPixel(n * scale))
@@ -68,13 +88,13 @@ const LogDetailModal: React.FC<Props> = ({
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{ flex: 1 }}
+        style={styles.avoider}
         keyboardVerticalOffset={80}
       >
         <ScrollView
           style={styles.scroll}  
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.content, { flexGrow: 1 }]}          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
           {/* Category */}
           <View style={styles.categoryHeader}>
@@ -148,29 +168,85 @@ const LogDetailModal: React.FC<Props> = ({
             accessibilityLabel="Comments input"
           />
 
-          {/* Separator & Tags */}
-          <View style={styles.separator} />
-          <Text style={styles.sectionTitle}>Tags</Text>
-          <View style={styles.chipContainer}>
-            {suggestedTags.map(tag => (
+          {/* Selected tags */}
+        {selectedTags.length > 0 && (
+          <View style={styles.selectedChips}>
+            {selectedTags.map(tag => (
               <TouchableOpacity
                 key={tag}
-                style={styles.tagChip}
-                onPress={() => onAddTag(tag)}
-                accessibilityLabel={`Add tag ${tag}`}
+                style={styles.selectedTagChip}
+                onPress={() => {
+                  setSelectedTags(prev => prev.filter(t => t !== tag))
+                  onAddTag(tag /* or a removeTag callback */)
+                }}
+                accessibilityLabel={`Remove tag ${tag}`}
               >
-                <Text style={styles.tagText}>#{tag}</Text>
+                <Text style={styles.selectedTagText}>× {tag}</Text>
               </TouchableOpacity>
             ))}
           </View>
+        )}
+
+          {/* Separator & Tags */}
+          <View style={styles.separator} />
+          <View style={styles.tagsHeader}>
+            <Text style={styles.sectionTitle}>Tags</Text>
+            <TouchableOpacity
+              onPress={() => setShowPicker(p => !p)}
+              style={styles.addTagBtn}
+              accessibilityLabel="Show tag picker"
+            >
+              <Text style={styles.addTagText}>＋</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* inline picker */}
+          {showPicker && (
+            <View style={styles.pickerContainer}>
+              {commonTags.map(t => (
+                <TouchableOpacity
+                  key={t}
+                  style={styles.pickerTag}
+                  onPress={() => {
+                    if (!selectedTags.includes(t)) {
+                      setSelectedTags(ts => [...ts, t])
+                      onAddTag(t)
+                    }
+                    setShowPicker(false)
+                  }}
+                >
+                  <Text style={styles.pickerTagText}>+ #{t}</Text>
+                </TouchableOpacity>
+              ))}
+              {commonTags.length === 0 && (
+                <Text style={styles.noSuggestions}>No tags available</Text>
+              )}
+            </View>
+          )}
+      
         </ScrollView>
-        {/* ── Footer with Save / Confirm / Close buttons ── */}
-        <View style={styles.footer}>
+                {/* ── Footer with Save / Confirm / Close buttons ── */}
+                <View style={styles.footer}>
           {mode === 'edit' && (
             <TouchableOpacity
               style={styles.saveBtn}
-              onPress={() => onSave({ ...slice /* + other edits like comments */ })}
-            >
+              onPress={async () => {
+                  // 1) save updated slice
+                    onSave({ ...slice })
+                   // 2) persist metadata
+                   if (meta) {
+                     const updatedMeta: LogSliceMeta = {
+                    ...meta,
+                    notes: comments,
+                    tags: selectedTags,
+                      edited: true,
+                     lastModified: new Date().toISOString(),
+                    }
+                   await saveLogSliceMeta(slice.babyId, updatedMeta)
+                  setMeta(updatedMeta)
+                 }
+               }}
+               >
               <Text style={styles.saveText}>Save</Text>
             </TouchableOpacity>
           )}
@@ -233,7 +309,54 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     avoider: { flex: 1 },
-    scroll: { flex: 1 }
+    scroll: { flex: 1, paddingBottom: 75 },
+    selectedChips: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 12, paddingHorizontal: 16 },
+  selectedTagChip: {
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    margin: 4,
+  },
+  selectedTagText: {
+    color: '#38004D',
+    fontWeight: '600',
+  },
+  tagChipSelected: {
+    opacity: 0.5,
+  },
+  tagsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  addTagBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  addTagText: {
+    fontSize: 18,
+    color: '#E9DAFA',
+  },
+  pickerContainer: {
+    backgroundColor: '#49265F',
+    borderRadius: 8,
+    padding: 8,
+    marginVertical: 8,
+  },
+  pickerTag: {
+    paddingVertical: 6,
+  },
+  pickerTagText: {
+    color: '#E9DAFA',
+    fontSize: 14,
+  },
+  noSuggestions: {
+    color: 'rgba(255,255,255,0.6)',
+    fontStyle: 'italic',
+    textAlign: 'center',
+    padding: 8,
+  },
 })
 
 export default LogDetailModal
