@@ -1,6 +1,6 @@
 // src/components/carescreen/CategoryRing.tsx
 import React, { memo } from 'react'
-import Svg, { Path, Text } from 'react-native-svg'
+import Svg, { Path, Text, Line } from 'react-native-svg'
 import { ViewStyle, StyleProp } from 'react-native'
 import type { LogSlice } from '../../models/LogSlice'
 
@@ -22,6 +22,8 @@ interface CategoryRingProps {
   confirmedIds: Set<string>
   aiSuggestedIds: Set<string>
   mode?: 'edit' | 'view' // mode for rendering (e.g. edit mode)
+  showGaps?: boolean,
+  showSeparators?: boolean,
 }
 
 /**
@@ -260,6 +262,8 @@ const CategoryRing: React.FC<CategoryRingProps> = ({
   dimFuture,
   aiSuggestedIds,
   mode = 'view',
+  showGaps = true,
+  showSeparators = true,
 }) => {
   const isEdit = mode === 'edit'
   const center = size / 2
@@ -272,7 +276,7 @@ const CategoryRing: React.FC<CategoryRingProps> = ({
       const totalMinutes = date.getHours() * 60 + date.getMinutes() + date.getSeconds() / 60
       return (totalMinutes / (24 * 60)) * 360
     }
-  
+
   // Determine the cutoff angle for “now” (in degrees)
   const nowAngle = (typeof dimFuture === 'number')
     ? dimFuture * 360
@@ -328,7 +332,7 @@ const CategoryRing: React.FC<CategoryRingProps> = ({
      }
    }      
 
-      // 3) Render placeholder arcs first
+  // 3) Render placeholder arcs first
   const placeholderArcs = gaps.map((gap, i) => (
     <ArcPath
       key={`gap-${i}`}
@@ -337,7 +341,7 @@ const CategoryRing: React.FC<CategoryRingProps> = ({
       center={center}
       innerRadius={innerRadius}
       outerRadius={outerRadius}
-      color={placeholderColor}        // using the new prop
+      color={placeholderColor}   
       opacity={0.3}
     />
   ))    
@@ -368,6 +372,7 @@ const CategoryRing: React.FC<CategoryRingProps> = ({
     const sA = (i * 360) / 24
     const eA = ((i + 1) * 360) / 24
     const d = describeSlice(center, center, innerRadius, outerRadius, sA, eA)
+
     return (
       <Path
         key={`sep-${i}`}
@@ -375,15 +380,17 @@ const CategoryRing: React.FC<CategoryRingProps> = ({
         fill="transparent"
         stroke={separatorColor}
         strokeWidth={1}
+        strokeOpacity={0.75}          
+        opacity={0.25}
       />
     )
   })
 
   return (
     <Svg width={size} height={size} testID={testID}>
-      {placeholderArcs} 
-      {sliceArcs}
-      {separators}  
+      {showGaps && placeholderArcs}
+      {showGaps && sliceArcs}
+      {/* showSeparators &&  */separators}
       {filledSlices}
     </Svg>
   )

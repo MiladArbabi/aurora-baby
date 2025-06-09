@@ -2,6 +2,14 @@
 import { useState, useEffect, useCallback } from 'react'
 import { ensureScheduleForDate } from '../services/ScheduleService'
 import type { LogSlice } from '../models/LogSlice'
+import { ScheduleService } from '../services/ScheduleService';
+import * as ScheduleStorage from '../storage/ScheduleStorage';
+import { DailyScheduleEngine } from '../services/DailyScheduleEngine';
+
+const scheduleService = new ScheduleService(
+  ScheduleStorage,
+  DailyScheduleEngine
+);
 
 /**
  * useTrackerSchedule
@@ -48,7 +56,7 @@ export function useTrackerSchedule(
       } else {
         dateISO = today.toISOString().split('T')[0]
       }
-      const result = await ensureScheduleForDate(babyId, dateISO)
+      const result = await scheduleService.ensureScheduleForDate(babyId, dateISO)
       console.log('[useTrackerSchedule] got slices:', result)
       setSlices(result)
     } catch (err: any) {

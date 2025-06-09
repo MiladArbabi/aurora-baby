@@ -24,6 +24,9 @@ import { setSliceConfirmed } from '../../services/LogSliceMetaService'
 import { getLogSliceMeta } from '../../storage/LogSliceMetaStorage'
 import { saveLogSliceMeta } from '../../storage/LogSliceMetaStorage'
 import { LogSliceMeta } from '../../models/LogSliceMeta'
+import type { DailySnapshot } from '../../models/DailySnapshot'
+import { generateDailySnapshot } from '../../services/DailySnapshotService';
+import DailySnapshotSummary from 'components/carescreen/DailySnapshotSummary'
 
 import Tracker from '../../components/carescreen/Tracker'
 import ScheduleEditor from '../../components/carescreen/ScheduleEditor'
@@ -47,9 +50,15 @@ const CareScreen: React.FC = () => {
   useTrackerSchedule(babyId, showLast24h)
   const [selectedSlice, setSelectedSlice] = useState<LogSlice | null>(null)
   const [sliceMode, setSliceMode] = useState<'view'|'confirm'|'edit'>('edit')
-
   const { confirmedIds, unconfirmedIds, aiSuggestedIds, reloadMeta } = useSliceMeta(slices, babyId)
   const [isEditingSchedule, setIsEditingSchedule] = useState(false)
+  const [snapshot, setSnapshot] = useState<DailySnapshot | null>(null)
+
+  const [preview, setPreview] = useState<{
+    hour: number
+    slice: LogSlice
+    expiresAt: number
+  }|null>(null)
 
   // Bottom‐tab navigation handler
   const handleNavigate = useCallback((tab: MiniTab) => {
@@ -108,6 +117,12 @@ const CareScreen: React.FC = () => {
         [slices]
       )
 
+      function showTimePreview(hour: number) {
+            const slice = slices.find(s => new Date(s.startTime).getHours() === hour)
+            if (!slice) return
+            setPreview({ hour, slice, expiresAt: Date.now() + 1500 })
+          }
+
       const handleSave = async (updated: LogSlice) => {
                       // ── A) Update today's schedule array ───────────────────────────────
                       const schedule = (await getDailySchedule(todayISO, babyId)) || []
@@ -140,7 +155,6 @@ const CareScreen: React.FC = () => {
                       setSelectedSlice(null)
                       refresh()
                     }
-            
 
         const handleConfirmAll = useCallback(async () => {
               await Promise.all(
@@ -149,6 +163,15 @@ const CareScreen: React.FC = () => {
               // Refresh metadata after bulk confirm
               reloadMeta()
             }, [babyId, unconfirmedIds, reloadMeta])
+
+        
+        useEffect(() => {
+          if (!loading && !error) {
+            generateDailySnapshot(babyId, todayISO)
+              .then(setSnapshot)
+              .catch(console.warn)
+            }
+        }, [loading, error, babyId, todayISO])    
 
     // Show loading or error
     if (loading) {
@@ -188,10 +211,12 @@ const CareScreen: React.FC = () => {
        </View>
      )}
 
+      {/* ── TRACKER ───────────────────────────────────────────── */}
      <Tracker
         slices={slices}
         nowFrac={nowFrac}
-        onSlicePress={handleSlicePress}
+        onSlicePress={showTimePreview}        // single tap → preview
+        onSliceLongPress={handleSlicePress}
         confirmedIds={confirmedIds}
         aiSuggestedIds={aiSuggestedIds}
         onResize={() => {
@@ -200,12 +225,41 @@ const CareScreen: React.FC = () => {
         isEditingSchedule={isEditingSchedule}
       />
 
-      {/* ── 2. Edit Schedule ─────────────────────────────────────────── */}
+      {/* ── Edit Schedule ─────────────────────────────────────────── */}
       <View style={styles.buttonsContainer}>
         <TouchableOpacity onPress={() => setIsEditingSchedule(true)} style={styles.iconWrapper}>
           <Text style={styles.confirmButtonText}>Edit Schedule</Text>
         </TouchableOpacity>
       </View>
+
+      {/* ── DAILY SUMMARY ───────────────────────────────────────────── */}
+      {snapshot && <DailySnapshotSummary snapshot={snapshot} />}
+
+      {/* ToolTip for Time Preview */ }
+      {preview && Date.now() < preview.expiresAt && (() => {
+        // midpoint math:
+        const { slice, hour } = preview
+        const totalM = new Date(slice.startTime).getHours()*60 + new Date(slice.startTime).getMinutes()
+        const midAngle = ((totalM/(24*60))*2*Math.PI) - Math.PI/2
+        const r = (RING_SIZE/2 + CLOCK_STROKE_EXTRA)
+        const x = CENTER + r*Math.cos(midAngle)
+        const y = CENTER + r*Math.sin(midAngle)
+        const start = slice.startTime.slice(11,16)
+        const end   = slice.endTime.slice(11,16)
+        return (
+          <View style={{
+            position: 'absolute',
+            left: x - 40,
+            top: y - 20,
+            backgroundColor: 'rgba(0,0,0,0.7)',
+            paddingHorizontal: 6,
+            paddingVertical: 2,
+            borderRadius: 4,
+          }}>
+            <Text style={{ color: 'white', fontSize: 11 }}>{start} – {end}</Text>
+          </View>
+        )
+      })()}
     </CareLayout>
 
     {isEditingSchedule && (
@@ -261,7 +315,21 @@ export default CareScreen
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  // Icons section (flex:1)
+  summaryCard: {
+        padding: 12,
+        borderRadius: 8,
+        marginHorizontal: 16,
+        marginBottom: 12,
+      },
+      summaryTitle: {
+        fontWeight: '600',
+        marginBottom: 8,
+      },
+      summaryRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginVertical: 2,
+      },
   buttonsContainer: {
     flex: 1,
     flexDirection: 'row',

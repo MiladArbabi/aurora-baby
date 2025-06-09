@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
+import { useTheme } from 'styled-components/native'
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Platform } from 'react-native'
 import type { LogSlice } from '../../models/LogSlice'
 import { Picker } from '@react-native-picker/picker'
@@ -21,7 +22,15 @@ const timeOptions = Array.from({ length: 48 }).map((_, i) => {
 })
 
 export default function ScheduleEditor({ slices, onSave, onCancel }: Props) {
+  const theme = useTheme()
   const [localSlices, setLocalSlices] = useState<LogSlice[]>(slices)
+
+  const sortedSlices = useMemo(() => {
+    return [...localSlices].sort(
+      (a, b) =>
+        new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+    )
+  }, [localSlices])
 
   const updateCategory = (id: string, cat: Category) => {
     setLocalSlices(prev =>
@@ -107,51 +116,82 @@ export default function ScheduleEditor({ slices, onSave, onCancel }: Props) {
   }
 
   const renderItem = ({ item }: { item: LogSlice }) => {
+    // derive the theme color key, e.g. “trackerSleep”
+    const colorKey = `tracker${item.category[0].toUpperCase()}${item.category.slice(1)}` as keyof typeof theme.colors
+    const rowColor = (theme.colors[colorKey] as string) || '#cccccc'
+  
+    // build a 20%‐opaque background from rowColor
+    let bg: string
+    if (rowColor.startsWith('#')) {
+      // append 33 for 20% alpha in 8-digit hex
+      bg = rowColor + '33'
+    } else if (rowColor.startsWith('rgba(')) {
+      // replace existing alpha with 0.2
+      bg = rowColor.replace(
+        /rgba\(\s*(\d+,\s*\d+,\s*\d+),\s*[\d.]+\s*\)/,
+        'rgba($1,0.2)'
+      )
+    } else if (rowColor.startsWith('rgb(')) {
+      // convert rgb(…) to rgba(…,0.2)
+      bg = rowColor.replace(
+        /rgb\(\s*(\d+,\s*\d+,\s*\d+)\s*\)/,
+        'rgba($1,0.2)'
+      )
+    } else {
+      // fallback
+      bg = rowColor
+    }
+  
     const [date, timePart] = item.startTime.split('T')
     const start = timePart.slice(0, 5)
     const end = item.endTime.split('T')[1].slice(0, 5)
-
+  
     return (
-      <View style={styles.row}>
-        <Picker
-          selectedValue={item.category}
-          style={styles.picker}
-          onValueChange={(cat: Category) => updateCategory(item.id, cat)}
-        >
-          {categories.map(c => (
-            <Picker.Item key={c} label={c} value={c} />
-          ))}
-        </Picker>
+      <View
+        style={[
+          styles.row,
+          { borderColor: rowColor, backgroundColor: bg },
+        ]}
+      >
+          <Picker
+            selectedValue={item.category}
+            style={styles.picker}
+            onValueChange={(cat: Category) => updateCategory(item.id, cat)}
+          >
+            {categories.map(c => (
+              <Picker.Item key={c} label={c} value={c} />
+            ))}
+          </Picker>
 
-        <Picker
-          selectedValue={start}
-          style={styles.picker}
-          onValueChange={time => {
-            const iso = `${date}T${time}:00.000`
-            setSliceField(item.id, 'startTime', iso)
-          }}
-        >
-          {timeOptions.map(t => (
-            <Picker.Item key={t} label={t} value={t} />
-          ))}
-        </Picker>
+          <Picker
+            selectedValue={start}
+            style={styles.picker}
+            onValueChange={time => {
+              const iso = `${date}T${time}:00.000`
+              setSliceField(item.id, 'startTime', iso)
+            }}
+          >
+            {timeOptions.map(t => (
+              <Picker.Item key={t} label={t} value={t} />
+            ))}
+          </Picker>
 
-        <Picker
-          selectedValue={end}
-          style={styles.picker}
-          onValueChange={time => {
-            const iso = `${date}T${time}:00.000`
-            setSliceField(item.id, 'endTime', iso)
-          }}
-        >
-          {timeOptions.map(t => (
-            <Picker.Item key={t} label={t} value={t} />
-          ))}
-        </Picker>
+          <Picker
+            selectedValue={end}
+            style={styles.picker}
+            onValueChange={time => {
+              const iso = `${date}T${time}:00.000`
+              setSliceField(item.id, 'endTime', iso)
+            }}
+          >
+            {timeOptions.map(t => (
+              <Picker.Item key={t} label={t} value={t} />
+            ))}
+          </Picker>
 
-        <TouchableOpacity onPress={() => setLocalSlices(prev => prev.filter(s => s.id !== item.id))}>
-          <Text style={styles.delete}>✕</Text>
-        </TouchableOpacity>
+          <TouchableOpacity onPress={() => setLocalSlices(prev => prev.filter(s => s.id !== item.id))}>
+            <Text style={styles.delete}>✕</Text>
+          </TouchableOpacity>
       </View>
     )
   }
@@ -160,7 +200,7 @@ export default function ScheduleEditor({ slices, onSave, onCancel }: Props) {
     <View style={styles.container}>
       <Text style={styles.title}>Edit Schedule</Text>
       <FlatList
-        data={localSlices}
+        data={sortedSlices}
         keyExtractor={s => s.id}
         renderItem={renderItem}
       />
@@ -196,7 +236,7 @@ export default function ScheduleEditor({ slices, onSave, onCancel }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, backgroundColor: '#fff' },
   title: { fontSize: 18, fontWeight: '600', marginBottom: 12 },
-  row: { flexDirection: 'row', alignItems: 'center', marginVertical: 4 },
+  row: { flexDirection: 'row', alignItems: 'center', marginVertical: 4, padding: 6, borderWidth: 2, borderRadius: 6 },
   picker: { flex: 1, height: Platform.OS === 'ios' ? 150 : 50 },
   delete: { fontSize: 18, color: 'red', marginLeft: 8 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around', marginTop: 16 },
@@ -211,4 +251,10 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '600',
   },
+  swatch: {
+       width: 12,
+       height: 12,
+       borderRadius: 6,
+       marginRight: 8,
+     },
 })

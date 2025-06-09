@@ -1,31 +1,39 @@
 // src/services/ScheduleService.ts
+import { IScheduleStorage, IDailyScheduleEngine } from '../types/ScheduleTypes';
 import { LogSlice } from '../models/LogSlice';
-import {
-  getDailySchedule,
-  saveDailySchedule,
-} from '../storage/ScheduleStorage';
-import { DefaultScheduleGenerator } from './DefaultScheduleGenerator'
-import { DEFAULT_TEMPLATE }         from '../config/defaultScheduleTemplates'
-import { DailyScheduleEngine } from './DailyScheduleEngine'
+import { DailyScheduleEngine }   from './DailyScheduleEngine'
+import * as ScheduleStorage from '../storage/ScheduleStorage'
 
-/**
- * If a schedule already exists for (babyId, dateISO), returns it.
- * Otherwise, generates a new one via DailyScheduleEngine and saves it.
- */
-export async function ensureScheduleForDate(
-  babyId: string,
-  dateISO: string // e.g. "2025-06-05"
-): Promise<LogSlice[]> {
-  // 1) Try to load an existing schedule
-  console.log('[ScheduleService] ensureScheduleForDate', babyId, dateISO)
-  const existing = await getDailySchedule(dateISO, babyId)
-  if (existing) {
-    console.log('[ScheduleService] found existing schedule:', existing)
-    return existing
+export class ScheduleService {
+  constructor(
+    private storage: IScheduleStorage,
+    private engine: IDailyScheduleEngine
+  ) {}
+
+  async ensureScheduleForDate(
+    babyId: string,
+    dateISO: string
+  ): Promise<LogSlice[]> {
+    console.log('[ScheduleService] ensureScheduleForDate', babyId, dateISO);
+    const existing = await this.storage.getDailySchedule(dateISO, babyId);
+    if (existing) {
+      console.log('[ScheduleService] found existing schedule');
+      return existing;
+    }
+    console.log('[ScheduleService] no existing → generating new');
+    const generated = await this.engine.generateScheduleForDate({ babyId, date: dateISO });
+    await this.storage.saveDailySchedule(dateISO, babyId, generated);
+    console.log('[ScheduleService] saved new schedule');
+    return generated;
   }
-  console.log('[ScheduleService] no existing → generating new')
-  const generated = await DailyScheduleEngine.generateScheduleForDate({ babyId, date: dateISO })
-  await saveDailySchedule(dateISO, babyId, generated)
-  console.log('[ScheduleService] saved new schedule')
-  return generated
 }
+
+export const scheduleService = new ScheduleService(
+    ScheduleStorage,
+    DailyScheduleEngine
+  )
+  
+  // backwards-compatible free function:
+  export const ensureScheduleForDate = scheduleService.ensureScheduleForDate.bind(
+    scheduleService
+  )

@@ -1,5 +1,4 @@
 // src/components/carescreen/Tracker.tsx
-
 import React, { useMemo, useState, useCallback } from 'react'
 import { View, StyleSheet, GestureResponderEvent, Dimensions } from 'react-native'
 import Svg, { Line, Circle } from 'react-native-svg'
@@ -29,11 +28,14 @@ export type TrackerProps = {
   confirmedIds: Set<string>
   aiSuggestedIds: Set<string>
   onSlicePress: (hour: number) => void
+  onSliceLongPress: (hour: number) => void
   onResize: (id: string, newStartAngle?: number, newEndAngle?: number) => void
 }
 
 
-export default function Tracker({ slices, nowFrac, isEditingSchedule, aiSuggestedIds, onSlicePress, onResize }: TrackerProps) {
+export default function Tracker({ 
+  slices, nowFrac, isEditingSchedule, aiSuggestedIds, onSlicePress, onSliceLongPress
+ }: TrackerProps) {
   // Derive subsets
   const theme = useTheme()
   const todayISO = getTodayISO()
@@ -67,7 +69,7 @@ export default function Tracker({ slices, nowFrac, isEditingSchedule, aiSuggeste
       const y1 = CENTER + tickOuter * Math.sin(angleRad)
       const x2 = CENTER + tickInner * Math.cos(angleRad)
       const y2 = CENTER + tickInner * Math.sin(angleRad)
-      return <Line key={`tick-${i}`} x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(0,0,0,0.1)" strokeWidth={1} />
+      return <Line key={`tick-${i}`} x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(0, 0, 0, 0.6)" strokeWidth={1} />
     })
   }, [CENTER, CLOCK_RADIUS])
 
@@ -179,7 +181,7 @@ export default function Tracker({ slices, nowFrac, isEditingSchedule, aiSuggeste
                 refresh()
               }
       
-         const handleResize = useCallback(
+         /* const handleResize = useCallback(
           async (id: string, newStartAngle?: number, newEndAngle?: number) => {
             // find the slice
             const orig = slices.find(s => s.id === id)
@@ -210,7 +212,7 @@ export default function Tracker({ slices, nowFrac, isEditingSchedule, aiSuggeste
           [slices, todayISO, babyId, refresh],
         ) 
 
-
+ */
         const ringStyles = useMemo(() => ({
               outermost: {
                 position: 'absolute' as const,
@@ -277,17 +279,13 @@ export default function Tracker({ slices, nowFrac, isEditingSchedule, aiSuggeste
                 testID="awake-ring"
                 accessible
                 accessibilityLabel={`Awake slices`}
-                onSlicePress={!isEditingSchedule ? handleSlicePress : undefined}
-                onSliceLongPress={!isEditingSchedule ? (hour) => {
-                    console.log('[CareScreen] slice long-press → edit mode', hour)
-                    setSliceMode('edit')
-                    // find the slice and setSelectedSlice(...)
-                    const s = slices.find(s => new Date(s.startTime).getHours() === hour)
-                    if (s) setSelectedSlice(s)
-                  } : undefined}
+                onSlicePress={!isEditingSchedule ? onSlicePress : undefined}
+                onSliceLongPress={!isEditingSchedule ? onSliceLongPress : undefined}
                 dimFuture={nowFrac}
                 confirmedIds={confirmedIds}
                 aiSuggestedIds={aiSuggestedIds} 
+                showGaps={false}
+                showSeparators={false} 
               />
             </View>
             <View style={{ position: 'absolute', top: 0, left: 0 }}>
@@ -295,12 +293,8 @@ export default function Tracker({ slices, nowFrac, isEditingSchedule, aiSuggeste
                 size={RING_SIZE}
                 strokeWidth={RING_THICKNESS}
                 slices={sleepSlices}
-                onSlicePress={!isEditingSchedule
-                  ? (hour: number) => {
-                      console.log(`[CategoryRing] tap hour=${hour} edit=${isEditingSchedule}`);
-                      handleSlicePress(hour);
-                    }
-                  : undefined}
+                onSlicePress={!isEditingSchedule ? onSlicePress : undefined}
+                onSliceLongPress={!isEditingSchedule ? onSliceLongPress : undefined}
                 dimFuture={nowFrac}
                 accessible
                 accessibilityLabel={`Sleep slices`}
@@ -309,6 +303,8 @@ export default function Tracker({ slices, nowFrac, isEditingSchedule, aiSuggeste
                 testID="sleep-ring"
                 confirmedIds={confirmedIds}
                 aiSuggestedIds={aiSuggestedIds} 
+                showGaps={false}
+                showSeparators={false}
               />
             </View>
           </View>
@@ -322,10 +318,13 @@ export default function Tracker({ slices, nowFrac, isEditingSchedule, aiSuggeste
                 slices={feedSlices}
                 fillColor={feedColor}
                 separatorColor="rgba(0,0,0,0.1)"
-                onSlicePress={!isEditingSchedule ? handleSlicePress : undefined}
+                onSlicePress={!isEditingSchedule ? onSlicePress : undefined}
+                onSliceLongPress={!isEditingSchedule ? onSliceLongPress : undefined}
                 dimFuture={nowFrac}
                 confirmedIds={confirmedIds}
                 aiSuggestedIds={aiSuggestedIds}
+                showGaps={false}
+                showSeparators={false}
               />
             </View>
             <View style={{ position: 'absolute', top: 0, left: 0 }}>
@@ -335,10 +334,13 @@ export default function Tracker({ slices, nowFrac, isEditingSchedule, aiSuggeste
                 slices={diaperSlices}
                 fillColor={diaperColor}
                 separatorColor="rgba(0,0,0,0.1)"
-                onSlicePress={!isEditingSchedule ? handleSlicePress : undefined}
+                onSlicePress={!isEditingSchedule ? onSlicePress : undefined}
+                onSliceLongPress={!isEditingSchedule ? onSliceLongPress : undefined}
                 dimFuture={nowFrac}
                 confirmedIds={confirmedIds}
                 aiSuggestedIds={aiSuggestedIds}
+                showGaps={false}
+                showSeparators={false}
               />
             </View>
           </View>
@@ -352,10 +354,13 @@ export default function Tracker({ slices, nowFrac, isEditingSchedule, aiSuggeste
                 slices={careSlices}
                 fillColor={essColor}
                 separatorColor="rgba(0,0,0,0.1)"
-                onSlicePress={!isEditingSchedule ? handleSlicePress : undefined}
+                onSlicePress={!isEditingSchedule ? onSlicePress : undefined}
+                onSliceLongPress={!isEditingSchedule ? onSliceLongPress : undefined}
                 dimFuture={nowFrac}
                 confirmedIds={confirmedIds}
                 aiSuggestedIds={aiSuggestedIds}
+                showGaps={false}
+                showSeparators={false}
               />
             </View>
             <View style={{ position: 'absolute', top: 0, left: 0 }}>
@@ -365,10 +370,13 @@ export default function Tracker({ slices, nowFrac, isEditingSchedule, aiSuggeste
                 slices={talkSlices}
                 fillColor={talkColor}
                 separatorColor="rgba(0,0,0,0.1)"
-                onSlicePress={!isEditingSchedule ? handleSlicePress : undefined}
+                onSlicePress={!isEditingSchedule ? onSlicePress : undefined}
+                onSliceLongPress={!isEditingSchedule ? onSliceLongPress : undefined}
                 dimFuture={nowFrac}
                 confirmedIds={confirmedIds}
                 aiSuggestedIds={aiSuggestedIds}
+                showGaps={false}
+                showSeparators={false}
               />
             </View>
             <View style={{ position: 'absolute', top: 0, left: 0 }}>
@@ -378,24 +386,15 @@ export default function Tracker({ slices, nowFrac, isEditingSchedule, aiSuggeste
                 slices={otherSlices}
                 fillColor={otherColor}
                 separatorColor="rgba(0,0,0,0.1)"
-                onSlicePress={!isEditingSchedule ? handleSlicePress : undefined}
+                onSlicePress={!isEditingSchedule ? onSlicePress : undefined}
+                onSliceLongPress={!isEditingSchedule ? onSliceLongPress : undefined}
                 dimFuture={nowFrac}
                 confirmedIds={confirmedIds}
                 aiSuggestedIds={aiSuggestedIds}
+                showGaps={false}
+                showSeparators={false}
               />
             </View>
-          </View>
-
-          {/* draggable handles overlay */}
-          <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-          {isEditingSchedule && (
-          <ResizableSliceOverlay
-            size={RING_SIZE + CLOCK_STROKE_EXTRA * 2}
-            strokeWidth={RING_THICKNESS}
-            slices={slices}
-            onResize={handleResize}
-          />
-        )}
           </View>
           
           {/* 4) Clock arc + ticks (innermost) */}
@@ -428,8 +427,8 @@ export default function Tracker({ slices, nowFrac, isEditingSchedule, aiSuggeste
                   (CLOCK_RADIUS + CLOCK_STROKE_WIDTH / 2) *
                     Math.sin(nowFrac * 2 * Math.PI - Math.PI / 2)
                 }
-                r={4}
-                fill={theme.colors.highlight || '#FF4081'}
+                r={5}
+                fill={theme.colors.primary || '#FF4081'}
               />
             </Svg>
           </View>

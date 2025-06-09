@@ -1,4 +1,4 @@
-import * as Access from '../storage/BabyProfileAccess'
+import * as Access from '../storage/BabyProfileStorage'
 import { BabyProfile } from '../models/BabyProfile'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
