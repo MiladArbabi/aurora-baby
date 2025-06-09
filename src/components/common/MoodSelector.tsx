@@ -9,6 +9,7 @@ interface MoodSelectorProps {
   value?: Mood
   onSelect: (mood: Mood) => void
   disabled?: boolean
+  accessibilityLabel: string
 }
 
 const moods: { key: Mood; label: string }[] = [

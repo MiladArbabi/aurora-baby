@@ -8,7 +8,8 @@ interface DateTimeDropdownProps {
     label: string
     value: Date
     onChange: (newDate: Date) => void
-    disabled?: boolean  
+    disabled?: boolean
+    accessibilityLabel: string
   }
 
 export const DateTimeDropdown: React.FC<DateTimeDropdownProps> = ({ 
