@@ -37,3 +37,7 @@ export async function generateHarmonyStory(
 
   return response.story
 }
+
+export async function generateOrGetStory(prompt: string): Promise<GeneratedStory> {
+  return queryStory(prompt)
+}

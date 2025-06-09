@@ -1,7 +1,7 @@
 // src/services/GapSettingsStorage.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { defaultGapSettingsForAge } from './GapSettingsDefaults';
-import { ChildProfile } from '../models/ChildProfile';
+import { BabyProfile } from 'models/BabyProfile';
 
 // ---------------
 // 1) Define an interface for gap thresholds
@@ -42,13 +42,13 @@ export const getGapSettings = async (
       }
       // 2) No custom value or parse failed → compute default from child’s DOB
       //    We need the child's profile to get dob:
-      //    (Assume we have a synchronous cache or call ChildProfileAccess)
+      //    (Assume we have a synchronous cache or call BabyProfileStorage)
       //    For simplicity, let’s fetch it here:
       const fromStorage = await AsyncStorage.getItem('@child_profile:' + childId);
       if (fromStorage) {
         try {
-          const child: ChildProfile = JSON.parse(fromStorage);
-          return defaultGapSettingsForAge(child.dob);
+          const child: BabyProfile = JSON.parse(fromStorage);
+          return defaultGapSettingsForAge(child.birthDate);
         } catch {
           // if parse fails, fall back to a fallback default:
         }

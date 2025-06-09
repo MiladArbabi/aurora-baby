@@ -1,7 +1,6 @@
 // src/navigation/AppNavigator.tsx
-
 import React, { useState, useEffect } from 'react'
-import { NavigationContainer } from '@react-navigation/native'
+import { NavigationContainer, CommonActions } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import { auth, checkAuthState } from '../services/firebase'
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth'
@@ -31,7 +30,7 @@ import TextStoryScreen from '../screens/harmony/TextStoryScreen'
 import VoiceStorytellingScreen from '../screens/harmony/VoiceStorytellingScreen'
 import AnimatedStoryScreen from '../screens/harmony/AnimatedStoryScreen'
 
-import { getBabyProfile } from '../storage/BabyProfileAccess'
+import { getBabyProfile } from '../storage/BabyProfileStorage'
 import { BabyProfile } from '../models/BabyProfile'
 
 export type RootStackParamList = {

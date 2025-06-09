@@ -8,7 +8,7 @@ import { format, startOfToday, endOfToday } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components/native';
 
-import { getChildProfile } from '../../services/ChildProfileAccess';
+import { getBabyProfile } from 'storage/BabyProfileStorage';
 import { getParentProfile } from '../../services/ParentProfileAccess';
 import { QuickLogEntry } from 'models/QuickLogSchema';
 import { getLogsBetween } from '../../services/QuickLogAccess';
@@ -46,7 +46,7 @@ export default function EndOfDayExportScreen({ navigation }: Props) {
      // 1) Fetch profiles so we can inject “Child (son/daughter of Parent)”
      // -------------------------------------------------------------------
      try {
-       const child = await getChildProfile();
+       const child = await getBabyProfile();
        const parent = await getParentProfile();
        if (child) {
          setChildName(child.name);

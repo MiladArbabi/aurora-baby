@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react'
 import { View, Text, TouchableOpacity, Button, StyleSheet } from 'react-native'
 import { StackScreenProps } from '@react-navigation/stack'
 import { OnboardingParamList } from '../../navigation/OnboardingNavigator'
-import { saveChildProfile, getChildProfile } from '../../services/ChildProfileAccess'
+import { saveBabyProfile, getBabyProfile } from 'storage/BabyProfileStorage'
 import * as Speech from 'expo-speech'
 
 const ALL_THEMES = ['Animals','Adventure','Magic','Calming','Music','Forest','Night']
@@ -27,9 +27,9 @@ export default function ThemePreferencesScreen({ navigation }: Props) {
   }
 
   const onNext = async () => {
-    const profile = await getChildProfile()
+    const profile = await getBabyProfile()
     if (!profile) return
-    await saveChildProfile({ ...profile, themePreferences: selected })
+    await saveBabyProfile({ ...profile })
     navigation.navigate('Done')
   }
 

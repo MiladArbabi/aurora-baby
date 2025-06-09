@@ -1,20 +1,20 @@
 // src/screens/PrivacyDashboardScreen.tsx
 import React, { useEffect, useState } from 'react'
 import { View, Text, ScrollView, StyleSheet } from 'react-native'
-import { getChildProfile } from '../../services/ChildProfileAccess'
+import { getBabyProfile } from 'storage/BabyProfileStorage'
 import { getParentProfile } from '../../services/ParentProfileAccess'
 import { getPrivacySettings, PrivacySettings } from '../../services/PrivacySettingsStorage'
-import { ChildProfile } from '../../models/ChildProfile'
+import { BabyProfile } from 'models/BabyProfile'
 import { ParentProfile } from '../../storage/ParentProfileStorage'
 
 export default function PrivacyDashboardScreen() {
-  const [child, setChild] = useState<ChildProfile | null>(null)
+  const [child, setChild] = useState<BabyProfile | null>(null)
   const [parent, setParent] = useState<ParentProfile | null>(null)
   const [privacy, setPrivacy] = useState<PrivacySettings | null>(null)
 
   useEffect(() => {
     (async () => {
-      const storedChild = await getChildProfile()
+      const storedChild = await getBabyProfile()
       setChild(storedChild)
 
       const storedParent = await getParentProfile()
@@ -44,11 +44,11 @@ export default function PrivacyDashboardScreen() {
           <>
             <Text style={styles.value}>Name: {child.name}</Text>
             <Text style={styles.value}>
-              Date of Birth: {new Date(child.dob).toLocaleDateString()}
+              Date of Birth: {new Date(child.birthDate).toLocaleDateString()}
             </Text>
-            {child.themePreferences && child.themePreferences.length > 0 ? (
+            {child.personality && child.personality.length > 0 ? (
                 <Text style={styles.value}>
-                    Themes: {child.themePreferences.join(', ')}
+                    Themes: {child.personality}
                 </Text>
                 ) : (
                 <Text style={styles.placeholder}>No theme preferences.</Text>

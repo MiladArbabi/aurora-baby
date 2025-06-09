@@ -7,10 +7,11 @@ import BottomNav from '../../components/common/BottomNav';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import Spinner from '../../components/common/Spinner';
-import { generateOrGetStory } from '../../services/StoryGenerationService';
-import { StoryCardData } from '../../types/HarmonyFlatList';
+
 import { logEvent } from '../../utils/analytics';
 import { isFeatureEnabled } from '../../services/RemoteConfigService';
+import { generateHarmonyStory } from '../../services/StoryGenerationService'
+import { generateOrGetStory } from '../../services/StoryGenerationService';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 type Props = StackScreenProps<RootStackParamList, 'CreateStory'>;
@@ -87,6 +88,7 @@ const BackButton = styled.TouchableOpacity`
 // Main functional component
 const CreateStoryScreen: React.FC<Props> = ({ navigation }) => {
   const theme = useTheme();
+  const babyId = 'defaultBabyId'
   const storyIdRef = React.useRef(`custom-${Date.now()}`);
   const [currentStep, setCurrentStep] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
@@ -95,6 +97,8 @@ const CreateStoryScreen: React.FC<Props> = ({ navigation }) => {
   const [fullStory, setFullStory] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [showGoToStory, setShowGoToStory] = useState(false);
+
+  const todayISO = new Date().toISOString().slice(0,10);
   
   const advancedTone = isFeatureEnabled('advanced_tone_selector');
 
@@ -161,30 +165,55 @@ const handleNext = React.useCallback(() => {
 }, [currentStep, steps.length]);
 
 // 5) Generate (or fetch cached) preview from AI
-const handlePreviewGeneration = React.useCallback(async () => {
-  setLoading(true);
-  // build prompt using all chosen params
+const handlePreviewGeneration = useCallback(async () => {
+  setLoading(true)
   const prompt = `Write a ${storyConfig.length.toLowerCase()}, gentle, toddler-friendly story ` +
-                 `about ${storyConfig.characters.join(' and ')} ` +
-                 `in a ${storyConfig.concept.toLowerCase()} adventure at ${storyConfig.location}.`;
- 
-  try {
-    const card = await generateOrGetStory(prompt);
-    setFullStory(card.fullStory);
-    setStoryPreview(card.fullStory.split(' ').slice(0, 10).join(' ') + '…');
-    setShowGoToStory(true);
-    storyIdRef.current = card.id;
+                  `about ${storyConfig.characters.join(' and ')} ` +
+                  `in a ${storyConfig.concept.toLowerCase()} adventure at ${storyConfig.location}.`
 
-    logEvent('story_preview_shown', { storyId: card.id });
-    
+  try {
+    // <-- returns { title, story }
+    const card = await generateOrGetStory(prompt)
+
+    // map story → your state
+    setFullStory(card.story)
+    setStoryPreview(card.story.split(' ').slice(0,10).join(' ') + '…')
+
+    // pick something stable for navigation / caching
+    storyIdRef.current = card.title
+
+    logEvent('story_preview_shown', { storyId: storyIdRef.current })
+    setShowGoToStory(true)
   } catch (err) {
-    console.error(err);
-    setStoryPreview('Something went wrong.');
+    console.error(err)
+    setStoryPreview('Something went wrong.')
+  } finally {
+    setLoading(false)
+    setShowPreviewButton(false)
+  }
+}, [storyConfig])
+
+const handleAutoStoryFromLogs = useCallback(async () => {
+  setLoading(true);
+  try {
+    const todayISO = new Date().toISOString().slice(0, 10);
+    const storyText = await generateHarmonyStory(babyId, todayISO);
+
+    setFullStory(storyText);
+    setStoryPreview(storyText.split(' ').slice(0, 10).join(' ') + '…');
+    setShowGoToStory(true);
+
+    // Use a stable ID so PlayStory can fetch/cache it if needed:
+    storyIdRef.current = `logs-${babyId}-${todayISO}`;
+    logEvent('story_auto_from_logs', { babyId, date: todayISO });
+  } catch (error) {
+    console.error(error);
+    setStoryPreview('Something went wrong generating from logs.');
   } finally {
     setLoading(false);
-    setShowPreviewButton(false);
   }
-}, [storyConfig]);
+}, [babyId]);
+
 
 const renderStep = React.useCallback((stepIndex: number) => {
   const { title, options, key } = steps[stepIndex] as {
@@ -317,6 +346,23 @@ return (
               <Text style={{ color: 'black', fontWeight: '600', fontSize: 16 }}>
                 Preview My Story
               </Text>
+
+              {!loading && !showGoToStory && (
+              <TouchableOpacity
+                onPress={handleAutoStoryFromLogs}
+                style={{
+                  alignSelf: 'center',
+                  marginTop: 12,
+                  padding: 12,
+                  backgroundColor: theme.colors.primary,
+                  borderRadius: 16,
+                }}
+              >
+                <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
+                  Generate From Today’s Logs
+                </Text>
+              </TouchableOpacity>
+            )}
             </TouchableOpacity>
           )}
         </View>

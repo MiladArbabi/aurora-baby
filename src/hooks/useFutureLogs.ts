@@ -11,7 +11,7 @@ import {
 } from '../utils/constants';
 import { QuickLogEntry } from '../models/QuickLogSchema';
 import { getLogsBetween } from '../services/QuickLogAccess';
-import { getChildProfile } from '../services/ChildProfileAccess';
+import { getBabyProfile } from 'storage/BabyProfileStorage';
 import { generateRuleBasedQuickLogs } from '../services/RuleBasedLogGenerator';
 
 /**
@@ -95,7 +95,7 @@ export function useFutureLogs() {
       // 2) Determine babyId
       let babyId = '';
       try {
-        const profile = await getChildProfile();
+        const profile = await getBabyProfile();
         babyId = profile?.id ?? '';
       } catch {
         babyId = recent[0]?.babyId ?? '';

@@ -3,7 +3,7 @@
 // Import needed types and utilities
 import { QuickLogEntry, FeedingLog, DiaperLog } from '../models/QuickLogSchema';  
 import { getGapSettings } from './GapSettingsStorage';                               
-import { getChildProfile } from './ChildProfileAccess';                              
+import { getBabyProfile } from 'storage/BabyProfileStorage';                           
 import { v4 as uuidv4 } from 'uuid';                                                 
 
 // A helper to get “now” and “end” timestamps

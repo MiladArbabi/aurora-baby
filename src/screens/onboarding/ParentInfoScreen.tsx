@@ -20,7 +20,7 @@ export default function ParentInfoScreen({ navigation }: Props) {
 
   const onNext = async () => {
     await saveParentProfile({ name: name.trim() })
-    navigation.navigate('Child')
+    navigation.navigate('Baby')
   }
 
   return (

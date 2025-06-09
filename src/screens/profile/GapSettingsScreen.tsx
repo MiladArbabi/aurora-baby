@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert, SafeAreaView } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
-import { getChildProfile } from '../../services/ChildProfileAccess';
+import { getBabyProfile } from 'storage/BabyProfileStorage';
 import BackButton from '../../assets/icons/common/BackButton';
 
 import {
@@ -22,7 +22,7 @@ export default function GapSettingsScreen({ navigation }: Props) {
 
   useEffect(() => {
     (async () => {
-      const child = await getChildProfile();
+      const child = await getBabyProfile();
       if (!child) {
         Alert.alert('Error', 'No child profile found.');
         navigation.goBack();

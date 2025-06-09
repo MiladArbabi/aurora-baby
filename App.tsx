@@ -59,10 +59,10 @@ const App: React.FC = () => {
       <ThemeProvider theme={rneThemeBase as any}>
         <StyledThemeProvider theme={theme}>
           <I18nextProvider i18n={i18n}>
-            <NavigationContainer>
-              <CareScreen />
+
+              <AppNavigator />
               <StatusBar style="auto" />
-          </NavigationContainer>
+
           </I18nextProvider>
         </StyledThemeProvider>
       </ThemeProvider>
