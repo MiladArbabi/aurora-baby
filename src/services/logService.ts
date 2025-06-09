@@ -1,8 +1,9 @@
 // src/services/logService.ts
-
 import { getCache, setCache } from './cache';
 import { CareLog } from '../models/log';
 import { v4 as uuidv4 } from 'uuid';
+import { LogSlice } from 'models';
+import { getDailySchedule } from 'storage/ScheduleStorage';
 
 const PENDING_LOGS_KEY = 'pending_logs';
 
@@ -54,4 +55,16 @@ export async function syncPendingLogs() {
 
   // Overwrite cache with any logs that failed to sync
   await setCache(PENDING_LOGS_KEY, stillPending);
+}
+
+/**
+ * Fetch the LogSlices for a given baby & date.
+ */
+export async function fetchLogsForDate(
+  babyId: string,
+  dateISO: string
+): Promise<LogSlice[]> {
+  // getDailySchedule returns LogSlice[] | undefined
+  const schedule = await getDailySchedule(dateISO, babyId)
+  return schedule ?? []
 }

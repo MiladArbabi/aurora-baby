@@ -1,7 +1,7 @@
 // src/services/UserStoriesService.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StoryCardData } from '../types/HarmonyFlatList';
-import { getChildProfile } from './ChildProfileAccess';
+import { getBabyProfile } from '../storage/BabyProfileStorage';
 import { harmonySections } from '../data/harmonySections';
 
 const STORAGE_KEY = 'user_stories';
@@ -33,9 +33,9 @@ function calculateAgeYears(dobStr: string): number {
 }
 
 export async function getRecommendedStories(): Promise<StoryCardData[]> {
-  const profile = await getChildProfile();
-  const prefs = profile?.themePreferences ?? [];
-  const age = profile ? calculateAgeYears(profile.dob) : null;
+  const profile = await getBabyProfile();
+  const prefs = profile?.personality ?? [];
+  const age = profile ? calculateAgeYears(profile.birthDate) : null;
 
   // Score each story
   const scored = allPrebuilt.map(s => {

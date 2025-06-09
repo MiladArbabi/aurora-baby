@@ -93,3 +93,19 @@ export async function removeSliceMeta(
 ): Promise<void> {
   await deleteLogSliceMeta(babyId, sliceId)
 }
+
+
+/**
+ * Given an array of slice IDs, load or bootstrap every slice’s metadata.
+ */
+export async function fetchAllMetasForSlices(
+  babyId: string,
+  sliceIds: string[]
+): Promise<LogSliceMeta[]> {
+  // 1) Kick off all the fetches (or ensures) in parallel
+  const metas = await Promise.all(
+    sliceIds.map(id => ensureLogSliceMeta(babyId, id))
+  )
+  // 2) Return the array of fully-normalized metas
+  return metas
+}
