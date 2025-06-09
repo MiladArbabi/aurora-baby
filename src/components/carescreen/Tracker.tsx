@@ -29,7 +29,6 @@ export type TrackerProps = {
   aiSuggestedIds: Set<string>
   onSlicePress: (hour: number) => void
   onSliceLongPress: (hour: number) => void
-  onResize: (id: string, newStartAngle?: number, newEndAngle?: number) => void
 }
 
 export default function Tracker({ 

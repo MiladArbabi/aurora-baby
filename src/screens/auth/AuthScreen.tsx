@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Alert, TextInput, Platform, ImageBackground, TouchableOpacity } from 'react-native';
 import styled from 'styled-components/native';
-import { signInWithGoogleAsync } from '../../services/googleAuth';
 import { signInWithGoogle, signInWithEmail, signUpWithEmail } from '../../services/firebase';
-import Constants from 'expo-constants';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator'; // Updated
 import { DefaultTheme } from 'styled-components/native';

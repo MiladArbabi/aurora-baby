@@ -10,13 +10,16 @@ global.expo = {
 };
 
 jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage);
-jest.mock('@react-native-google-signin/google-signin', () => ({
-  GoogleSignin: {
-    configure: jest.fn(),
-    hasPlayServices: jest.fn().mockResolvedValue(true),
-    signIn: jest.fn().mockResolvedValue({ data: { idToken: 'mock-token' } }),
-  },
-}));
+
+// explicitly load our hand-written mock file
+try {
+    jest.mock(
+      '@react-native-google-signin/google-signin',
+    () => require('../src/__mocks__/google-signin.js')
+    );
+  } catch (e) {
+    // nothing to do if it fails
+  }
 
 jest.mock('expo-font', () => ({
   useFonts: jest.fn(() => [true]),

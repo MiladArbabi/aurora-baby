@@ -222,9 +222,6 @@ const CareScreen: React.FC = () => {
         onSliceLongPress={handleSlicePress}
         confirmedIds={confirmedIds}
         aiSuggestedIds={aiSuggestedIds}
-        onResize={() => {
-          // This is a no-op, but you can implement resizing logic if needed
-        }}
         isEditingSchedule={isEditingSchedule}
       />
 
