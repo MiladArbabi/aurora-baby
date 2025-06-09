@@ -1,3 +1,4 @@
+// src/services/TagSuggestionService.ts
 import type { LogSlice } from '../models/LogSlice'
 import type { LogSliceMeta } from '../models/LogSliceMeta'
 

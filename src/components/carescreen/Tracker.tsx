@@ -1,12 +1,12 @@
 // src/components/carescreen/Tracker.tsx
 import React, { useMemo, useState, useCallback } from 'react'
-import { View, StyleSheet, GestureResponderEvent, Dimensions } from 'react-native'
+import { View, StyleSheet, GestureResponderEvent, Pressable } from 'react-native'
 import Svg, { Line, Circle } from 'react-native-svg'
 import { useTheme } from 'styled-components/native'
 
 import CategoryRing from './CategoryRing'
 import ClockArc from '../../assets/carescreen/tracker-rings/ClockArc'
-import ResizableSliceOverlay from './ResizableSliceOverlay'
+/* import ResizableSliceOverlay from './ResizableSliceOverlay' */
 import type { LogSlice } from '../../models/LogSlice'
 import { getLogSliceMeta } from '../../storage/LogSliceMetaStorage'
 import { saveLogSliceMeta } from '../../storage/LogSliceMetaStorage'
@@ -32,9 +32,13 @@ export type TrackerProps = {
   onResize: (id: string, newStartAngle?: number, newEndAngle?: number) => void
 }
 
-
 export default function Tracker({ 
-  slices, nowFrac, isEditingSchedule, aiSuggestedIds, onSlicePress, onSliceLongPress
+  slices, 
+  nowFrac, 
+  isEditingSchedule, 
+  aiSuggestedIds, 
+  onSlicePress, 
+  onSliceLongPress
  }: TrackerProps) {
   // Derive subsets
   const theme = useTheme()
@@ -54,7 +58,7 @@ export default function Tracker({
   const [confirmedIds, setConfirmedIds] = useState<Set<string>>(new Set())
 
   const babyId = 'defaultBabyId'
-   const { loading, error, refresh } = 
+    const { loading, error, refresh } = 
     useTrackerSchedule( babyId )
 
   // Pre-compute ticks
@@ -73,80 +77,22 @@ export default function Tracker({
     })
   }, [CENTER, CLOCK_RADIUS])
 
-  // Handler for ring touch events
-  const onRingTouch = useCallback((evt: GestureResponderEvent) => {
-        const { locationX, locationY } = evt.nativeEvent
-        const dx = locationX - CENTER
-        const dy = locationY - CENTER
-        const r = Math.hypot(dx, dy)
-    
-        const inOuter = r >= OUTER_RADIUS - T && r <= OUTER_RADIUS
-        const inMiddle = r >= OUTER_RADIUS - 2*T - G && r <= OUTER_RADIUS - T - G
-        const inInner = r >= OUTER_RADIUS - 3*T - 2*G && r <= OUTER_RADIUS - 2*T - 2*G
-        if (!inOuter && !inMiddle && !inInner) return
-    
-        let angle = Math.atan2(dy, dx) + Math.PI/2
-        if (angle < 0) angle += 2*Math.PI
-        const hour = Math.floor((angle * 180/Math.PI)/(360/24))
-        onSlicePress(hour)
-      }, [CENTER, OUTER_RADIUS, T, G, onSlicePress])
-    
-      // Responder “should we handle this touch?”
-      const shouldSetResponder = useCallback(() => !isEditingSchedule, [isEditingSchedule])
-    
-      // Only fire onRingTouch if we’re not in edit mode
-      const onResponderRelease = useCallback((evt: GestureResponderEvent) => {
-        if (!isEditingSchedule) onRingTouch(evt)
-      }, [isEditingSchedule, onRingTouch])
-
-  //  ── 4) Slice‐tap handler ─────────────────────────────────────────
-  const handleSlicePress = useCallback(
-        async (hourIndex: number) => { 
-        console.log('[CareScreen] handleSlicePress 🕑 hourIndex =', hourIndex)
-          // 1) See if there’s already a LogSlice whose startTime hour == hourIndex
-          const existing = slices.find(s => {
-            const h = new Date(s.startTime).getHours()
-            return h === hourIndex
-          })
-    
-          if (existing) {
-            const nowMs = Date.now()
-                  const startMs = new Date(existing.startTime).getTime()
-                  const meta = await getLogSliceMeta(babyId, existing.id)
-            
-                  if (startMs < nowMs) {
-                    if (meta?.confirmed) {
-                      setSliceMode('view')
-                    } else {
-                      setSliceMode('confirm')
-                    }
-                  } else {
-                    setSliceMode('edit')
-                  }
-                  setSelectedSlice(existing)
-            return
-          }
-    
-          // 2) If no existing slice, create a “new” placeholder slice for that hour window
-          const pad = (n: number) => n.toString().padStart(2, '0')
-          const startIso = `${todayISO}T${pad(hourIndex)}:00:00.000`
-          const endIso   = `${todayISO}T${pad(hourIndex + 1 <= 23 ? hourIndex + 1 : 23)}:00:00.000`
-          // createdAt/updatedAt can remain UTC‐ISO if you prefer, but slice times must be local
-          const nowIso   = new Date().toISOString()
-          const newSlice: LogSlice = {
-            id: `new-${todayISO}-${hourIndex}`,         // a temporary ID
-            babyId: babyId,                             // replace with actual babyId
-            category: 'other',                          // default until user edits
-            startTime: startIso,
-            endTime: endIso,
-            createdAt: nowIso,
-            updatedAt: nowIso,
-            version: 1,                                 // initial version
-          }
-          setSelectedSlice(newSlice)
-        },
-        [slices]
-      )
+      const hitTest = useCallback((evt: GestureResponderEvent): number | null => {
+        const { locationX, locationY } = evt.nativeEvent;
+        const dx = locationX - CENTER;
+        const dy = locationY - CENTER;
+        const r = Math.hypot(dx, dy);
+      
+        const inOuter  = r >= OUTER_RADIUS - T      && r <= OUTER_RADIUS;
+        const inMiddle = r >= OUTER_RADIUS - 2*T - G && r <= OUTER_RADIUS - T - G;
+        const inInner  = r >= OUTER_RADIUS - 3*T - 2*G && r <= OUTER_RADIUS - 2*T - 2*G;
+        if (!inOuter && !inMiddle && !inInner) return null;
+      
+        let angle = Math.atan2(dy, dx) + Math.PI/2;
+        if (angle < 0) angle += 2 * Math.PI;
+        const hour = Math.floor((angle * 180/Math.PI) / (360/24));
+        return hour;
+      }, [CENTER, OUTER_RADIUS, T, G]);
 
        const handleSave = async (updated: LogSlice) => {
                 // ── A) Update today's schedule array ───────────────────────────────
@@ -183,38 +129,6 @@ export default function Tracker({
                 refresh()
               }
       
-         /* const handleResize = useCallback(
-          async (id: string, newStartAngle?: number, newEndAngle?: number) => {
-            // find the slice
-            const orig = slices.find(s => s.id === id)
-            if (!orig) return
-        
-            // compute new ISO times from angles
-            const angleToTime = (angle: number) => {
-              const totalMinutes = (angle / 360) * 24 * 60
-              const hours = Math.floor(totalMinutes / 60)
-              const minutes = Math.round(totalMinutes % 60)
-              const pad2 = (n: number) => n.toString().padStart(2,'0')
-              return `${todayISO}T${pad2(hours)}:${pad2(minutes)}:00.000`
-            }
-        
-            const updated: LogSlice = {
-              ...orig,
-             startTime: newStartAngle != null ? angleToTime(newStartAngle) : orig.startTime,
-             endTime:   newEndAngle   != null ? angleToTime(newEndAngle)   : orig.endTime,
-            }
-            // persist
-            const sched = (await getDailySchedule(todayISO, babyId)) || []
-            const idx = sched.findIndex(s => s.id === id)
-            if (idx >= 0) sched[idx] = updated
-            else sched.push(updated)
-            await saveDailySchedule(todayISO, babyId, sched)
-            refresh()
-          },
-          [slices, todayISO, babyId, refresh],
-        ) 
-
- */
         const ringStyles = useMemo(() => ({
               outermost: {
                 position: 'absolute' as const,
@@ -265,10 +179,19 @@ export default function Tracker({
         
   return (
     <View style={styles.trackerContainer}>
-            <View style={styles.ringWrapper}
-            onStartShouldSetResponder={shouldSetResponder}
-            onResponderRelease={onResponderRelease}
-            >
+      <Pressable
+        style={styles.ringWrapper}
+        disabled={isEditingSchedule}
+        onPress={(evt) => {
+          const hour = hitTest(evt);
+          if (hour !== null) onSlicePress(hour);
+        }}
+        onLongPress={(evt) => {
+          const hour = hitTest(evt);
+          if (hour !== null) onSliceLongPress(hour);
+        }}
+        delayLongPress={300}
+      >
         {/* 1) Awake/Sleep ring pair (outermost) */}
         <View style={ringStyles.outermost}>
             <View style={{ position: 'absolute', top: 0, left: 0 }}>
@@ -434,7 +357,7 @@ export default function Tracker({
               />
             </Svg>
           </View>
-        </View>
+        </Pressable>
         {/* ── 4. Detail Modal ───────────────────────────────────── */}
            {selectedSlice && (
             <LogDetailModal
@@ -465,7 +388,7 @@ export default function Tracker({
               />
             )}
       </View>
-  )
+    )
 }
 
 const styles = StyleSheet.create({
