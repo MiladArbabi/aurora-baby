@@ -1,5 +1,5 @@
 import { generateRuleBasedQuickLogs } from '../RuleBasedLogGenerator';
-import { QuickLogEntry } from '../../models/QuickLogSchema';
+import { QuickLogEntry } from '../../models/LogSchema';
 
 describe('generateRuleBasedQuickLogs', () => {
   it('should return at least one feeding or diaper log for hoursAhead=24 when recentLogs is empty', async () => {

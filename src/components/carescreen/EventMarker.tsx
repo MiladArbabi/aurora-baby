@@ -1,7 +1,7 @@
 // src/components/carescreen/EventMarker.tsx
 import React from 'react'
 import { StyleSheet, GestureResponderEvent, TouchableOpacity, ViewStyle, StyleProp } from 'react-native'
-import { QuickLogEntry } from '../../models/QuickLogSchema'
+import { QuickLogEntry } from '../../models/LogSchema'
 
 import SleepButton from '../../assets/carescreen/QuickLogMenu/SleepButton';
 import NotesButton from '../../assets/carescreen/QuickLogMenu/NotesButton';

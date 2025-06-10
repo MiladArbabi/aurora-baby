@@ -8,8 +8,8 @@ import BottomNav from '../common/BottomNav'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { RootStackParamList } from '../../navigation/AppNavigator'
-import { QuickLogEntry } from '../../models/QuickLogSchema'
-import { getLogsBetween } from '../../services/QuickLogAccess'
+import { LogEntry } from '../../models/LogSchema'
+import {LogRepository} from '../../storage/LogRepository'
 
 type CareNavProp = StackNavigationProp<RootStackParamList, 'Care'>
 
@@ -23,7 +23,7 @@ interface Props {
 export default function CareLayout({ activeTab, onNavigate, children, bgColor }: Props) {
     const navigation = useNavigation<CareNavProp>()
     const theme = useTheme()
-    const [quickLogEntries, setQuickLogEntries] = useState<QuickLogEntry[]>([])
+    const [LogEntries, setLogEntries] = useState<LogEntry[]>([])
 
   // fetch the last 24h / today’s logs
   useEffect(() => {
@@ -31,22 +31,22 @@ export default function CareLayout({ activeTab, onNavigate, children, bgColor }:
     const start = new Date(
       Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0)
     )
-    getLogsBetween(start.toISOString(), now.toISOString())
-      .then(setQuickLogEntries)
+    LogRepository.getEntriesBetween(start.toISOString(), now.toISOString())
+      .then(setLogEntries)
       .catch(console.error)
   }, [])
 
   const handleNewAiLog = useCallback((raw: string) => {
     try {
-      const entries = JSON.parse(raw) as QuickLogEntry[]
-      entries.forEach(entry => setQuickLogEntries(e => [entry, ...e]))
+      const entries = JSON.parse(raw) as LogEntry[]
+      entries.forEach(entry => setLogEntries(e => [entry, ...e]))
     } catch (err) {
       console.error('[CareLayout] invalid AI JSON:', err)
     }
   }, [])
 
-  const handleLogged = useCallback((entry: QuickLogEntry) => {
-    setQuickLogEntries(e => [entry, ...e])
+  const handleLogged = useCallback((entry: LogEntry) => {
+    setLogEntries(e => [entry, ...e])
   }, [])
 
   return (

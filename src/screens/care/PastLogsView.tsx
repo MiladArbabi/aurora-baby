@@ -10,9 +10,9 @@ import {
   Dimensions,
 } from 'react-native'
 import { useTheme } from 'styled-components/native'
-import { QuickLogEntry } from '../../models/QuickLogSchema'
-import { quickLogEmitter } from '../../storage/QuickLogEvents';
-import { getLogsBetween, deleteLogEntry  } from '../../services/QuickLogAccess'
+import { QuickLogEntry } from '../../models/LogSchema'
+import { logEmitter } from '../../storage/LogEvents';
+import { LogRepository } from '../../storage/LogRepository'
 import CareLayout from '../../components/carescreen/CareLayout'
 import { MiniTab } from '../../components/carescreen/MiniNavBar'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -60,7 +60,7 @@ export default function PastLogsView() {
   // fetch once
   // fetch & sort once
   useEffect(() => {
-    getLogsBetween(
+    LogRepository.getEntriesBetween(
       new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
       new Date().toISOString()
     )
@@ -79,9 +79,9 @@ export default function PastLogsView() {
     const handler = (entry: QuickLogEntry) => {
       setEntries((es) => [entry, ...es])
     }
-    quickLogEmitter.on('saved', handler);
+    logEmitter.on('saved', handler);
   return () => {
-    quickLogEmitter.off('saved', handler);
+    logEmitter.off('saved', handler);
   };
 }, [])
   
@@ -93,9 +93,9 @@ export default function PastLogsView() {
     const onDeleted = (entry: QuickLogEntry) => {
       handlerDelete(entry.id)
     }
-    quickLogEmitter.on('deleted', onDeleted)
+    logEmitter.on('deleted', onDeleted)
     return () => {
-      quickLogEmitter.off('deleted', onDeleted)
+      logEmitter.off('deleted', onDeleted)
       }
     }, [])
 
@@ -195,9 +195,9 @@ export default function PastLogsView() {
       style={{ flex: 1 }}
       />  
       {/* Modal */}
-      {selectedEntry && (
+{/*       {selectedEntry && (
         <LogDetailModal
-          entry={selectedEntry}
+          slice={slice}
           visible={true}
           onClose={() => setSelectedEntry(null)}
           onDelete={(id: string) => {
@@ -211,7 +211,7 @@ export default function PastLogsView() {
 
           }}
         />
-      )}
+      )} */}
     </CareLayout>
   )
 }

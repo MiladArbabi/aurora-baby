@@ -9,8 +9,8 @@ import {
   Pressable,
   Dimensions
 } from 'react-native';
-import { saveQuickLogEntry } from '../../storage/QuickLogStorage';
-import { QuickLogEntry } from '../../models/QuickLogSchema';
+import { saveQuickLogEntry } from '../../storage/LogRepository';
+import { QuickLogEntry } from '../../models/LogSchema';
 import HandleBar from '../../assets/carescreen/QuickLogMenu/HandleBar';
 import { generateId } from '../../utils/generateId';
 import { SvgProps } from 'react-native-svg';

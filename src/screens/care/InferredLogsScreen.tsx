@@ -7,7 +7,7 @@ import LogDetailModal from '../../components/carescreen/LogDetailModal';
 import CareLayout from 'components/carescreen/CareLayout';
 
 import { RootStackParamList } from '../../navigation/AppNavigator';
-import { QuickLogEntry } from '../../models/QuickLogSchema';
+import { LogEntry } from '../../models/LogSchema';
 import InferredLogItem from '../../components/carescreen/InferredLogItem';
 
 import { useFutureLogs } from '../../hooks/useFutureLogs';  //
@@ -29,7 +29,7 @@ export default function InferredLogsScreen() {
     } = useFutureLogs();
 
   // (A) Count of stored future entries & full array to render
-  const [selectedEntry, setSelectedEntry] = useState<QuickLogEntry | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<LogEntry | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
   // (3) Simple navigator stub

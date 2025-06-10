@@ -1,7 +1,7 @@
 // src/services/RuleBasedLogGenerator.ts
 
 // Import needed types and utilities
-import { QuickLogEntry, FeedingLog, DiaperLog } from '../models/QuickLogSchema';  
+import { QuickLogEntry, FeedingLog, DiaperLog } from '../models/LogSchema';  
 import { getGapSettings } from './GapSettingsStorage';                               
 import { getBabyProfile } from 'storage/BabyProfileStorage';                           
 import { v4 as uuidv4 } from 'uuid';                                                 

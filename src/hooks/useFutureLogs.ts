@@ -1,16 +1,12 @@
 // src/hooks/useFutureLogs.ts
 import { useCallback, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  getFutureEntries as _getFutureEntries,
-  saveFutureEntries as _saveFutureEntries,
-} from '../services/QuickLogAccess';
+import { LogRepository } from 'storage/LogRepository';
 import {
   FUTURE_LOGS_STORAGE_KEY,
   DEFAULT_RULE_HOURS_AHEAD,
 } from '../utils/constants';
-import { QuickLogEntry } from '../models/QuickLogSchema';
-import { getLogsBetween } from '../services/QuickLogAccess';
+import { QuickLogEntry } from '../models/LogSchema';
 import { getBabyProfile } from 'storage/BabyProfileStorage';
 import { generateRuleBasedQuickLogs } from '../services/RuleBasedLogGenerator';
 
@@ -30,7 +26,7 @@ export function useFutureLogs() {
   // Load from AsyncStorage
   const reload = useCallback(async () => {
     try {
-      const stored = await _getFutureEntries();
+      const stored = await LogRepository.getFutureEntries();
       setEntries(stored);
     } catch (err) {
       console.error('[useFutureLogs] reload failed:', err);
@@ -51,7 +47,7 @@ export function useFutureLogs() {
   const replaceOne = useCallback(
     async (updatedEntry: QuickLogEntry) => {
       try {
-        const all = await _getFutureEntries();
+        const all = await LogRepository.getFutureEntries();
         const replaced = all.map((e) =>
           e.id === updatedEntry.id ? updatedEntry : e
         );
@@ -70,7 +66,7 @@ export function useFutureLogs() {
   // Delete one entry (by ID)
   const deleteOne = useCallback(async (id: string) => {
     try {
-      const all = await _getFutureEntries();
+      const all = await LogRepository.getFutureEntries();
       const filtered = all.filter((e) => e.id !== id);
       await AsyncStorage.setItem(
         FUTURE_LOGS_STORAGE_KEY,
@@ -86,7 +82,7 @@ export function useFutureLogs() {
   const generateNextDay = useCallback(async () => {
     try {
       // 1) fetch any real logs from start‐of‐today→now
-      const recent = await getLogsBetween(
+      const recent = await LogRepository.getEntriesBetween(
         new Date(new Date().setHours(0, 0, 0, 0)).toISOString(),
         new Date().toISOString()
       );
@@ -112,7 +108,7 @@ export function useFutureLogs() {
       );
 
       // 4) Persist them (append to existing)
-      await _saveFutureEntries(suggestions);
+      /* await LogRepository.saveFutureEntry(entry) */
       console.log('[useFutureLogs] saved future entries');
 
       // 5) Reload state

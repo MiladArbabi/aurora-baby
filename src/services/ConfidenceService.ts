@@ -1,7 +1,7 @@
 // src/services/ConfidenceService.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { InferredLogEntry } from '../models/InferredLog';
-import { QuickLogEntry } from '../models/QuickLogSchema';
+import { QuickLogEntry } from '../models/LogSchema';
 
 const FEEDBACK_STORAGE_KEY = '@inferred_log_feedback';
 

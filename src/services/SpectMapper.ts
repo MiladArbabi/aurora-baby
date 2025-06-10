@@ -1,13 +1,13 @@
 // src/services/SpectMapper.ts
 
-import { QuickLogEntry } from '../models/QuickLogSchema';
+import { LogEntry } from '../models/LogSchema';
 
 export interface SpectCategory {
   category: 'Sleep' | 'Play' | 'Eat' | 'Care' | 'Talk';
   subcategory?: string;
 }
 
-export const categorizeLogToSPECT = (log: QuickLogEntry): SpectCategory | null => {
+export const categorizeLogToSPECT = (log: LogEntry): SpectCategory | null => {
     const time = new Date(log.timestamp).getUTCHours();
   
     switch (log.type) {

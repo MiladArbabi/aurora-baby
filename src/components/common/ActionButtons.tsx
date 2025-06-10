@@ -10,7 +10,7 @@ import {
 import AiLogGeneratorButton from "../../assets/whispr/AiLogGenerator"
 import QuickLogButton from "../carescreen/QuickLogButton"
 import { askWhispr } from "../../services/LlamaLogGenerator"
-import { QuickLogEntry } from "../../models/QuickLogSchema"
+import { QuickLogEntry } from "../../models/LogSchema"
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window")
 // Icon size will be 10% of screen width

@@ -1,19 +1,21 @@
-// server/services/llamaService.js
-const fs   = require('fs');
+const fs = require('fs');
 const path = require('path');
+const retry = require('async-retry');
 
-// High‐level instructions to shape Whispr's tone and focus
+const MODEL_PATH = process.env.MODEL_PATH || path.resolve(__dirname, '../models/llama-2-7b-q2_K.gguf');
+let session = null;
+let lastUsed = Date.now();
+
 const RULES = `
-You are Whispr, a warm and caring AI assistant for new parents.
+You are Whispr, a warm and caring assistant for new parents.
 - Always address the user as "Parent".
-- Provide child‑friendly, evidence‑based baby care tips.
+- Provide child-friendly, evidence-based baby care tips.
 - Use a direct, straightforward style in short (1–2 sentence) responses.
 - Frame your answers in a reassuring, supportive tone.
 - Never mention "model" or "AI."`;
 
-// Whispr’s persona, included on every call:
 const PERSONA_PROMPT = `
-You are Whispr, a warm and caring AI assistant for new parents.
+You are Whispr, a warm and caring assistant for new parents.
 Your name is "Whispr," you speak softly and succinctly,
 and you always frame your answers in a friendly, reassuring tone.
 You know your purpose is to help parents with baby care tips,
@@ -23,10 +25,10 @@ and you refer to yourself as "Whispr" in the first person.
 const UNIVERSE_DEFS = `
 Aurora Universe Characters:
 - Birk: a gentle, protective bear cub who loves to snuggle.
-- Freya: a curious, playful snow owl with a kind and empathetic eyes.
-- Nordra: a strong baby charriot with 4 all-terrain wheels.
-- AXO: a wise floating driod who shows the direction with projections and robotic sounds.
-- Swans: graceful lake swans who sing soothing harmoniously together.
+- Freya: a curious, playful snow owl with kind and empathetic eyes.
+- Nordra: a strong baby chariot with 4 all-terrain wheels.
+- AXO: a wise floating droid who shows direction with projections and robotic sounds.
+- Swans: graceful lake swans who sing soothingly together.
 - Moss Moles: little burrow-dwelling moles who maintain forest moss beds and collect berries.
 
 Story Style Rules:
@@ -37,47 +39,68 @@ Story Style Rules:
 - Do not mention “AI,” “model,” or technical terms.
 `;
 
-const MODEL_PATH = path.resolve(__dirname, '../../models/llama-2-7b-q4_0.gguf');
-let session = null;
-
-async function generateCompletion(promptText) {
-  await loadSession();
-  // build a minimal “JSON‐only” prompt (or reuse your existing story prompt)
-  const fullPrompt = promptText;
-  const reply = await session.completePrompt(fullPrompt, {
-    maxTokens:           128,
-    temperature:         0.7,
-    topP:                0.9,
-    repeatPenalty:       1.1,
-    customStopTriggers:  ['\n\n'], // stop at double newline, etc.
-    trimWhitespaceSuffix: true,
-  });
-  return reply.trim();
-}
-
 async function loadSession() {
-  if (session) return;
+  if (session) {
+    lastUsed = Date.now();
+    return;
+  }
   if (!fs.existsSync(MODEL_PATH)) {
     throw new Error(`Model file not found at ${MODEL_PATH}`);
   }
 
-  const { getLlama, LlamaChatSession } = await import('node-llama-cpp'); 
+  console.log('[LlamaService] Loading model...');
+  const { getLlama, LlamaChatSession } = await import('node-llama-cpp');
   const llama = await getLlama();
   const model = await llama.loadModel({
     modelPath: MODEL_PATH,
-    backend:  'auto',
-    n_ctx:     1024,
-    n_threads: 4,
+    backend: 'auto',
+    n_ctx: 512, // Reduced context size
+    n_threads: 2, // Reduced threads for memory
   });
   const context = await model.createContext();
   session = new LlamaChatSession({ contextSequence: context.getSequence() });
+  lastUsed = Date.now();
+  console.log('[LlamaService] Model loaded successfully');
+}
+
+// Periodically check for inactivity to free memory
+setInterval(() => {
+  if (session && Date.now() - lastUsed > 30 * 60 * 1000) { // 30 minutes
+    console.log('[LlamaService] Unloading model due to inactivity');
+    session = null;
+  }
+}, 5 * 60 * 1000); // Check every 5 minutes
+
+async function generateCompletion(promptText) {
+  if (!promptText || typeof promptText !== 'string') {
+    throw new Error('Prompt must be a non-empty string');
+  }
+
+  await loadSession();
+  const fullPrompt = `${PERSONA_PROMPT}\n${RULES}\n${promptText}`;
+  return retry(
+    async () => {
+      const reply = await session.completePrompt(fullPrompt, {
+        maxTokens: 128,
+        temperature: 0.7,
+        topP: 0.9,
+        repeatPenalty: 1.1,
+        customStopTriggers: ['\n\n'],
+        trimWhitespaceSuffix: true,
+      });
+      lastUsed = Date.now();
+      return reply.trim();
+    },
+    { retries: 3, factor: 2 }
+  );
 }
 
 async function generateStoryCompletion(promptText) {
-  // ensure the model is loaded (or error out if absent)
-  await loadSession();
+  if (!promptText || typeof promptText !== 'string') {
+    throw new Error('Prompt must be a non-empty string');
+  }
 
-  // build your single, clear prompt:
+  await loadSession();
   const fullPrompt = `
 ${UNIVERSE_DEFS.trim()}
 
@@ -90,43 +113,110 @@ ${promptText}
 ### Story:
 `.trim();
 
-  // now actually invoke Llama:
-  const reply = await session.completePrompt(fullPrompt, {
-    maxTokens:           512,    // plenty of room for a short story
-    temperature:         0.7,    // creative but not random
-    topP:                0.9,
-    repeatPenalty:       1.1,
-    customStopTriggers:  ['###'], // stop if the model echoes the next section header
-    trimWhitespaceSuffix: true,
-  });
-
-  return reply.trim();
+  return retry(
+    async () => {
+      const reply = await session.completePrompt(fullPrompt, {
+        maxTokens: 512,
+        temperature: 0.7,
+        topP: 0.9,
+        repeatPenalty: 1.1,
+        customStopTriggers: ['###'],
+        trimWhitespaceSuffix: true,
+      });
+      lastUsed = Date.now();
+      return reply.trim();
+    },
+    { retries: 3, factor: 2 }
+  );
 }
 
 async function generateStoryTitle(storyText) {
-  // re-use loadSession if you like, or just push it through the same session
+  if (!storyText || typeof storyText !== 'string') {
+    throw new Error('Story text must be a non-empty string');
+  }
+
+  await loadSession();
   const titlePrompt = `
-  ${UNIVERSE_DEFS.trim()}
-  
-  ### Your task:
-  Give a very short (≤5 words), child-friendly title for the story below.
-  
-  ### Story:
-  ${storyText}
-  
-  ### Title:
-  `.trim();
+${UNIVERSE_DEFS.trim()}
 
-  const raw = await session.completePrompt(titlePrompt, {
-    maxTokens:  32,
-    temperature: 0.3,
-    topP:        0.9,
-    repeatPenalty: 1.1,
-    customStopTriggers: ['\n'],
-    trimWhitespaceSuffix: true,
-  });
+### Your task:
+Give a very short (≤5 words), child-friendly title for the story below.
 
-  return raw.split('\n')[0].trim();
+### Story:
+${storyText}
+
+### Title:
+`.trim();
+
+  return retry(
+    async () => {
+      const raw = await session.completePrompt(titlePrompt, {
+        maxTokens: 32,
+        temperature: 0.3,
+        topP: 0.9,
+        repeatPenalty: 1.1,
+        customStopTriggers: ['\n'],
+        trimWhitespaceSuffix: true,
+      });
+      lastUsed = Date.now();
+      return raw.split('\n')[0].trim();
+    },
+    { retries: 3, factor: 2 }
+  );
 }
 
-module.exports = { generateStoryCompletion, generateStoryTitle, generateCompletion };
+async function summarizeLogs(logs, options = { format: 'story' }) {
+  if (!Array.isArray(logs) || logs.length === 0) {
+    throw new Error('Logs must be a non-empty array');
+  }
+  for (const log of logs) {
+    if (!log.timestamp || !log.event) {
+      throw new Error('Each log must have timestamp and event');
+    }
+  }
+
+  const bullets = logs.map(
+    (l) =>
+      `- [${l.timestamp}] ${l.event}${
+        l.details ? `: ${JSON.stringify(l.details)}` : ''
+      }`
+  );
+
+  const prompt = `
+${PERSONA_PROMPT.trim()}
+${options.format === 'story' ? UNIVERSE_DEFS.trim() : ''}
+
+### Your task:
+Provide a concise, child-friendly summary of the following logs in a ${options.format} format.
+Use a warm, reassuring tone and address the user as "Parent".
+
+### Logs:
+${bullets.join('\n')}
+
+### Summary:
+`.trim();
+
+  return retry(
+    async () => {
+      await loadSession();
+      const raw = await session.completePrompt(prompt, {
+        maxTokens: 300,
+        temperature: 0.7,
+        topP: 0.9,
+        repeatPenalty: 1.1,
+        customStopTriggers: ['###'],
+        trimWhitespaceSuffix: true,
+      });
+      lastUsed = Date.now();
+      return raw.trim();
+    },
+    { retries: 3, factor: 2 }
+  );
+}
+
+module.exports = {
+  generateCompletion,
+  generateStoryCompletion,
+  generateStoryTitle,
+  summarizeLogs,
+};

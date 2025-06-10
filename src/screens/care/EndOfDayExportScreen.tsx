@@ -3,15 +3,14 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, Button, ScrollView, StyleSheet, Alert, Share } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
-import { getLogsForDate, formatLogsAsCsv } from '../../services/EndOfDayExportService';
 import { format, startOfToday, endOfToday } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components/native';
 
 import { getBabyProfile } from 'storage/BabyProfileStorage';
 import { getParentProfile } from '../../services/ParentProfileAccess';
-import { QuickLogEntry } from 'models/QuickLogSchema';
-import { getLogsBetween } from '../../services/QuickLogAccess';
+import { LogEntry } from 'models/LogSchema';
+import { LogRepository } from '../../storage/LogRepository';
 
 import BackButton from '../../assets/icons/common/BackButton';
 
@@ -25,7 +24,7 @@ const HeaderRow = styled.View`
 
 export default function EndOfDayExportScreen({ navigation }: Props) {
     const { t } = useTranslation();
-    const [todayLogs, setTodayLogs] = useState<QuickLogEntry[]>([]);
+    const [todayLogs, setTodayLogs] = useState<LogEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [childName, setChildName] = useState<string | null>(null);
     const [parentName, setParentName] = useState<string | null>(null);
@@ -36,7 +35,7 @@ export default function EndOfDayExportScreen({ navigation }: Props) {
 
   useEffect(() => {
     (async () => {
-        const logs = await getLogsBetween(
+        const logs = await LogRepository.getEntriesBetween(
             startOfToday().toISOString(),
             endOfToday().toISOString()
         );
@@ -63,8 +62,8 @@ export default function EndOfDayExportScreen({ navigation }: Props) {
     })();
   }, []);
 
-  // Render a QuickLogEntry.data in readable form:
-  function renderLogDetails(log: QuickLogEntry): string {
+  // Render a LogEntry.data in readable form:
+  function renderLogDetails(log: LogEntry): string {
         switch (log.type) {
           case 'feeding':
             const { method, quantity, notes } = log.data;

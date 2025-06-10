@@ -9,7 +9,7 @@ export type QuickLogType =
   | 'health'
   | 'note';
 
-export interface QuickLogBase {
+export interface LogBase {
   id: string;
   babyId: string;
   timestamp: string; // ISO 8601
@@ -17,7 +17,7 @@ export interface QuickLogBase {
   version: number;
 }
 
-export interface SleepLog extends QuickLogBase {
+export interface SleepLog extends LogBase {
   type: 'sleep';
   data: {
     subtype?: 'night' | 'nap1' | 'nap2' | 'nap3';
@@ -27,7 +27,7 @@ export interface SleepLog extends QuickLogBase {
   };
 }
 
-export interface FeedingLog extends QuickLogBase {
+export interface FeedingLog extends LogBase {
   type: 'feeding';
   data: {
     method: 'bottle' | 'breast' | 'solid';
@@ -36,7 +36,7 @@ export interface FeedingLog extends QuickLogBase {
   };
 }
 
-export interface DiaperLog extends QuickLogBase {
+export interface DiaperLog extends LogBase {
   type: 'diaper';
   data: {
     status: 'wet' | 'dirty' | 'both';
@@ -44,7 +44,7 @@ export interface DiaperLog extends QuickLogBase {
   };
 }
 
-export interface MoodLog extends QuickLogBase {
+export interface MoodLog extends LogBase {
   type: 'mood';
   data: {
     emoji: string;
@@ -53,7 +53,7 @@ export interface MoodLog extends QuickLogBase {
   };
 }
 
-export interface HealthLog extends QuickLogBase {
+export interface HealthLog extends LogBase {
   type: 'health';
   data: {
     subtype?: string;
@@ -63,14 +63,14 @@ export interface HealthLog extends QuickLogBase {
   };
 }
 
-export interface NoteLog extends QuickLogBase {
+export interface NoteLog extends LogBase {
   type: 'note';
   data: {
     text: string;
   };
 }
 
-export type QuickLogEntry =
+export type LogEntry =
   | SleepLog
   | FeedingLog
   | DiaperLog
@@ -157,7 +157,7 @@ export const NoteLogSchema = z.object({
   }),
 });
 
-export const QuickLogEntrySchema = z.discriminatedUnion('type', [
+export const LogEntrySchema = z.discriminatedUnion('type', [
   SleepLogSchema,
   FeedingLogSchema,
   DiaperLogSchema,
