@@ -58,7 +58,7 @@ async function loadSession() {
   const model = await llama.loadModel({
     modelPath: MODEL_PATH,
     backend: 'auto',
-    n_ctx: 1024,
+    n_ctx: 2048,
     n_threads: 2,
   });
   const context = await model.createContext();

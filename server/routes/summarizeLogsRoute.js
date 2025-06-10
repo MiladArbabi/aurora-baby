@@ -1,7 +1,8 @@
+// server/routes/summarizeLogsRoute.js
 const express = require('express');
 const router = express.Router();
 const Joi = require('joi');
-const { summarizeLogs } = require('../services/SummarizeService'); // Updated import
+const { summarizeLogs } = require('../services/SummarizeService');
 
 const logSchema = Joi.object({
   id: Joi.string().uuid().required(),
@@ -14,7 +15,7 @@ const logSchema = Joi.object({
 
 const summarizeSchema = Joi.object({
   logs: Joi.array().items(logSchema).min(1).max(100).required(),
-  format: Joi.string().valid('story', 'narration').optional().default('story'),
+  format: Joi.string().valid('story', 'narration').optional().default('narration'),
 });
 
 router.post('/', async (req, res) => {
@@ -29,12 +30,12 @@ router.post('/', async (req, res) => {
     console.error(`[SummarizeLogsRoute][${requestId}] Validation error:`, error.details[0].message);
     return res.status(400).json({ error: error.details[0].message });
   }
-  const { logs, format } = value;
+  const { logs } = value;
 
   try {
-    const summary = await summarizeLogs(logs, format); // Removed options object
+    const summary = await summarizeLogs(logs, 'narration'); // Force narration
     console.log(`[SummarizeLogsRoute][${requestId}] Summary generated, length: ${summary.length}`);
-    return res.json({ summary, format });
+    return res.json({ summary, format: value.format });
   } catch (err) {
     console.error(`[SummarizeLogsRoute][${requestId}] Error:`, err.message);
     return res.status(500).json({
