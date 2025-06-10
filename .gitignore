@@ -1,17 +1,24 @@
+# Node.js dependencies
 node_modules
+
+# Expo device configs
 .expo/devices.json
-/models/*.gguf
-server/.env
+
+# Model files
+server/models/*.gguf
+server/models/.quantize-venv/
+
 # Environment variables
+server/.env
 .env
-# Gradle caches
+
+# Android build artifacts
 android/.gradle
 android/build
 android/app/build
+
 # Keystores
 android/app/debug.keystore
+
 # Local configs
 *.local
-
-/models/.quantize-venv/
-/models/*.gguf
