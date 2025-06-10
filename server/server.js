@@ -1,12 +1,14 @@
+// server/server.js
 require('dotenv').config({ path: require('path').resolve(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
-const whisprRoute = require('./routes/whisprRoute');
-const storyRoute = require('./routes/storyRoute');
-const futureLogsRoute = require('./routes/futureLogsRoute');
-const summarizeLogsRoute = require('./routes/summarizeLogsRoute');
+
+const futureLogsRouter = require('./routes/futureLogsRoute');
+const summarizeLogsRouter = require('./routes/summarizeLogsRoute');
+const storyTellingRouter = require('./routes/storyTellingRoute');
+const whisprVoiceRouter = require('./routes/whisprVoiceRoute');
 
 const app = express();
 
@@ -24,10 +26,10 @@ app.use(
 );
 
 // Routes
-app.use('/api/whispr/query', whisprRoute);
-app.use('/api/story/generate', storyRoute);
-app.use('/api/futureLogs', futureLogsRoute);
-app.use('/summarize-logs', summarizeLogsRoute);
+app.use('/whispr-voice', whisprVoiceRouter); // Updated
+app.use('/story-telling', storyTellingRouter); // Updated
+app.use('/api/futureLogs', futureLogsRouter);
+app.use('/summarize-logs', summarizeLogsRouter);
 
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'OK' }));
@@ -40,7 +42,7 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 4000;
 if (require.main === module) {
-  app.listen(PORT, () => console.log(`Listening on ${PORT}`));
+  app.listen(PORT, () => console.log(`[Server] Listening on http://localhost:${PORT}`));
 }
 
 module.exports = app;

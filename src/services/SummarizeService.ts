@@ -1,17 +1,74 @@
-// src/services/SummarizeService.ts
 import axios from 'axios';
 import Constants from 'expo-constants';
 
-const API_BASE = Constants.expoConfig?.extra?.apiHost || 'http://localhost:3000';
+const { generateText, UNIVERSE_DEFS } = require('./llamaService');
+
+interface Log {
+  timestamp: string;
+  type: string;
+  data?: any;
+}
+
+async function summarizeLogs(logs: Log[], format = 'story') {
+  if (!Array.isArray(logs) || logs.length === 0) {
+    throw new Error('Logs must be a non-empty array');
+  }
+  for (const log of logs) {
+    if (!log.timestamp || !log.type) {
+      throw new Error('Each log must have timestamp and type');
+    }
+  }
+
+  const bullets = logs.map(
+    (l) =>
+      `- At ${l.timestamp}, baby has ${l.type}${l.data ? `: ${JSON.stringify(l.data)}` : ''}`
+  );
+
+  const prompt = `
+${format === 'story' ? UNIVERSE_DEFS : ''}
+
+### Your task:
+Write a short, child-friendly summary of the baby’s activities based on the logs below.
+Use a warm, reassuring tone and address the user as "Parent".
+${format === 'story' ? 'Include Aurora characters (e.g., Birk, Freya) to make it fun.' : 'Keep it simple and factual.'}
+Use short sentences (≤ 10 words).
+Do not introduce yourself or explain your role.
+Focus only on the baby’s activities from the logs.
+
+### Logs:
+${bullets.join('\n')}
+
+### Summary:
+`;
+
+  return generateText(prompt, {
+    maxTokens: 400,
+    temperature: 0.5, // Lower for stability
+    stopTriggers: ['###'],
+  });
+}
+
+const API_BASE = Constants.expoConfig?.extra?.apiHost || 'http://localhost:4000';
+
+export interface LogEntry {
+  id: string;
+  babyId: string;
+  timestamp: string;
+  type: 'sleep' | 'feeding' | 'diaper' | 'mood' | 'health' | 'note';
+  version: number;
+  data: Record<string, any>;
+}
 
 export async function summarizeLogsServerless(
-  logs: Array<{ timestamp: string; event: string; details?: any }>,
+  logs: LogEntry[],
   format: 'story' | 'narration' = 'story'
 ): Promise<{ summary: string; format: string }> {
   const res = await axios.post(
-    `${API_BASE}/api/summarize-logs`,
+    `${API_BASE}/summarize-logs`,
     { logs, format },
     { headers: { 'Content-Type': 'application/json' } }
   );
   return res.data;
 }
+
+module.exports = { summarizeLogs };
