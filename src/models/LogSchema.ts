@@ -30,8 +30,10 @@ export interface SleepLog extends LogBase {
 export interface FeedingLog extends LogBase {
   type: 'feeding';
   data: {
-    method: 'bottle' | 'breast' | 'solid';
+    method: 'bottle' | 'breast';
     quantity?: number;
+    unit?: 'oz' | 'mL';
+    subtype?: 'formula' | 'milk'; // Optional for formula vs. breast milk
     notes?: string;
   };
 }
@@ -101,8 +103,10 @@ export const FeedingLogSchema = z.object({
   type:      z.literal('feeding'),
   version:   z.number(),
   data: z.object({
-    method:  z.enum(['bottle', 'breast', 'solid']),
+    method:   z.enum(['bottle', 'breast']),
     quantity: z.number().optional(),
+    unit:     z.enum(['oz', 'mL']).optional(),
+    subtype:  z.enum(['formula', 'milk']).optional(),
     notes:    z.string().optional(),
   }),
 });
