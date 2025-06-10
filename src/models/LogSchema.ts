@@ -1,7 +1,7 @@
-//src/models/QuickLogSchema.ts
+//src/models/LogSchema.ts
 import { z } from 'zod';
 
-export type QuickLogType =
+export type LogType =
   | 'sleep'
   | 'feeding'
   | 'diaper'
@@ -13,7 +13,7 @@ export interface LogBase {
   id: string;
   babyId: string;
   timestamp: string; // ISO 8601
-  type: QuickLogType;
+  type: LogType;
   version: number;
 }
 

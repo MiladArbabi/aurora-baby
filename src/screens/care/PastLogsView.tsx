@@ -10,7 +10,7 @@ import {
   Dimensions,
 } from 'react-native'
 import { useTheme } from 'styled-components/native'
-import { QuickLogEntry } from '../../models/LogSchema'
+import { LogEntry } from '../../models/LogSchema'
 import { logEmitter } from '../../storage/LogEvents';
 import { LogRepository } from '../../storage/LogRepository'
 import CareLayout from '../../components/carescreen/CareLayout'
@@ -37,9 +37,9 @@ type CardsNavProp = StackNavigationProp<RootStackParamList,'PastLogs'>
 export default function PastLogsView() {
   const navigation = useNavigation<CardsNavProp>()
   const theme = useTheme()
-  const [entries, setEntries] = useState<QuickLogEntry[]>([])
+  const [entries, setEntries] = useState<LogEntry[]>([])
   const [selectedCategory, setSelectedCategory] = useState<Category>('all')
-  const [selectedEntry, setSelectedEntry] = useState<QuickLogEntry | null>(null)
+  const [selectedEntry, setSelectedEntry] = useState<LogEntry | null>(null)
 
   // helper: relative‐day label
   const getDayLabel = (ts: string) => {
@@ -64,9 +64,9 @@ export default function PastLogsView() {
       new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
       new Date().toISOString()
     )
-    .then((logs: QuickLogEntry[]) => {
+    .then((logs: LogEntry[]) => {
       const sorted = [...logs].sort(
-        (a: QuickLogEntry, b: QuickLogEntry) =>
+        (a: LogEntry, b: LogEntry) =>
           new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
       )
       setEntries(sorted)
@@ -76,7 +76,7 @@ export default function PastLogsView() {
 
   // whenever any new entry is saved, prepend it into the list:
   useEffect(() => {
-    const handler = (entry: QuickLogEntry) => {
+    const handler = (entry: LogEntry) => {
       setEntries((es) => [entry, ...es])
     }
     logEmitter.on('saved', handler);
@@ -90,7 +90,7 @@ export default function PastLogsView() {
   }
   
   useEffect(() => {
-    const onDeleted = (entry: QuickLogEntry) => {
+    const onDeleted = (entry: LogEntry) => {
       handlerDelete(entry.id)
     }
     logEmitter.on('deleted', onDeleted)
@@ -104,7 +104,7 @@ export default function PastLogsView() {
     : entries.filter(e=>e.type===selectedCategory)
 
   const renderCard = useCallback(
-    ({item}:{item:QuickLogEntry})=>(
+    ({item}:{item:LogEntry})=>(
       <TouchableOpacity
         style={[styles.card,{borderColor:borderColors[item.type]}]}
         onPress={() => setSelectedEntry(item)}
@@ -132,7 +132,7 @@ export default function PastLogsView() {
     const profile = await getBabyProfile(recent[0]?.babyId) 
   
     // 2) Ask your AI endpoint for recommendations
-    const suggestions: QuickLogEntry[] = await generateAIQuickLogs(recent, profile, hoursAhead)
+    const suggestions: LogEntry[] = await generateAILogs(recent, profile, hoursAhead)
   
     // 3) Persist & emit them as “future” entries
     await saveFutureEntries(suggestions)

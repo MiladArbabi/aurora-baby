@@ -1,4 +1,4 @@
-import { QuickLogEntry } from '../models/LogSchema';
+import { LogEntry } from '../models/LogSchema';
 import Constants from 'expo-constants';
 
 const apiHost = Constants.expoConfig?.extra?.apiHost ??
@@ -6,10 +6,10 @@ const apiHost = Constants.expoConfig?.extra?.apiHost ??
                   ? 'http://10.0.2.2:4000'
                   : 'http://localhost:4000');
 
-export async function generateAIQuickLogs(
-  recentLogs: QuickLogEntry[],
+export async function generateAILogs(
+  recentLogs: LogEntry[],
   hoursAhead: number = 24
-): Promise<QuickLogEntry[]> {
+): Promise<LogEntry[]> {
   if (!Array.isArray(recentLogs) || recentLogs.length === 0) {
     throw new Error('recentLogs must be a non-empty array');
   }
@@ -35,7 +35,7 @@ export async function generateAIQuickLogs(
       throw new Error('Failed to generate logs');
     }
 
-    const aiEntries = (await resp.json()) as QuickLogEntry[];
+    const aiEntries = (await resp.json()) as LogEntry[];
     return aiEntries;
   } catch (err) {
     console.error('[LlamaLogGenerator] fetch failed:', err);

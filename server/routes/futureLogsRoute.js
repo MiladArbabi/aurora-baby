@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const Joi = require('joi');
 const { generateCompletion } = require('../services/llamaService');
-const { getAllEntries } = require('../../src/services/QuickLogAccess');
+const { getAllEntries } = require('../storage/LogRepository');
 
 const logEntrySchema = Joi.object({
   id: Joi.string().uuid().required(),
@@ -44,7 +44,7 @@ Loves themes: ${themes}
 Here are their logs for the last 24h:
 ${JSON.stringify(recentLogs, null, 2)}
 
-Please output EXACTLY one JSON array—no additional text—of QuickLogEntry objects for the next ${hoursAhead} hours.
+Please output EXACTLY one JSON array—no additional text—of LogEntry objects for the next ${hoursAhead} hours.
 Begin and end your response between <<<JSON>>> markers. For example:
 <<<JSON>>>
 [
@@ -124,7 +124,7 @@ Loves themes: no specific themes
 Here are their logs for the last 24h:
 ${JSON.stringify(logs, null, 2)}
 
-Please output EXACTLY one JSON array—no additional text—of QuickLogEntry objects for the next ${hours} hours.
+Please output EXACTLY one JSON array—no additional text—of LogEntry objects for the next ${hours} hours.
 Begin and end your response between <<<JSON>>> markers.
 `;
 

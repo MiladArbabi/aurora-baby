@@ -1,7 +1,7 @@
 // src/services/ConfidenceService.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { InferredLogEntry } from '../models/InferredLog';
-import { QuickLogEntry } from '../models/LogSchema';
+import { LogEntry } from '../models/LogSchema';
 
 const FEEDBACK_STORAGE_KEY = '@inferred_log_feedback';
 
@@ -11,7 +11,7 @@ const FEEDBACK_STORAGE_KEY = '@inferred_log_feedback';
  *    For now, we’ll generate a random confidence between 0.6 and 0.95.
  */
 export async function scoreInferredLogs(
-  entries: QuickLogEntry[]
+  entries: LogEntry[]
 ): Promise<InferredLogEntry[]> {
   return entries.map((entry) => {
     const confidence = parseFloat(

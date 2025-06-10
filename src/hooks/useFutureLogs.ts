@@ -6,13 +6,13 @@ import {
   FUTURE_LOGS_STORAGE_KEY,
   DEFAULT_RULE_HOURS_AHEAD,
 } from '../utils/constants';
-import { QuickLogEntry } from '../models/LogSchema';
+import { LogEntry } from '../models/LogSchema';
 import { getBabyProfile } from 'storage/BabyProfileStorage';
-import { generateRuleBasedQuickLogs } from '../services/RuleBasedLogGenerator';
+import { generateRuleBasedLogs } from '../services/RuleBasedLogGenerator';
 
 /**
  * Manages the “future logs” array, providing:
- *   - entries: current array of QuickLogEntry
+ *   - entries: current array of LogEntry
  *   - count: length of that array
  *   - reload(): re‐load from AsyncStorage
  *   - clearAll(): wipe out the entire FUTURE_LOGS key
@@ -21,7 +21,7 @@ import { generateRuleBasedQuickLogs } from '../services/RuleBasedLogGenerator';
  *   - generateNextDay(): run rule‐based logic, persist new entries, then reload
  */
 export function useFutureLogs() {
-  const [entries, setEntries] = useState<QuickLogEntry[]>([]);
+  const [entries, setEntries] = useState<LogEntry[]>([]);
 
   // Load from AsyncStorage
   const reload = useCallback(async () => {
@@ -45,7 +45,7 @@ export function useFutureLogs() {
 
   // Replace one entry (by ID) with updatedEntry
   const replaceOne = useCallback(
-    async (updatedEntry: QuickLogEntry) => {
+    async (updatedEntry: LogEntry) => {
       try {
         const all = await LogRepository.getFutureEntries();
         const replaced = all.map((e) =>
@@ -98,7 +98,7 @@ export function useFutureLogs() {
       }
 
       // 3) Generate rule-based suggestions
-      const suggestions = await generateRuleBasedQuickLogs(
+      const suggestions = await generateRuleBasedLogs(
         recent,
         DEFAULT_RULE_HOURS_AHEAD,
         babyId

@@ -1,7 +1,7 @@
 // src/services/RuleBasedLogGenerator.ts
 
 // Import needed types and utilities
-import { QuickLogEntry, FeedingLog, DiaperLog } from '../models/LogSchema';  
+import { LogEntry, FeedingLog, DiaperLog } from '../models/LogSchema';  
 import { getGapSettings } from './GapSettingsStorage';                               
 import { getBabyProfile } from 'storage/BabyProfileStorage';                           
 import { v4 as uuidv4 } from 'uuid';                                                 
@@ -10,17 +10,17 @@ import { v4 as uuidv4 } from 'uuid';
 const nowUtc = () => new Date();                                                    
 
 /**
- * Generate future “feeding” and “diaper” QuickLogEntries based purely on gap settings.
+ * Generate future “feeding” and “diaper” LogEntries based purely on gap settings.
  *
- * @param recentLogs   Array of QuickLogEntry for the past (to find the last‐logged time)
+ * @param recentLogs   Array of LogEntry for the past (to find the last‐logged time)
  * @param hoursAhead   How many hours into the future to plan (e.g. 24 or 168)
- * @param babyId       The ID of the child (required so each QuickLogEntry.babyId is set)
+ * @param babyId       The ID of the child (required so each LogEntry.babyId is set)
  */
-export async function generateRuleBasedQuickLogs(
-  recentLogs: QuickLogEntry[],
+export async function generateRuleBasedLogs(
+  recentLogs: LogEntry[],
   hoursAhead: number,
   babyId: string
-): Promise<QuickLogEntry[]> {
+): Promise<LogEntry[]> {
   // 1) Fetch the child’s gap settings (feedingGapMinutes, diaperGapHours, etc.)
   let gapSettings;
   try {
@@ -49,7 +49,7 @@ export async function generateRuleBasedQuickLogs(
   });
 
   // 4) Build future entries list
-  const futureEntries: QuickLogEntry[] = [];
+  const futureEntries: LogEntry[] = [];
 
   // 5)  - FEEDING logs
   {
