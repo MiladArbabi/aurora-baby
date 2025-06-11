@@ -1,3 +1,4 @@
+// src/services/WhisprService.ts
 import axios from 'axios';
 import Constants from 'expo-constants';
 
@@ -13,11 +14,13 @@ export async function queryWhispr(prompt: string): Promise<string> {
 
   try {
     const response = await axios.post(
-      `${apiHost}/api/whispr/query`,
-      { prompt },
+      // hit the same endpoint you just tested with curl
+      `${apiHost}/api/whispr-voice/voice-response`,
+      { query: prompt },
       { headers: { 'Content-Type': 'application/json' } }
     );
-    return response.data.reply;
+    // whisprVoiceRoute returns { response: string }
+    return response.data.response;
   } catch (err) {
     console.error('[WhisprService] error:', err);
     throw new Error('Failed to connect to Whispr, please try again');

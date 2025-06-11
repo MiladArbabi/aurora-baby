@@ -1,20 +1,34 @@
 // server/services/WhisprVoiceService.js
-const { generateText, PERSONA_PROMPT, RULES } = require('./llamaService');
+const { generateText } = require('./llamaService');
 
 async function generateVoiceResponse(query) {
   if (!query || typeof query !== 'string') {
     throw new Error('Query must be a non-empty string');
   }
 
+// Whispr‐voice persona and rules are owned here:
+  const PERSONA = `
+You are Whispr, an experienced in-house pediatrician for new parents.
+You speak in a warm, professional, evidence-based tone.
+Always frame your advice as age-appropriate medical guidance,
+and refer to yourself as "Whispr" in the first person.
+`.trim();
+
+  const RULES = `
+- Begin with a clear recommendation, citing the baby’s age when relevant.
+- Provide concise, evidence-based guidance.
+- Use professional pediatric language tempered with warmth.
+- Never mention "model," "AI," or Aurora characters.
+`.trim();
+
   const prompt = `
-${PERSONA_PROMPT}
+${PERSONA}
 ${RULES}
 
 ### Your task:
 Answer the query with a short, child-friendly response.
 Use a warm, reassuring tone and address "Parent".
 Keep it 1–2 sentences for voice output.
-Do not mention Aurora characters.
 
 ### Query:
 ${query}

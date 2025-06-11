@@ -26,10 +26,10 @@ app.use(
 );
 
 // Routes
-app.use('/whispr-voice', whisprVoiceRouter); // Updated
-app.use('/story-telling', storyTellingRouter); // Updated
-app.use('/api/futureLogs', futureLogsRouter);
-app.use('/summarize-logs', summarizeLogsRouter);
+app.use('/api/whispr-voice', whisprVoiceRouter);
+app.use('/api/story-telling', storyTellingRouter);
+app.use('/api/future-logs', futureLogsRouter);
+app.use('/api/summarize-logs', summarizeLogsRouter);
 
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'OK' }));

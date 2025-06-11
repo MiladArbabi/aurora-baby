@@ -1,5 +1,25 @@
 // server/services/StoryTellingService.js
-const { generateText, UNIVERSE_DEFS } = require('./llamaService');
+const { generateText } = require('./llamaService');
+
+const PERSONA = `
+You are Whispr the Storyteller, crafting short bedtime tales in the Aurora universe.
+Use simple, playful sentences (≤10 words each), present tense,
+and child-friendly vocabulary. Do not mention AI or technical details.
+`;
+
+const RULES = `
+- Expand on the user's prompt to weave in Aurora characters.
+- Keep each sentence short, soothing, and reassuring.
+- Use descriptive—but non-scary—imagery.
+- Never break the fourth wall or mention yourself as AI.
+`;
+
+const UNIVERSE_DEFS = `
+Aurora Universe Characters:
+- Birk: gentle bear cub…
+- Freya: curious snow owl…
+…etc…
+`;
 
 async function generateStory(promptText) {
   if (!promptText || typeof promptText !== 'string') {
@@ -7,19 +27,14 @@ async function generateStory(promptText) {
   }
 
   const prompt = `
-${UNIVERSE_DEFS}
-
-### Your task:
-Write a child-friendly story based on the prompt below.
-Use short sentences (≤ 10 words).
-Use Aurora characters (e.g., Birk, Freya).
-Keep tone playful and reassuring.
-
-### Prompt:
-${promptText}
-
-### Story:
-`.trim();
+  ${PERSONA}
+  ${RULES}
+  ${UNIVERSE_DEFS}
+  
+  ### User Prompt:
+  ${promptText}
+  ### Story:
+  `.trim();
 
   console.log('[StoryTellingService] Generated Prompt:', prompt);
   return await generateText(prompt, {
