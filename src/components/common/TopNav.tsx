@@ -1,9 +1,13 @@
+// src/components/common/TopNav.tsx
 import React from 'react';
 import { Image } from 'react-native';
 import styled, { useTheme } from 'styled-components/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { DefaultTheme } from 'styled-components/native';
+import WhisprVoiceLogo from 'assets/whispr/WhisprVoiceLogo';
+import BlackFilledLogo from 'assets/png/system/BlackFilledLogo';
+import AvatarIcon from 'assets/png/icons/Avatar';
 
 const TopNavContainer = styled.View`
   height: ${({ theme }: { theme: DefaultTheme }) => theme.sizes.topNavHeight}px;
@@ -15,6 +19,26 @@ const TopNavContainer = styled.View`
   padding: 0 ${({ theme }: { theme: DefaultTheme }) => theme.spacing.large}px;
 `;
 
+const SideContainer = styled.View`
+   width: 40px;
+   align-items: center;
+   justify-content: center;
+ `;
+
+ const CenterContainer = styled.View`
+   flex: 1;
+   align-items: center;
+   justify-content: center;
+ `;
+
+ // Touchable wrapper for the Whispr icon
+ const WhisprButton = styled.TouchableOpacity`
+   width: 40px;
+   height: 40px;
+   align-items: center;
+   justify-content: center;
+ `;
+
 const LogoContainer = styled.View`
   flex-direction: row;
   align-items: center;
@@ -23,13 +47,6 @@ const LogoContainer = styled.View`
 const Logo = styled.Image`
   width: 40px;
   height: 40px;
-`;
-
-const LogoText = styled.Text`
-  font-size: ${({ theme }: { theme: DefaultTheme }) => theme.fonts.sizes.body}px;
-  color: ${({ theme }: { theme: DefaultTheme }) => theme.colors.secondaryBackground};
-  font-family: ${({ theme }: { theme: DefaultTheme }) => theme.fonts.regular};
-  margin-left: ${({ theme }: { theme: DefaultTheme }) => theme.spacing.small}px;
 `;
 
 const Avatar = styled.TouchableOpacity`
@@ -46,13 +63,38 @@ const TopNav: React.FC<TopNavProps> = ({ navigation }) => {
 
   return (
     <TopNavContainer>
-      <LogoContainer>
-        <Logo source={require('../../assets/png/system/colorlogo.png')} testID="top-nav-logo" />
-        <LogoText testID="top-nav-text">Aurora Baby</LogoText>
-      </LogoContainer>
-      <Avatar testID="top-nav-avatar" onPress={() => navigation.navigate('ProfileSettings')}>
-        <Image source={require('../../assets/png/icons/avatar.png')} style={{ width: 40, height: 50 }} />
-      </Avatar>
+      {/* Left: Profile settings */}
+      <SideContainer>
+        <AvatarIcon
+          testID="top-nav-avatar"
+          onPress={() => navigation.navigate('ProfileSettings')}
+        >
+        </AvatarIcon>
+      </SideContainer>
+
+      {/* Center: Aurora logo (no text) */}
+      <CenterContainer>
+        <BlackFilledLogo
+         
+        >
+
+        </BlackFilledLogo>
+      </CenterContainer>
+
+      {/* Right: Whispr voice button */}
+      <SideContainer>
+        <WhisprButton
+          testID="top-nav-whispr"
+          onPress={() => navigation.navigate('Whispr')}
+        >
+          <WhisprVoiceLogo
+          fill='black'
+            width={40}
+            height={40}
+            testID="whispr-voice-logo"
+          />
+        </WhisprButton>
+      </SideContainer>
     </TopNavContainer>
   );
 };

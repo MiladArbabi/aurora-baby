@@ -8,7 +8,6 @@ import HomeIcon from '../../assets/bottomnavicons/HomeIcon';
 import HarmonyIcon from '../../assets/bottomnavicons/HarmonyIcon';
 import CareIcon from '../../assets/bottomnavicons/CareIcon';
 import WonderIcon from '../../assets/bottomnavicons/WonderIcon';
-import Svg, { Defs, LinearGradient, Stop, Circle } from 'react-native-svg';
 
 const Wrapper = styled.View`
   position: absolute;
@@ -117,32 +116,6 @@ const BottomNav: React.FC<BottomNavProps> = ({ navigation, activeScreen }) => {
           </Animated.View>
         </NavButton>
       </Container>
-
-      {/* floating “Whispr” button on top */}
-      <FloatingButton
-        testID="bottom-nav-whispr"
-        size={floatSize}
-        bgColor={whisprBg}
-        onPress={() => navigation.navigate('Whispr')}
-      >
-        {/* use SVG + LinearGradient to draw just the circle stroke */}
-        <Svg width={floatSize} height={floatSize}>
-          <Defs>
-            <LinearGradient id="auroraGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <Stop offset="0%" stopColor="#50E3C2" />
-              <Stop offset="100%" stopColor="#9013FE" />
-            </LinearGradient>
-          </Defs>
-          <Circle
-            cx={floatSize/2}
-            cy={floatSize/2}
-            r={floatSize/3}          // leave a bit of padding
-            stroke="url(#auroraGrad)"
-            strokeWidth={15}
-            fill="transparent"
-          />
-        </Svg>
-      </FloatingButton>
     </Wrapper>
   );
 };

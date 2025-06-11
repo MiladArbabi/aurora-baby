@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { getBabyProfile } from '../../storage/BabyProfileStorage'
 import { getParentProfile } from '../../storage/ParentProfileStorage'
 import { PrivacySettings, getPrivacySettings, savePrivacySettings } from '../../services/PrivacySettingsStorage';
+import Avatar from 'assets/png/icons/Avatar';
 
 import BackButton from '../../assets/icons/common/BackButton';
 
@@ -126,7 +127,7 @@ const ProfileSettingScreen: React.FC = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [name, setName] = useState('User Name');
-  const [avatar, setAvatar] = useState(require('../../assets/png/icons/avatar.png'));
+  const [avatar, setAvatar] = useState();
   const [childName, setChildName] = useState('Child Name');
   const [childBirthdate, setChildBirthdate] = useState('YYYY-MM-DD');
   const [colorMode, setColorMode] = useState<'light' | 'dark'>('light');
