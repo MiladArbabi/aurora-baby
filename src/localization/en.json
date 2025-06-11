@@ -29,6 +29,22 @@
         "chooseLanguage": "Choose Language",
         "english": "English",
         "swedish": "Svenska"
+    },
+    "ttsSettings": {
+      "invalidRateRange": "Rate must be between 0.1 and 2.0",
+      "ttsNotInitialized": "Text-to-speech not initialized",
+      "invalidText": "Text must be a non-empty string (max 10000 chars)",
+      "invalidProfile": "Invalid voice profile selected"
+    },
+    "whispr": {
+      "title": "Whispr Assistant",
+      "summary": "Daily Summary"
+    },
+    "voiceSummary": {
+      "accessibilityLabel": "Play daily summary",
+      "error": "Failed to load summary",
+      "play": "Play Summary",
+      "pause": "Pause Summary"
     }
   }
   

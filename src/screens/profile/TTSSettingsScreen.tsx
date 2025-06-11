@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react'
+// src/screens/profile/TTSSettingsScreen.tsx
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,98 +8,102 @@ import {
   TouchableOpacity,
   Alert,
   ScrollView,
-} from 'react-native'
-import { StackScreenProps } from '@react-navigation/stack'
-import { RootStackParamList } from '../../navigation/AppNavigator'
+} from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import { StackScreenProps } from '@react-navigation/stack';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 import {
   setGlobalRateOverride,
   getGlobalRateOverride,
-} from '../../services/TTSService'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import BackButton from 'assets/icons/common/BackButton'
+} from '../../services/TTSService';
+import { setNightModeConfig, getNightModeConfig } from '../../utils/NightMode';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import BackButton from '../../assets/icons/common/BackButton';
+import { useTranslation } from 'react-i18next';
 
-// key under which we save the chosen “default profile”
-const PROFILE_KEY = '@tts_default_profile'
+const PROFILE_KEY = '@tts_default_profile';
+const AVAILABLE_PROFILES = ['default', 'story', 'alert', 'soothing'] as const;
+type ProfileName = typeof AVAILABLE_PROFILES[number];
 
-// the names must match your profiles in TTSService.ts
-const AVAILABLE_PROFILES = ['default', 'story', 'alert', 'soothing'] as const
-type ProfileName = typeof AVAILABLE_PROFILES[number]
-
-type Props = StackScreenProps<RootStackParamList, 'TTSSettings'>
+type Props = StackScreenProps<RootStackParamList, 'TTSSettings'>;
 
 export default function TTSSettingsScreen({ navigation }: Props) {
-  const [chosenProfile, setChosenProfile] = useState<ProfileName>('default')
-  const [rateOverrideText, setRateOverrideText] = useState('') // stringified number
+  const { t } = useTranslation();
+  const [chosenProfile, setChosenProfile] = useState<ProfileName>('default');
+  const [rateOverrideText, setRateOverrideText] = useState('');
+  const [nightMode, setNightMode] = useState<'auto' | 'day' | 'night'>('auto');
+  const [nightStart, setNightStart] = useState(18);
+  const [nightEnd, setNightEnd] = useState(6);
 
-  // on mount, load stored profile & rate override
   useEffect(() => {
-    ;(async () => {
+    (async () => {
       try {
-        const rawProfile = await AsyncStorage.getItem(PROFILE_KEY)
-        if (
-          rawProfile &&
-          AVAILABLE_PROFILES.includes(rawProfile as ProfileName)
-        ) {
-          setChosenProfile(rawProfile as ProfileName)
+        const rawProfile = await AsyncStorage.getItem(PROFILE_KEY);
+        if (rawProfile && AVAILABLE_PROFILES.includes(rawProfile as ProfileName)) {
+          setChosenProfile(rawProfile as ProfileName);
         }
 
-        const rawRate = await getGlobalRateOverride()
+        const rawRate = await getGlobalRateOverride();
         if (rawRate !== null) {
-          setRateOverrideText(String(rawRate))
+          setRateOverrideText(String(rawRate));
         }
-      } catch (err) {
-        console.warn('Error loading TTS settings:', err)
-      }
-    })()
-  }, [])
 
-  // save profile selection to AsyncStorage
+        const config = await getNightModeConfig();
+        setNightMode(config.mode);
+        setNightStart(config.nightStart || 18);
+        setNightEnd(config.nightEnd || 6);
+      } catch (err) {
+        console.warn('Error loading TTS settings:', err);
+      }
+    })();
+  }, []);
+
   const persistProfile = async (profile: ProfileName) => {
     try {
-      await AsyncStorage.setItem(PROFILE_KEY, profile)
-      setChosenProfile(profile)
-      Alert.alert('Saved', `Voice profile set to "${profile}".`)
+      await AsyncStorage.setItem(PROFILE_KEY, profile);
+      setChosenProfile(profile);
+      Alert.alert(t('ttsSettings.saved'), `${t('ttsSettings.profileSet')} "${profile}".`);
     } catch (err) {
-      console.warn('Failed to save default profile:', err)
-      Alert.alert('Error', 'Could not save profile.')
+      console.warn('Failed to save default profile:', err);
+      Alert.alert(t('ttsSettings.error'), t('ttsSettings.profileError'));
     }
-  }
+  };
 
-  // save rate override (call into TTSService)
   const persistRateOverride = async () => {
-    const parsed = parseFloat(rateOverrideText)
+    const parsed = parseFloat(rateOverrideText);
     if (isNaN(parsed) || parsed <= 0 || parsed > 2) {
-      Alert.alert(
-        'Invalid Rate',
-        'Enter a number between 0.1 and 2.0 (e.g. 0.85).'
-      )
-      return
+      Alert.alert(t('ttsSettings.invalidRate'), t('ttsSettings.rateRange'));
+      return;
     }
-    await setGlobalRateOverride(parsed)
-    Alert.alert('Saved', `Global TTS rate override set to ${parsed}.`)
-  }
+    await setGlobalRateOverride(parsed);
+    Alert.alert(t('ttsSettings.saved'), `${t('ttsSettings.rateSet')} ${parsed}.`);
+  };
 
-  // clear rate override
   const clearRateOverride = async () => {
-    await setGlobalRateOverride(null)
-    setRateOverrideText('')
-    Alert.alert('Reset', 'Global TTS rate override cleared.')
-  }
+    await setGlobalRateOverride(null);
+    setRateOverrideText('');
+    Alert.alert(t('ttsSettings.reset'), t('ttsSettings.rateCleared'));
+  };
+
+  const saveNightMode = async () => {
+    try {
+      await setNightModeConfig({ mode: nightMode, nightStart, nightEnd });
+      Alert.alert(t('ttsSettings.saved'), t('ttsSettings.nightModeSaved'));
+    } catch (err) {
+      console.warn('Failed to save night mode:', err);
+      Alert.alert(t('ttsSettings.error'), t('ttsSettings.nightModeError'));
+    }
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.safeArea}>
-      {/* ── Top nav: Back button + Title ── */}
       <View style={styles.topNav}>
-        <BackButton
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        />
-        <Text style={styles.screenTitle}>TTS Settings</Text>
+        <BackButton onPress={() => navigation.goBack()} style={styles.backButton} />
+        <Text style={styles.screenTitle}>{t('ttsSettings.title')}</Text>
       </View>
 
-      {/* ── Content ── */}
       <View style={styles.container}>
-        <Text style={styles.sectionTitle}>Default Voice Profile</Text>
+        <Text style={styles.sectionTitle}>{t('ttsSettings.defaultProfile')}</Text>
         {AVAILABLE_PROFILES.map((profile) => (
           <TouchableOpacity
             key={profile}
@@ -121,10 +126,8 @@ export default function TTSSettingsScreen({ navigation }: Props) {
 
         <View style={styles.divider} />
 
-        <Text style={styles.sectionTitle}>Global Rate Override</Text>
-        <Text style={styles.label}>
-          (leave blank to use each profile’s default)
-        </Text>
+        <Text style={styles.sectionTitle}>{t('ttsSettings.globalRate')}</Text>
+        <Text style={styles.label}>{t('ttsSettings.rateHint')}</Text>
         <TextInput
           style={styles.input}
           keyboardType="decimal-pad"
@@ -132,31 +135,61 @@ export default function TTSSettingsScreen({ navigation }: Props) {
           value={rateOverrideText}
           onChangeText={setRateOverrideText}
         />
-
         <View style={styles.rateButtonsRow}>
-          <TouchableOpacity
-            style={styles.saveButton}
-            onPress={persistRateOverride}
-          >
-            <Text style={styles.saveButtonText}>Save Rate</Text>
+          <TouchableOpacity style={styles.saveButton} onPress={persistRateOverride}>
+            <Text style={styles.saveButtonText}>{t('ttsSettings.saveRate')}</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.clearButton}
-            onPress={clearRateOverride}
-          >
-            <Text style={styles.clearButtonText}>Clear</Text>
+          <TouchableOpacity style={styles.clearButton} onPress={clearRateOverride}>
+            <Text style={styles.clearButtonText}>{t('ttsSettings.clear')}</Text>
           </TouchableOpacity>
         </View>
+
+        <View style={styles.divider} />
+
+        <Text style={styles.sectionTitle}>{t('ttsSettings.nightMode')}</Text>
+        <Picker
+          selectedValue={nightMode}
+          onValueChange={(value: 'auto' | 'day' | 'night') => setNightMode(value)}
+          style={styles.picker}
+        >
+          <Picker.Item label={t('ttsSettings.auto')} value="auto" />
+          <Picker.Item label={t('ttsSettings.day')} value="day" />
+          <Picker.Item label={t('ttsSettings.night')} value="night" />
+        </Picker>
+        {nightMode === 'auto' && (
+          <>
+            <Text style={styles.label}>{t('ttsSettings.nightStart')}</Text>
+            <Picker
+              selectedValue={nightStart}
+              onValueChange={(value: number) => setNightStart(value)}
+              style={styles.picker}
+            >
+              {Array.from({ length: 24 }, (_, i) => (
+                <Picker.Item key={i} label={`${i}:00`} value={i} />
+              ))}
+            </Picker>
+            <Text style={styles.label}>{t('ttsSettings.nightEnd')}</Text>
+            <Picker
+              selectedValue={nightEnd}
+              onValueChange={(value: number) => setNightEnd(value)}
+              style={styles.picker}
+            >
+              {Array.from({ length: 24 }, (_, i) => (
+                <Picker.Item key={i} label={`${i}:00`} value={i} />
+              ))}
+            </Picker>
+          </>
+        )}
+        <TouchableOpacity style={styles.saveButton} onPress={saveNightMode}>
+          <Text style={styles.saveButtonText}>{t('ttsSettings.saveNightMode')}</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flexGrow: 1,
-    backgroundColor: '#fff',
-  },
+  safeArea: { flexGrow: 1, backgroundColor: '#fff' },
   topNav: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -164,28 +197,12 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderBottomWidth: 1,
     borderColor: '#EEE',
-    marginVertical: 26
+    marginVertical: 26,
   },
-  backButton: {
-    marginRight: 12,
-  },
-  backArrow: {
-    fontSize: 20,
-  },
-  screenTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-  },
-  container: {
-    paddingHorizontal: 16,
-    paddingTop: 24,
-    flexGrow: 1,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '500',
-    marginBottom: 12,
-  },
+  backButton: { marginRight: 12 },
+  screenTitle: { fontSize: 20, fontWeight: '600' },
+  container: { paddingHorizontal: 16, paddingTop: 24, flexGrow: 1 },
+  sectionTitle: { fontSize: 18, fontWeight: '500', marginBottom: 12 },
   profileOption: {
     paddingVertical: 10,
     paddingHorizontal: 14,
@@ -194,28 +211,11 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     marginBottom: 8,
   },
-  profileOptionSelected: {
-    backgroundColor: '#CCE5FF',
-    borderColor: '#66B2FF',
-  },
-  profileOptionText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  profileOptionTextSelected: {
-    color: '#004A99',
-    fontWeight: '600',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#EEE',
-    marginVertical: 24,
-  },
-  label: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 6,
-  },
+  profileOptionSelected: { backgroundColor: '#CCE5FF', borderColor: '#66B2FF' },
+  profileOptionText: { fontSize: 16, color: '#333' },
+  profileOptionTextSelected: { color: '#004A99', fontWeight: '600' },
+  divider: { height: 1, backgroundColor: '#EEE', marginVertical: 24 },
+  label: { fontSize: 14, color: '#555', marginBottom: 6 },
   input: {
     borderWidth: 1,
     borderColor: '#CCC',
@@ -224,30 +224,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 16,
   },
-  rateButtonsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
+  rateButtonsRow: { flexDirection: 'row', justifyContent: 'space-between' },
   saveButton: {
     backgroundColor: '#4A90E2',
     paddingVertical: 10,
     paddingHorizontal: 18,
     borderRadius: 6,
+    marginTop: 10,
   },
-  saveButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  saveButtonText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
   clearButton: {
     backgroundColor: '#AAA',
     paddingVertical: 10,
     paddingHorizontal: 18,
     borderRadius: 6,
   },
-  clearButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-})
+  clearButtonText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
+  picker: { height: 50, width: '100%', marginBottom: 10 },
+});

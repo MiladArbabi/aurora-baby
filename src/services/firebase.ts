@@ -1,6 +1,5 @@
 // src/services/firebase.ts
-
-import { initializeApp } from 'firebase/app'
+import { initializeApp } from 'firebase/app';
 import {
   getAuth,
   onAuthStateChanged,
@@ -10,39 +9,31 @@ import {
   signInWithCredential,
   User,
   UserCredential,
-} from 'firebase/auth'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import Constants from 'expo-constants'
-import { signInWithGoogleAsync } from './googleAuth'
+} from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
+import { signInWithGoogleAsync } from './googleAuth';
 
-// 1) Initialize Firebase app with your Expo config
+// Initialize Firebase app
 const firebaseConfig = {
   apiKey: Constants.expoConfig?.extra?.firebaseApiKey || 'YOUR_API_KEY',
-  authDomain:
-    Constants.expoConfig?.extra?.firebaseAuthDomain ||
-    'your-app.firebaseapp.com',
-  projectId:
-    Constants.expoConfig?.extra?.firebaseProjectId || 'your-app-id',
-  storageBucket:
-    Constants.expoConfig?.extra?.firebaseStorageBucket ||
-    'your-app.appspot.com',
-  messagingSenderId:
-    Constants.expoConfig?.extra?.firebaseMessagingSenderId || 'YOUR_SENDER_ID',
-  appId:
-    Constants.expoConfig?.extra?.firebaseAppId || 'YOUR_IOS_ANDROID_APP_ID',
-  measurementId:
-    Constants.expoConfig?.extra?.firebaseMeasurementId || 'G-XXXXXXXXXX',
-}
+  authDomain: Constants.expoConfig?.extra?.firebaseAuthDomain || 'your-app.firebaseapp.com',
+  projectId: Constants.expoConfig?.extra?.firebaseProjectId || 'your-app-id',
+  storageBucket: Constants.expoConfig?.extra?.firebaseStorageBucket || 'your-app.appspot.com',
+  messagingSenderId: Constants.expoConfig?.extra?.firebaseMessagingSenderId || 'YOUR_SENDER_ID',
+  appId: Constants.expoConfig?.extra?.firebaseAppId || 'YOUR_IOS_ANDROID_APP_ID',
+  measurementId: Constants.expoConfig?.extra?.firebaseMeasurementId || 'G-XXXXXXXXXX',
+};
 
 if (!firebaseConfig.apiKey) {
-  throw new Error(
-    'Firebase API key is missing. Please check your app.config.js extra fields.'
-  )
+  throw new Error('Firebase API key is missing. Please check your app.config.js extra fields.');
 }
 
-const app = initializeApp(firebaseConfig)
-export const auth = getAuth(app)
-const googleProvider = new GoogleAuthProvider()
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getFirestore(app); 
+const googleProvider = new GoogleAuthProvider();
 
 // 2) Google sign-in using expo-google-auth-session (or your own wrapper)
 export async function signInWithGoogle(): Promise<User> {

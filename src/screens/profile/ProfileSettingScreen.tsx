@@ -10,7 +10,7 @@ import { getAuth, signOut } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useTranslation } from 'react-i18next';
 
-import { getChildProfile } from '../../storage/BabyProfileStorage'
+import { getBabyProfile } from '../../storage/BabyProfileStorage'
 import { getParentProfile } from '../../storage/ParentProfileStorage'
 import { PrivacySettings, getPrivacySettings, savePrivacySettings } from '../../services/PrivacySettingsStorage';
 
@@ -143,11 +143,11 @@ const ProfileSettingScreen: React.FC = () => {
       const p = await getParentProfile();
       if (p) setName(p.name);
 
-      const c = await getChildProfile();
+      const c = await getBabyProfile();
       if (c) {
         setChildName(c.name);
         // Only keep “YYYY-MM-DD” (drop the “T00:00:00.000Z”)
-        const justDate = c.dob.split('T')[0];
+        const justDate = c.birthDate.split('T')[0];
         setChildBirthdate(justDate);
       }
 

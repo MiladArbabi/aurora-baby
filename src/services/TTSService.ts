@@ -21,13 +21,14 @@ export async function setGlobalRateOverride(rate: number | null): Promise<void> 
   try {
     if (rate === null) {
       await AsyncStorage.removeItem(GLOBAL_RATE_OVERRIDE_KEY);
-    } else if (typeof rate === 'number' && rate >= 0.0 && rate <= 1.0) {
+    } else if (typeof rate === 'number' && rate >= 0.1 && rate <= 2.0) {
       await AsyncStorage.setItem(GLOBAL_RATE_OVERRIDE_KEY, rate.toString());
     } else {
-      throw new Error('Rate must be between 0.0 and 1.0');
+      throw new Error(i18n.t('ttsSettings.invalidRateRange'));
     }
   } catch (err) {
     console.error('[TTSService] setGlobalRateOverride error:', err);
+    throw err;
   }
 }
 
@@ -71,7 +72,7 @@ function splitIntoChunks(text: string): string[] {
 
 function checkTtsReady(): void {
   if (!ttsReady) {
-    throw new Error('TTS not initialized');
+    throw new Error(i18n.t('ttsSettings.ttsNotInitialized'));
   }
 }
 
@@ -100,11 +101,14 @@ export async function speakWithProfile(
   profileName: keyof typeof profiles
 ): Promise<void> {
   if (!text || typeof text !== 'string' || text.length > 10000) {
-    throw new Error('Text must be a non-empty string (max 10000 chars)');
+    throw new Error(i18n.t('ttsSettings.invalidText'));
   }
 
   checkTtsReady();
   const chosen = profiles[profileName] || profiles.default;
+  if (!chosen) {
+    throw new Error(i18n.t('ttsSettings.invalidProfile'));
+  }
   Tts.setDefaultLanguage(chosen.language);
   Tts.setDefaultPitch(chosen.pitch);
 

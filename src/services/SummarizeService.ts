@@ -19,10 +19,24 @@ async function summarizeLogs(logs: Log[], format = 'story') {
     }
   }
 
-  const bullets = logs.map(
-    (l) =>
-      `- At ${l.timestamp}, baby has ${l.type}${l.data ? `: ${JSON.stringify(l.data)}` : ''}`
-  );
+  const bullets = logs.map((l) => {
+    const time = new Date(l.timestamp).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'UTC',
+    });
+    let details = '';
+    if (l.type === 'feeding' && l.data) {
+      const unit = l.data.unit || 'oz';
+      const subtype = l.data.subtype ? ` ${l.data.subtype}` : '';
+      const quantity = l.data.quantity || 'unknown';
+      details = `${l.data.method}-fed${subtype} ${quantity} ${unit}`;
+    } else if (l.data) {
+      details = JSON.stringify(l.data);
+    }
+    return `- ${time}: ${l.type} (${details})`;
+  });
 
   const prompt = `
 ${format === 'story' ? UNIVERSE_DEFS : ''}

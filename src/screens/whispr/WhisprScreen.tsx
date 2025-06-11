@@ -1,5 +1,5 @@
-// src/screens/WhisprScreen.tsx
-import React, { useState, useRef, useEffect } from 'react'
+// src/screens/whispr/WhisprScreen.tsx
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,195 +8,230 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-} from 'react-native'
-import { queryWhispr } from '../../services/WhisprService'
-import { useNavigation } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { RootStackParamList } from '../../navigation/AppNavigator'
-import { speak } from '../../services/TTSService'
+} from 'react-native';
+import { queryWhispr } from '../../services/WhisprService';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { RootStackParamList } from '../../navigation/AppNavigator';
+import { speakWithProfile } from '../../services/TTSService'; // Updated import
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../../services/firebase';
+import VoiceSummaryButton from '../../components/common/VoiceSummaryButton';
 
-import ChatHistoryModal from '../../components/whispr/ChatHistoryModal'
-import WhisprVoiceLogo from '../../assets/whispr/WhisprVoiceLogo.svg'
-import LayerIcon from '../../assets/whispr/Layer'
-import Arrow from '../../assets/whispr/Arrow'
+import ChatHistoryModal from '../../components/whispr/ChatHistoryModal';
+import WhisprVoiceLogo from '../../assets/whispr/WhisprVoiceLogo.svg';
+import LayerIcon from '../../assets/whispr/Layer';
+import Arrow from '../../assets/whispr/Arrow';
 
-type WhisprNavProp = StackNavigationProp<RootStackParamList, 'Whispr'>
+type WhisprNavProp = StackNavigationProp<RootStackParamList, 'Whispr'>;
 
-type Sender = 'user' | 'whispr' | 'error'
+type Sender = 'user' | 'whispr' | 'error';
 interface Message {
-  text: string
-  sender: Sender
+  text: string;
+  sender: Sender;
 }
 
 interface Thread {
-  id: string
-  messages: Message[]
+  id: string;
+  messages: Message[];
 }
 
-let scrollRefMock: (opts: { animated: boolean }) => void = () => {}
+interface Log {
+  id: string;
+  babyId: string;
+  timestamp: string;
+  type: string;
+  version: number;
+  data: { method?: string; quantity?: number; unit?: 'oz' | 'mL'; subtype?: string };
+}
+
+let scrollRefMock: (opts: { animated: boolean }) => void = () => {};
 
 function useSafeNavigation<T>() {
   try {
-    return useNavigation<T>()
+    return useNavigation<T>();
   } catch {
-    return undefined
+    return undefined;
   }
 }
 
 const Logo = typeof WhisprVoiceLogo === 'function'
   ? WhisprVoiceLogo
-  : () => <View style={{ width: 150, height: 150 }} />
+  : () => <View style={{ width: 150, height: 150 }} />;
 
 const WhisprScreen: React.FC & {
-  __setScrollRefMock: (fn: (opts: { animated: boolean }) => void) => void
+  __setScrollRefMock: (fn: (opts: { animated: boolean }) => void) => void;
 } = () => {
-  const navigation = useSafeNavigation<WhisprNavProp>()
-  const [prompt, setPrompt] = useState('')
-  const [threads, setThreads] = useState<Thread[]>([])
-  const [currentThreadIndex, setCurrentThreadIndex] = useState<number>(-1)
-  const [messages, setMessages] = useState<Message[]>([])
-  const [loading, setLoading] = useState(false)
-  const [showChatHistory, setShowChatHistory] = useState(false)
-  const scrollRef = useRef<ScrollView>(null)
+  const navigation = useSafeNavigation<WhisprNavProp>();
+  const [prompt, setPrompt] = useState('');
+  const [threads, setThreads] = useState<Thread[]>([]);
+  const [currentThreadIndex, setCurrentThreadIndex] = useState<number>(-1);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [showChatHistory, setShowChatHistory] = useState(false);
+  const [logs, setLogs] = useState<Log[]>([]);
+  const [defaultProfile, setDefaultProfile] = useState('default');
+  const scrollRef = useRef<ScrollView>(null);
 
   // Load stored threads & restore last conversation
   useEffect(() => {
-    // don’t load from AsyncStorage when running Jest – it wipes out our error bubble
-    if (process.env.NODE_ENV === 'test') return
+    if (process.env.NODE_ENV === 'test') return;
     const loadThreads = async () => {
       try {
-        const stored = await AsyncStorage.getItem('whisprThreads')
+        const stored = await AsyncStorage.getItem('whisprThreads');
         if (stored) {
-          const parsed: Thread[] = JSON.parse(stored)
-          setThreads(parsed)
+          const parsed: Thread[] = JSON.parse(stored);
+          setThreads(parsed);
           if (parsed.length > 0) {
-            const lastIdx = parsed.length - 1
-            setCurrentThreadIndex(lastIdx)
-            setMessages(parsed[lastIdx].messages)
+            const lastIdx = parsed.length - 1;
+            setCurrentThreadIndex(lastIdx);
+            setMessages(parsed[lastIdx].messages);
           }
         }
+        const rawProfile = await AsyncStorage.getItem('@tts_default_profile');
+        if (rawProfile) setDefaultProfile(rawProfile);
       } catch (err) {
-        console.error('[WhisprScreen] Failed to load threads:', err)
+        console.error('[WhisprScreen] Failed to load threads:', err);
       }
-    }
-    loadThreads()
-  }, [])
+    };
+    loadThreads();
+  }, []);
 
-  // Persist threads whenever they change
+  // Fetch today’s logs from Firestore
+  useEffect(() => {
+    const fetchLogs = async () => {
+      try {
+        const babyId = await AsyncStorage.getItem('@baby_id');
+        if (!babyId) return;
+
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+        const q = query(
+          collection(db, 'logs'),
+          where('babyId', '==', babyId),
+          where('timestamp', '>=', startOfDay.toISOString())
+        );
+        const snapshot = await getDocs(q);
+        const fetchedLogs = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Log[];
+        setLogs(fetchedLogs);
+      } catch (err) {
+        console.error('[WhisprScreen] Failed to fetch logs:', err);
+      }
+    };
+    fetchLogs();
+  }, []);
+
+  // Persist threads
   useEffect(() => {
     const saveThreads = async () => {
       try {
-        await AsyncStorage.setItem('whisprThreads', JSON.stringify(threads))
+        await AsyncStorage.setItem('whisprThreads', JSON.stringify(threads));
       } catch (err) {
-        console.error('[WhisprScreen] Failed to save threads:', err)
+        console.error('[WhisprScreen] Failed to save threads:', err);
       }
-    }
-    saveThreads()
-  }, [threads])
+    };
+    saveThreads();
+  }, [threads]);
 
-  // Auto‐scroll on new messages
+  // Auto-scroll on new messages
   useEffect(() => {
-    scrollRef.current?.scrollToEnd({ animated: true })
-    scrollRefMock({ animated: true })
-  }, [messages])
+    scrollRef.current?.scrollToEnd({ animated: true });
+    scrollRefMock({ animated: true });
+  }, [messages]);
 
-  const handleGoBack = () => navigation?.goBack()
+  const handleBack = () => navigation?.goBack();
 
   const handleSendPrompt = async (overridePrompt?: string) => {
-    // ⚙️ if input is empty, retry last user message (so second-send still fires)
-    let text = overridePrompt ?? prompt
+    let text = overridePrompt ?? prompt;
     if (!text.trim()) {
-      const lastUser = messages.slice().reverse().find(m => m.sender === 'user')
-      if (lastUser) {
-        text = lastUser.text
-      }
+      const lastUser = messages.slice().reverse().find(m => m.sender === 'user');
+      if (lastUser) text = lastUser.text;
     }
 
-    // ensure we have a thread to append to
-    let idx = currentThreadIndex
+    let idx = currentThreadIndex;
     if (idx < 0 || idx >= threads.length) {
-      const newThread: Thread = { id: Date.now().toString(), messages: [] }
-      setThreads(prev => [...prev, newThread])
-      idx = threads.length
-      setCurrentThreadIndex(idx)
+      const newThread: Thread = { id: Date.now().toString(), messages: [] };
+      setThreads(prev => [...prev, newThread]);
+      idx = threads.length;
+      setCurrentThreadIndex(idx);
     }
 
-    // append the user message
     setThreads(prev => {
-      const clone = [...prev]
+      const clone = [...prev];
       clone[idx] = {
         ...clone[idx],
         messages: [...clone[idx].messages, { text, sender: 'user' }],
-      }
-      return clone
-    })
-    setMessages(prev => [...prev, { text, sender: 'user' }])
-    setPrompt('')   // clear the input
-    setLoading(true)
+      };
+      return clone;
+    });
+    setMessages(prev => [...prev, { text, sender: 'user' }]);
+    setPrompt('');
+    setLoading(true);
 
     try {
-      const reply = await queryWhispr(text)
-      // append Whispr's reply
+      const reply = await queryWhispr(text);
       setThreads(prev => {
-        const clone = [...prev]
+        const clone = [...prev];
         clone[idx] = {
           ...clone[idx],
           messages: [...clone[idx].messages, { text: reply, sender: 'whispr' }],
-        }
-        return clone
-      })
-      setMessages(prev => [...prev, { text: reply, sender: 'whispr' }])
-      speak(reply).catch(console.warn)
+        };
+        return clone;
+      });
+      setMessages(prev => [...prev, { text: reply, sender: 'whispr' }]);
+      await speakWithProfile(reply, defaultProfile); // Updated to use profile
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      // append error bubble
+      const msg = err instanceof Error ? err.message : String(err);
       setThreads(prev => {
-        const clone = [...prev]
+        const clone = [...prev];
         clone[idx] = {
           ...clone[idx],
           messages: [...clone[idx].messages, { text: `Error: ${msg}`, sender: 'error' }],
-        }
-        return clone
-      })
-      setMessages(prev => [...prev, { text: `Error: ${msg}`, sender: 'error' }])
+        };
+        return clone;
+      });
+      setMessages(prev => [...prev, { text: `Error: ${msg}`, sender: 'error' }]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleUpdateThreadName = (index: number, name: string) => {
     setThreads(prev => {
-      const clone = [...prev]
+      const clone = [...prev];
       clone[index] = {
         ...clone[index],
         messages: [{ text: name, sender: 'user' }, ...clone[index].messages.slice(1)],
-      }
-      return clone
-    })
-  }
+      };
+      return clone;
+    });
+  };
 
   const handleDeleteThread = (index: number) => {
-    setThreads(prev => prev.filter((_, i) => i !== index))
+    setThreads(prev => prev.filter((_, i) => i !== index));
     if (index === currentThreadIndex) {
-      const newLen = threads.length - 1
-      const newIdx = newLen > 0 ? newLen - 1 : -1
-      setCurrentThreadIndex(newIdx)
-      setMessages(newIdx >= 0 ? threads[newIdx].messages : [])
+      const newLen = threads.length - 1;
+      const newIdx = newLen > 0 ? newLen - 1 : -1;
+      setCurrentThreadIndex(newIdx);
+      setMessages(newIdx >= 0 ? threads[newIdx].messages : []);
     }
-  }
+  };
 
   const handleNewChat = () => {
-    const newThread: Thread = { id: Date.now().toString(), messages: [] }
-    setThreads(prev => [...prev, newThread])
-    setCurrentThreadIndex(threads.length)
-    setMessages([])
-  }
+    const newThread: Thread = { id: Date.now().toString(), messages: [] };
+    setThreads(prev => [...prev, newThread]);
+    setCurrentThreadIndex(threads.length);
+    setMessages([]);
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
-        <TouchableOpacity testID="back-button" onPress={handleGoBack} style={styles.backButton}>
+        <TouchableOpacity testID="back-button" onPress={handleBack} style={styles.backButton}>
           <Text style={styles.backText}>◀︎ Back</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -212,13 +247,20 @@ const WhisprScreen: React.FC & {
       <Text style={styles.greetingText}>Hello, I’m Whispr.</Text>
 
       <View testID="suggestions" style={styles.suggestions}>
-        {['Sleep', 'Feeding', 'Diaper', 'Mood', 'Health'].map(item => (
+        {['Sleep', 'Feeding', 'Diaper', 'Mood', 'Health', 'Summary'].map(item => (
           <TouchableOpacity
             key={item}
             style={styles.suggestionButton}
-            onPress={() => handleSendPrompt(item)}
+            onPress={() => {
+              if (item === 'Summary') return;
+              handleSendPrompt(item);
+            }}
           >
-            <Text style={styles.suggestionText}>{item}</Text>
+            {item === 'Summary' ? (
+              <VoiceSummaryButton logs={logs} style={styles.summaryButton} />
+            ) : (
+              <Text style={styles.suggestionText}>{item}</Text>
+            )}
           </TouchableOpacity>
         ))}
       </View>
@@ -228,10 +270,10 @@ const WhisprScreen: React.FC & {
         threads={threads}
         onClose={() => setShowChatHistory(false)}
         onSelectThread={thread => {
-          const idx = threads.findIndex(t => t.id === thread.id)
-          setCurrentThreadIndex(idx)
-          setMessages(thread.messages)
-          setShowChatHistory(false)
+          const idx = threads.findIndex(t => t.id === thread.id);
+          setCurrentThreadIndex(idx);
+          setMessages(thread.messages);
+          setShowChatHistory(false);
         }}
         onUpdateThreadName={handleUpdateThreadName}
         onDeleteThread={handleDeleteThread}
@@ -284,16 +326,16 @@ const WhisprScreen: React.FC & {
         {loading && <Text testID="loading-spinner">Loading...</Text>}
       </View>
     </View>
-  )
-}
+  );
+};
 
 WhisprScreen.__setScrollRefMock = fn => {
-  scrollRefMock = fn
-}
+  scrollRefMock = fn;
+};
 
-export default WhisprScreen
+export default WhisprScreen;
 
-const { width } = Dimensions.get('window')
+const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {
@@ -333,12 +375,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#E9DAFA',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.25)',
+  },
+  summaryButton: {
+    backgroundColor: 'transparent',
+    padding: 0,
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   suggestionText: {
     fontFamily: 'Edrosa',
     fontSize: 13,
     color: '#000',
-    borderColor: 'rgba(0,0,0,0.25)',
   },
   messagesContainer: {
     flex: 1,
@@ -402,4 +453,4 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(0,0,0,0.25)',
   },
   sendButtonDisabled: { opacity: 0.5 },
-})
+});
