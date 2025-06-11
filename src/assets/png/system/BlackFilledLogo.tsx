@@ -8,8 +8,8 @@ interface BlackFilledLogoProps extends SvgProps {
   }
 
   const BlackFilledLogo: React.FC<BlackFilledLogoProps> = ({
-      width = 45,
-      height = 45,
+      width,
+      height,
       ...props
     }) => (
   <Svg width={width} height={height} viewBox="0 0 55 54" {...props}>

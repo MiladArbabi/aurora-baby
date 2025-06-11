@@ -14,65 +14,47 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootStackParamList } from '../../navigation/AppNavigator';
-import { speakWithProfile } from '../../services/TTSService'; // Updated import
+import { speakWithProfile } from '../../services/TTSService'; 
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 import VoiceSummaryButton from '../../components/common/VoiceSummaryButton';
 
 import ChatHistoryModal from '../../components/whispr/ChatHistoryModal';
-import WhisprVoiceLogo from '../../assets/whispr/WhisprVoiceLogo.svg';
+import WhisprVoiceLogo from '../../assets/whispr/WhisprVoiceLogo';
 import LayerIcon from '../../assets/whispr/Layer';
 import Arrow from '../../assets/whispr/Arrow';
+import VoiceIcon from 'assets/harmonyscreen/playstoryscreen/VoiceIcon';
+import { theme } from 'styles/theme';
 
 type WhisprNavProp = StackNavigationProp<RootStackParamList, 'Whispr'>;
 
 type Sender = 'user' | 'whispr' | 'error';
-interface Message {
-  text: string;
-  sender: Sender;
-}
-
-interface Thread {
-  id: string;
-  messages: Message[];
-}
-
-interface Log {
-  id: string;
-  babyId: string;
-  timestamp: string;
-  type: string;
-  version: number;
-  data: { method?: string; quantity?: number; unit?: 'oz' | 'mL'; subtype?: string };
-}
+interface Message { text: string; sender: Sender; }
+interface Thread { id: string; messages: Message[]; }
+interface Log { id: string; babyId: string; timestamp: string; type: string; version: number; data: { method?: string; quantity?: number; unit?: 'oz' | 'mL'; subtype?: string }; }
 
 let scrollRefMock: (opts: { animated: boolean }) => void = () => {};
 
 function useSafeNavigation<T>() {
-  try {
-    return useNavigation<T>();
-  } catch {
-    return undefined;
-  }
+  try { return useNavigation<T>(); }
+  catch { return undefined; }
 }
 
 const Logo = typeof WhisprVoiceLogo === 'function'
   ? WhisprVoiceLogo
   : () => <View style={{ width: 150, height: 150 }} />;
 
-const WhisprScreen: React.FC & {
-  __setScrollRefMock: (fn: (opts: { animated: boolean }) => void) => void;
-} = () => {
-  const navigation = useSafeNavigation<WhisprNavProp>();
-  const [prompt, setPrompt] = useState('');
-  const [threads, setThreads] = useState<Thread[]>([]);
-  const [currentThreadIndex, setCurrentThreadIndex] = useState<number>(-1);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [showChatHistory, setShowChatHistory] = useState(false);
-  const [logs, setLogs] = useState<Log[]>([]);
-  const [defaultProfile, setDefaultProfile] = useState('default');
-  const scrollRef = useRef<ScrollView>(null);
+  const WhisprScreen: React.FC & { __setScrollRefMock: (fn: (opts: { animated: boolean }) => void) => void; } = () => {
+    const navigation = useSafeNavigation<WhisprNavProp>();
+    const [prompt, setPrompt] = useState('');
+    const [threads, setThreads] = useState<Thread[]>([]);
+    const [currentThreadIndex, setCurrentThreadIndex] = useState<number>(-1);
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [showChatHistory, setShowChatHistory] = useState(false);
+    const [logs, setLogs] = useState<Log[]>([]);
+    const [defaultProfile, setDefaultProfile] = useState('default');
+    const scrollRef = useRef<ScrollView>(null);
 
   // Load stored threads & restore last conversation
   useEffect(() => {
@@ -200,6 +182,16 @@ const WhisprScreen: React.FC & {
     }
   };
 
+  const handleVoiceCommand = () => {
+    console.log('Voice command pressed');
+    // TODO: integrate speech-to-text
+  };
+
+  const handleDictate = () => {
+    console.log('Dictate pressed');
+    // TODO: integrate dictation mode
+  };
+
   const handleUpdateThreadName = (index: number, name: string) => {
     setThreads(prev => {
       const clone = [...prev];
@@ -243,11 +235,11 @@ const WhisprScreen: React.FC & {
         </TouchableOpacity>
       </View>
 
-      <Logo width={150} height={150} style={styles.logo} />
+      <Logo width={150} height={150} style={styles.logo} fill='#3C1642' />
       <Text style={styles.greetingText}>Hello, I’m Whispr.</Text>
 
       <View testID="suggestions" style={styles.suggestions}>
-        {['Sleep', 'Feeding', 'Diaper', 'Mood', 'Health', 'Summary'].map(item => (
+        {['Sleep', 'Feeding', 'Summary'].map(item => (
           <TouchableOpacity
             key={item}
             style={styles.suggestionButton}
@@ -313,15 +305,25 @@ const WhisprScreen: React.FC & {
           />
         </View>
         <View style={styles.buttonRow}>
-          <TouchableOpacity
-            testID="send-button"
-            onPress={() => handleSendPrompt()}
-            disabled={loading}
-            accessibilityState={{ disabled: loading }}
-            style={[styles.sendButton, loading && styles.sendButtonDisabled]}
-          >
-            <Arrow width={24} height={24} />
-          </TouchableOpacity>
+          {prompt.trim() === '' ? (
+             <>
+             <TouchableOpacity testID="voice-command-button" onPress={handleVoiceCommand} style={styles.iconButton}>
+               <Logo width={24} height={24} />
+             </TouchableOpacity>
+             <TouchableOpacity testID="dictate-button" onPress={handleDictate} style={styles.iconButton}>
+               <VoiceIcon fill={theme.colors.primary} width={24} height={24} />
+             </TouchableOpacity>
+           </>
+         ) : (
+           <TouchableOpacity
+             testID="send-button"
+             onPress={() => handleSendPrompt()}
+             disabled={loading}
+             style={[styles.sendButton, loading && styles.sendButtonDisabled]}
+           >
+              <Arrow width={24} height={24} />
+            </TouchableOpacity>
+          )}
         </View>
         {loading && <Text testID="loading-spinner">Loading...</Text>}
       </View>
@@ -428,13 +430,15 @@ const styles = StyleSheet.create({
   },
   inputRow: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
   },
   buttonRow: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-  },
+    position: 'absolute',           
+    flexDirection: 'row',
+    right: 15,
+    bottom: 15,
+    alignItems: 'center',
+    },
   input: {
     flex: 1,
     fontFamily: 'Edrosa',
@@ -452,5 +456,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.25)',
   },
+  iconButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.25)',
+  },
   sendButtonDisabled: { opacity: 0.5 },
+  voiceButton: { padding: 8, backgroundColor: '#C4D8E2', borderRadius: 20, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(0,0,0,0.25)' },
+  voiceButtonText: { fontFamily: 'Edrosa', fontSize: 14, color: '#000' },
+  dictateButton: { padding: 8, backgroundColor: '#E2D8C4', borderRadius: 20, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(0,0,0,0.25)' },
+  dictateButtonText: { fontFamily: 'Edrosa', fontSize: 14, color: '#000' },
 });
