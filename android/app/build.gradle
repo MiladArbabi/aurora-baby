@@ -22,6 +22,17 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
     namespace 'com.miladarbabi.aurorababymobile'
+    packagingOptions {
+    resources {
+      // pick one copy when multiple libs ship the same file
+      pickFirst "META-INF/androidx.localbroadcastmanager_localbroadcastmanager.version"
+      pickFirst "META-INF/**/androidx.versionedparcelable.version"
+      // handle the customview duplicate
+      pickFirst "META-INF/androidx.customview_customview.version"
+      pickFirst "META-INF/androidx.legacy_legacy-support-core-ui.version"
+      pickFirst "META-INF/*.version"
+    }
+  }
     defaultConfig {
         applicationId 'com.miladarbabi.aurorababymobile'
         minSdkVersion rootProject.ext.minSdkVersion
@@ -57,6 +68,11 @@ android {
     androidResources {
         ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~'
     }
+}
+
+configurations.all {
+  exclude group: 'com.android.support', module: 'support-compat'
+  exclude group: 'com.android.support', module: 'versionedparcelable'
 }
 
 dependencies {

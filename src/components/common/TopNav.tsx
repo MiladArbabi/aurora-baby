@@ -74,11 +74,7 @@ const TopNav: React.FC<TopNavProps> = ({ navigation }) => {
 
       {/* Center: Aurora logo (no text) */}
       <CenterContainer>
-        <BlackFilledLogo
-         
-        >
-
-        </BlackFilledLogo>
+        <BlackFilledLogo width={50} height={50} />
       </CenterContainer>
 
       {/* Right: Whispr voice button */}

@@ -8,11 +8,14 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  ActivityIndicator
 } from 'react-native';
 import { queryWhispr } from '../../services/WhisprService';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Voice from '@react-native-voice/voice';
+
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { speakWithProfile } from '../../services/TTSService'; 
 import { collection, query, where, getDocs } from 'firebase/firestore';
@@ -54,6 +57,7 @@ const Logo = typeof WhisprVoiceLogo === 'function'
     const [showChatHistory, setShowChatHistory] = useState(false);
     const [logs, setLogs] = useState<Log[]>([]);
     const [defaultProfile, setDefaultProfile] = useState('default');
+    const [isRecording, setIsRecording] = useState(false);
     const scrollRef = useRef<ScrollView>(null);
 
   // Load stored threads & restore last conversation
@@ -125,6 +129,19 @@ const Logo = typeof WhisprVoiceLogo === 'function'
     scrollRefMock({ animated: true });
   }, [messages]);
 
+   // STT event handlers
+  useEffect(() => {
+       Voice.onSpeechStart = () => setIsRecording(true);
+       Voice.onSpeechEnd   = () => setIsRecording(false);
+       Voice.onSpeechResults = (e) => {
+         const text = e.value?.[0] ?? '';
+         setPrompt(text);
+       };
+       return () => {
+         Voice.destroy().then(Voice.removeAllListeners);
+       };
+     }, []);
+
   const handleBack = () => navigation?.goBack();
 
   const handleSendPrompt = async (overridePrompt?: string) => {
@@ -187,10 +204,17 @@ const Logo = typeof WhisprVoiceLogo === 'function'
     // TODO: integrate speech-to-text
   };
 
-  const handleDictate = () => {
-    console.log('Dictate pressed');
-    // TODO: integrate dictation mode
-  };
+  const handleDictate = async () => {
+       try {
+         if (!isRecording) {
+           await Voice.start('en-US');
+         } else {
+           await Voice.stop();
+         }
+       } catch (e) {
+         console.error('STT error:', e);
+       }
+     };
 
   const handleUpdateThreadName = (index: number, name: string) => {
     setThreads(prev => {
@@ -326,6 +350,12 @@ const Logo = typeof WhisprVoiceLogo === 'function'
           )}
         </View>
         {loading && <Text testID="loading-spinner">Loading...</Text>}
+        {isRecording && (
+       <ActivityIndicator
+         size="small"
+         style={styles.recordingIndicator}
+       />
+     )}
       </View>
     </View>
   );
@@ -471,4 +501,9 @@ const styles = StyleSheet.create({
   voiceButtonText: { fontFamily: 'Edrosa', fontSize: 14, color: '#000' },
   dictateButton: { padding: 8, backgroundColor: '#E2D8C4', borderRadius: 20, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(0,0,0,0.25)' },
   dictateButtonText: { fontFamily: 'Edrosa', fontSize: 14, color: '#000' },
+  recordingIndicator: {
+        position: 'absolute',
+        right: 75,
+        bottom: 20,
+      },
 });
