@@ -28,6 +28,7 @@ import LayerIcon from '../../assets/whispr/Layer';
 import Arrow from '../../assets/whispr/Arrow';
 import VoiceIcon from 'assets/harmonyscreen/playstoryscreen/VoiceIcon';
 import { theme } from 'styles/theme';
+import BackButton from 'assets/icons/common/BackButton';
 
 type WhisprNavProp = StackNavigationProp<RootStackParamList, 'Whispr'>;
 
@@ -247,9 +248,7 @@ const Logo = typeof WhisprVoiceLogo === 'function'
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
-        <TouchableOpacity testID="back-button" onPress={handleBack} style={styles.backButton}>
-          <Text style={styles.backText}>◀︎ Back</Text>
-        </TouchableOpacity>
+        <BackButton />
         <TouchableOpacity
           testID="layer-icon"
           onPress={() => setShowChatHistory(true)}
