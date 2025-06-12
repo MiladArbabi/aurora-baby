@@ -14,6 +14,7 @@ import { LogSliceMeta } from '../../models/LogSliceMeta'
 import { useTrackerSchedule } from '../../hooks/useTrackerSchedule'
 import { getDailySchedule, saveDailySchedule } from '../../storage/ScheduleStorage'
 import LogDetailModal from './LogDetailModal'
+import ApprovalRing from './ApprovalRing'
 
 import { setSliceConfirmed } from '../../services/LogSliceMetaService'
 import { getTodayISO } from '../../utils/date'
@@ -157,6 +158,14 @@ export default function Tracker({
                 justifyContent: 'center' as const,
                 alignItems: 'center' as const,
               },
+              approval: {
+                position: 'absolute' as const,
+                width: INNERMOST_DIAMETER - 3 * RING_THICKNESS,
+                height: INNERMOST_DIAMETER - 3 * RING_THICKNESS,
+                top: (WRAPPER_SIZE - (INNERMOST_DIAMETER - 3 * RING_THICKNESS)) / 2,
+                left: (WRAPPER_SIZE - (INNERMOST_DIAMETER - 3 * RING_THICKNESS)) / 2,
+              },
+              
               absolute: {
                 position: 'absolute' as const,
                 top: 0,
@@ -332,11 +341,11 @@ export default function Tracker({
               accessible
               accessibilityLabel={`Current time indicator at ${Math.floor(nowFrac * 24)}:00`}
             />
-            <Svg
+            {/* <Svg
               width={WRAPPER_SIZE}
               height={WRAPPER_SIZE}
               style={styles.tickSvg}
-            >
+            > */}
               {clockTicks}
 
               {/* Now‐marker dot at end of arc */}
@@ -354,7 +363,16 @@ export default function Tracker({
                 r={5}
                 fill={theme.colors.primary || '#FF4081'}
               />
-            </Svg>
+            {/* </Svg> */}
+
+            {/* Approval Dashes */}
+            <View style={ringStyles.approval}>
+            <ApprovalRing
+  size={INNERMOST_DIAMETER - 3 * RING_THICKNESS}
+  strokeWidth={3}
+              logSlices={slices}
+            />
+            </View>
           </View>
         </Pressable>
         {/* ── 4. Detail Modal ───────────────────────────────────── */}
@@ -402,11 +420,11 @@ buttonsContainer: {
   iconWrapper: {
     marginHorizontal: 12,
   },
-  tickSvg: {
+/*   tickSvg: {
        position: 'absolute',
         top: 0,
         left: 0,
-      },
+      }, */
   // Tracker section (flex:4)
   trackerContainer: {
     flex: 4,
