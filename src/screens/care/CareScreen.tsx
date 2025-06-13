@@ -113,6 +113,7 @@ const CareScreen: React.FC = () => {
             createdAt: nowIso,
             updatedAt: nowIso,
             version: 1,                                 // initial version
+          isAiSuggested: false
           }
           setSelectedSlice(newSlice)
         },
@@ -164,8 +165,14 @@ const CareScreen: React.FC = () => {
               await Promise.all(
                 unconfirmedIds.map(id => setSliceConfirmed(babyId, id, true))
               )
+ 
               // Refresh metadata after bulk confirm
               reloadMeta()
+
+              // close the schedule editor
+              setIsEditingSchedule(false)
+              // force-refresh your tracker data
+              refresh()
             }, [babyId, unconfirmedIds, reloadMeta])
 
         
@@ -201,18 +208,6 @@ const CareScreen: React.FC = () => {
   return (
     <>
     <CareLayout activeTab="tracker" onNavigate={handleNavigate} bgColor={theme.colors.accent}>
-      {/* ── 0. CONFIRM‐ALL BANNER ────────────────────────────────────────── */}
-{/*      {unconfirmedIds.length > 0 && (
-       <View style={styles.confirmBanner}>
-         <Text style={styles.confirmText}>
-           You have {unconfirmedIds.length} past slice
-           {unconfirmedIds.length > 1 ? 's' : ''} to confirm.
-         </Text>
-         <TouchableOpacity onPress={handleConfirmAll} style={styles.confirmButton}>
-           <Text style={styles.confirmButtonText}>Confirm All</Text>
-         </TouchableOpacity>
-       </View>
-     )} */}
 
       {/* ── TRACKER ───────────────────────────────────────────── */}
      <Tracker
@@ -223,18 +218,12 @@ const CareScreen: React.FC = () => {
         confirmedIds={confirmedIds}
         aiSuggestedIds={aiSuggestedIds}
         isEditingSchedule={isEditingSchedule}
+        onApprovalPress={() => setIsEditingSchedule(true)}
       />
 
-      {/* ── Edit Schedule ─────────────────────────────────────────── */}
-      <View style={styles.buttonsContainer}>
-        <TouchableOpacity onPress={() => setIsEditingSchedule(true)} style={styles.iconWrapper}>
-          <Text style={styles.confirmButtonText}>Edit Schedule</Text>
-        </TouchableOpacity>
-      </View>
-
       {/* ── DAILY SUMMARY ───────────────────────────────────────────── */}
-{/*       {snapshot && <DailySnapshotSummary snapshot={snapshot} />}
- */}
+      {snapshot && <DailySnapshotSummary snapshot={snapshot} />}
+
       {/* ToolTip for Time Preview */ }
       {preview && Date.now() < preview.expiresAt && (() => {
         // midpoint math:
@@ -267,11 +256,17 @@ const CareScreen: React.FC = () => {
         <ScheduleEditor
           slices={slices}
           onSave={async updated => {
-            // persist whole‐day schedule
             await saveDailySchedule(todayISO, babyId, updated)
+            reloadMeta()
             setIsEditingSchedule(false)
             refresh()
           }}
+          onEditSlice={slice => {
+            setSelectedSlice(slice)
+            setSliceMode('edit')
+          }}
+          unconfirmedIds={unconfirmedIds}
+          handleConfirmAll={handleConfirmAll}
           onCancel={() => setIsEditingSchedule(false)}
         />
       </Modal>
@@ -410,17 +405,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  // ── CONFIRM‐ALL BANNER STYLES ──────────────────────────────────────
-  confirmBanner: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF3CD',
-    borderColor: '#FFEEBA',
-    borderWidth: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
   confirmText: {
     color: '#856404',
     fontFamily: 'Inter',

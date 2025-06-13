@@ -1,6 +1,6 @@
 // src/components/carescreen/Tracker.tsx
 import React, { useMemo, useState, useCallback } from 'react'
-import { View, StyleSheet, GestureResponderEvent, Pressable } from 'react-native'
+import { View, StyleSheet, GestureResponderEvent, Pressable, Alert } from 'react-native'
 import Svg, { Line, Circle } from 'react-native-svg'
 import { useTheme } from 'styled-components/native'
 
@@ -30,6 +30,7 @@ export type TrackerProps = {
   aiSuggestedIds: Set<string>
   onSlicePress: (hour: number) => void
   onSliceLongPress: (hour: number) => void
+  onApprovalPress: () => void,
 }
 
 export default function Tracker({ 
@@ -38,7 +39,9 @@ export default function Tracker({
   isEditingSchedule, 
   aiSuggestedIds, 
   onSlicePress, 
-  onSliceLongPress
+  onSliceLongPress,
+  onApprovalPress,
+  confirmedIds,
  }: TrackerProps) {
   // Derive subsets
   const theme = useTheme()
@@ -54,8 +57,6 @@ export default function Tracker({
 
   const [sliceMode, setSliceMode] = useState<'view' | 'edit' | 'confirm'>('view')
   const [selectedSlice, setSelectedSlice] = useState<LogSlice | null>(null)
-  const [unconfirmedSliceIds, setUnconfirmedSliceIds] = useState<string[]>([])
-  const [confirmedIds, setConfirmedIds] = useState<Set<string>>(new Set())
 
   const babyId = 'defaultBabyId'
     const { loading, error, refresh } = 
@@ -164,6 +165,8 @@ export default function Tracker({
                 height: INNERMOST_DIAMETER - 3 * RING_THICKNESS,
                 top: (WRAPPER_SIZE - (INNERMOST_DIAMETER - 3 * RING_THICKNESS)) / 2,
                 left: (WRAPPER_SIZE - (INNERMOST_DIAMETER - 3 * RING_THICKNESS)) / 2,
+                zIndex: 10,
+                elevation: 10,
               },
               
               absolute: {
@@ -366,13 +369,24 @@ export default function Tracker({
             {/* </Svg> */}
 
             {/* Approval Dashes */}
-            <View style={ringStyles.approval}>
-            <ApprovalRing
-  size={INNERMOST_DIAMETER - 3 * RING_THICKNESS}
-  strokeWidth={3}
-              logSlices={slices}
-            />
-            </View>
+            <Pressable
+              style={ringStyles.approval}
+              hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+              pointerEvents="box-only"
+              onPress={() => {
+                onApprovalPress()
+              }}
+              android_ripple={{ radius: (INNERMOST_DIAMETER - 3 * RING_THICKNESS) / 2 }}
+            >
+              <ApprovalRing
+                size={INNERMOST_DIAMETER - 3 * RING_THICKNESS}
+                strokeWidth={3}
+                logSlices={slices}
+                confirmedIds={confirmedIds}
+                nowFrac={nowFrac}
+                onSectorPress={(hour) => console.log(`[Tracker] sector ${hour} pressed`)}
+              />
+            </Pressable>
           </View>
         </Pressable>
         {/* ── 4. Detail Modal ───────────────────────────────────── */}
