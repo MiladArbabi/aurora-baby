@@ -19,6 +19,7 @@ import { SwipeableModal } from 'components/common/SwipeableModal'
 import { getLogSliceMeta } from 'storage/LogSliceMetaStorage'
 import type { LogSliceMeta } from 'models/LogSliceMeta'
 import { saveLogSliceMeta } from 'storage/LogSliceMetaStorage'
+import { Picker } from '@react-native-picker/picker'
 
 const CATEGORY_ICONS: Record<LogSlice['category'], string> = {
   awake: '🌅',
@@ -96,14 +97,32 @@ const LogDetailModal: React.FC<Props> = ({
           contentContainerStyle={[styles.content, { flexGrow: 1 }]}          showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Category */}
+          {/* CATEGORY SELECTION */}
           <View style={styles.categoryHeader}>
-            <Text style={styles.categoryIcon}>
-              {CATEGORY_ICONS[slice.category]}
-            </Text>
-            <Text style={styles.categoryText}>
-              {slice.category.toUpperCase()}
-            </Text>
+            {mode === 'edit' ? (
+              <Picker
+                selectedValue={slice.category}
+                style={styles.categoryPicker}
+                onValueChange={cat => onSave({ ...slice, category: cat })}
+              >
+                {Object.keys(CATEGORY_ICONS).map(cat => (
+                  <Picker.Item
+                    key={cat}
+                    label={cat.charAt(0).toUpperCase() + cat.slice(1)}
+                    value={cat}
+                  />
+                ))}
+              </Picker>
+            ) : (
+              <>
+                <Text style={styles.categoryIcon}>
+                  {CATEGORY_ICONS[slice.category]}
+                </Text>
+                <Text style={styles.categoryText}>
+                  {slice.category.toUpperCase()}
+                </Text>
+              </>
+            )}
           </View>
 
           {/* Time section */}
@@ -275,7 +294,7 @@ const LogDetailModal: React.FC<Props> = ({
 const styles = StyleSheet.create({
   deleteBtn: { position: 'absolute', top: 12, right: 12, zIndex: 10 },
   content: { paddingHorizontal: 16, paddingTop: 24, paddingBottom: 40 },
-  categoryHeader: { alignItems: 'center', marginBottom: 16 },
+  categoryHeader: { alignItems: 'center', marginBottom: 16, width: '100%' },
   categoryIcon: { fontSize: 36 },
   categoryText: { color: '#E9DAFA', fontSize: 20, fontWeight: '600', marginTop: 6 },
   sectionTitle: { color: '#E9DAFA', fontSize: 14, fontWeight: '500', marginBottom: 8 },
@@ -356,6 +375,10 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     padding: 8,
+  },
+  categoryPicker: {
+    width: '60%',
+    color: '#E9DAFA',
   },
 })
 

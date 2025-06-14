@@ -58,6 +58,7 @@ export default function ScheduleEditor({
       isAiSuggested: false,
     }
     setLocalSlices(prev => [...prev, newSlice])
+    onEditSlice(newSlice)
   }
 
   function handleRemove(id: string) {
@@ -68,8 +69,10 @@ export default function ScheduleEditor({
     console.log('[ScheduleEditor] Export pressed')
   }
 
-  function handleTweak() {
-    console.log('[ScheduleEditor] Tweak pressed')
+  // Refill schedule action
+  function handleRefill() {
+    console.log('[ScheduleEditor] Refill Schedule pressed')
+    // implement refill logic
   }
 
   return (
@@ -83,14 +86,13 @@ export default function ScheduleEditor({
           const isConfirmed = !unconfirmedIds.includes(slice.id)
           const borderColor = isConfirmed ? '#4CAF50' : '#E53935'
           const bgColor = `${borderColor}33`
-          const [, timePart] = slice.startTime.split('T')
-          const start = timePart.slice(0, 5)
-          const end = slice.endTime.split('T')[1].slice(0, 5)
-          const Icon = DiaperIcon // map category → icon as needed
+          const [ , timePart ] = slice.startTime.split('T')
+          const start = timePart.slice(0,5)
+          const end   = slice.endTime.split('T')[1].slice(0,5)
+          const Icon = DiaperIcon
 
           return (
             <View style={[styles.row, { borderColor, backgroundColor: bgColor }]}> 
-              {/* icon + text on left */}
               <TouchableOpacity
                 style={styles.left}
                 onPress={() => onEditSlice(slice)}
@@ -102,7 +104,6 @@ export default function ScheduleEditor({
                 </View>
               </TouchableOpacity>
 
-              {/* remove */}
               <TouchableOpacity
                 style={styles.remove}
                 onPress={() => handleRemove(slice.id)}
@@ -130,8 +131,8 @@ export default function ScheduleEditor({
       {/* bottom bar */}
       <View style={styles.bottomBar}>
         <View style={styles.rowButtons}>
-          <TouchableOpacity style={styles.smallButton} onPress={handleTweak}>
-            <Text style={styles.smallButtonText}>Tweak</Text>
+-         <TouchableOpacity style={styles.smallButton} onPress={handleRefill}>
+            <Text style={styles.smallButtonText}>Refill Schedule</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.smallButton} onPress={handleAddSlice}>
             <Text style={styles.smallButtonText}>+ Add Slice</Text>
