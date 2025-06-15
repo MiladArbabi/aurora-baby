@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import { useTheme } from 'styled-components/native'
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Platform } from 'react-native'
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert } from 'react-native'
 import type { LogSlice } from '../../models/LogSlice'
 import { v4 as uuidv4 } from 'uuid'
 import { useNavigation } from '@react-navigation/native'
@@ -9,6 +9,11 @@ import { RootStackParamList } from '../../navigation/AppNavigator'
 
 import DiaperIcon from '../../assets/carescreen/QuickLogMenu/DiaperButton'
 import TopNav from 'components/common/TopNav'
+import { listTemplates, getTemplate } from '../../storage/TemplateStorage'
+import { getTodayISO } from '../../utils/date'
+import { BabyProfile } from 'models/BabyProfile'
+import { DefaultDailyEntries } from '../../data/defaultSchedule'
+
 
 // Props include slices, onSave, onCancel, unconfirmedIds, handleConfirmAll, onEditSlice
 interface Props {
@@ -34,6 +39,8 @@ export default function ScheduleEditor({
   const navigation = useNavigation<CareNavProp>()
 
   const [localSlices, setLocalSlices] = useState<LogSlice[]>(slices)
+  const today = getTodayISO()
+  const babyId = slices[0]?.babyId ?? ''
 
   // Sort slices by start time
   const sorted = useMemo(
@@ -69,11 +76,49 @@ export default function ScheduleEditor({
     console.log('[ScheduleEditor] Export pressed')
   }
 
-  // Refill schedule action
-  function handleRefill() {
-    console.log('[ScheduleEditor] Refill Schedule pressed')
-    // implement refill logic
-  }
+  // The Refill Handler
+  async function handleRefill() {
+    const templates = await listTemplates(babyId)
+    if (templates.length === 0) {
+      return Alert.alert(
+        'Build Routine',
+        'No saved routines found. Shall I scaffold a basic day for you?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Yes, please',
+            onPress: () => {
+              const [Y, M, D] = today.split('-').map(n => +n)
+              const nowTs = new Date().toISOString()
+              const newSlices: LogSlice[] = DefaultDailyEntries.map(entry => {
+                const start = new Date(Y, M - 1, D, entry.startHour)
+                const end   = new Date(Y, M - 1, D, entry.endHour)
+                return {
+                  id: uuidv4(),
+                  babyId,
+                  category: entry.category,
+                  startTime: start.toISOString(),
+                  endTime:   end.toISOString(),
+                  createdAt: nowTs,
+                  updatedAt: nowTs,
+                  version: 1,
+                  isAiSuggested: false,
+                }
+              })
+  
+              // lift it up for persistence & rerender
+              onSave(newSlices)
+              setLocalSlices(newSlices)
+            }
+          }
+        ],
+        { cancelable: true }
+      )
+    }
+  
+    // … your existing “select a saved template” flow …
+  }  
+    
 
   return (
     <View style={styles.container}>
@@ -131,7 +176,7 @@ export default function ScheduleEditor({
       {/* bottom bar */}
       <View style={styles.bottomBar}>
         <View style={styles.rowButtons}>
--         <TouchableOpacity style={styles.smallButton} onPress={handleRefill}>
+         <TouchableOpacity style={styles.smallButton} onPress={handleRefill}>
             <Text style={styles.smallButtonText}>Refill Schedule</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.smallButton} onPress={handleAddSlice}>
