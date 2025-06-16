@@ -15,6 +15,7 @@ import { useTrackerSchedule } from '../../hooks/useTrackerSchedule'
 import { getDailySchedule, saveDailySchedule } from '../../storage/ScheduleStorage'
 import LogDetailModal from './LogDetailModal'
 import ApprovalRing from './ApprovalRing'
+import { EventOverlay, InstantEvent } from './EventOverlay'
 
 import { setSliceConfirmed } from '../../services/LogSliceMetaService'
 import { getTodayISO } from '../../utils/date'
@@ -49,11 +50,38 @@ export default function Tracker({
 
   const awakeSlices = useMemo(() => slices.filter(s => s.category === 'awake'), [slices])
   const sleepSlices = useMemo(() => slices.filter(s => s.category === 'sleep'), [slices])
-  const diaperSlices = useMemo(() => slices.filter(s => s.category === 'diaper' ), [slices])
-  const feedSlices = useMemo(() => slices.filter(s => s.category === 'feed' ), [slices])
+  const feedSlices = useMemo(() => slices.filter(s => s.category === 'feed'), [slices])
+  const diaperSlices = useMemo(() => slices.filter(s => s.category === 'diaper'), [slices])
   const careSlices = useMemo(() => slices.filter(s => s.category === 'care'), [slices])
-  const talkSlices  = useMemo(() => slices.filter(s => s.category === 'talk'),  [slices])
+  const talkSlices = useMemo(() => slices.filter(s => s.category === 'talk'), [slices])
   const otherSlices = useMemo(() => slices.filter(s => s.category === 'other'), [slices])
+
+  // deriving the new lists
+  const feedEvents: InstantEvent[] = feedSlices.map(s => ({
+    id: s.id,
+    timestamp: s.startTime,
+    category: 'feed',
+  }))
+  const diaperEvents: InstantEvent[] = diaperSlices.map(s => ({
+    id: s.id,
+    timestamp: s.startTime,
+    category: 'diaper',
+  }))
+  const careEvents: InstantEvent[] = careSlices.map(s => ({
+    id: s.id,
+    timestamp: s.startTime,
+    category: 'care',
+  }))
+  const talkEvents: InstantEvent[] = talkSlices.map(s => ({
+    id: s.id,
+    timestamp: s.startTime,
+    category: 'talk',
+  }))
+  const otherEvents: InstantEvent[] = otherSlices.map(s => ({
+    id: s.id,
+    timestamp: s.startTime,
+    category: 'other',
+  }))
 
   const [sliceMode, setSliceMode] = useState<'view' | 'edit' | 'confirm'>('view')
   const [selectedSlice, setSelectedSlice] = useState<LogSlice | null>(null)
@@ -181,10 +209,10 @@ export default function Tracker({
     const awakeColor      = theme.colors.trackerAwake;
     const sleepColor      = theme.colors.trackerSleep;
     const feedColor       = theme.colors.trackerFeed;
-    const diaperColor    = theme.colors.trackerDiaper;
+    const diaperColor     = theme.colors.trackerDiaper;
     const essColor        = theme.colors.trackerEssentials;
-    const talkColor      = theme.colors.trackerTalk;
-    const otherColor     = theme.colors.trackerEssentials;
+    const talkColor       = theme.colors.trackerTalk;
+    const otherColor      = theme.colors.trackerEssentials;
     const arcColor        = theme.colors.trackerArc;
     const tickColor       = theme.colors.trackerTick;
         
@@ -245,93 +273,44 @@ export default function Tracker({
             </View>
           </View>
 
-          {/* 2) Feed + Diaper rings (middle band) */}
-          <View style={ringStyles.middle}>
-            <View style={{ position: 'absolute', top: 0, left: 0 }}>
-              <CategoryRing
-                size={RING_SIZE - 2*(RING_THICKNESS+GAP)}
-                strokeWidth={RING_THICKNESS}
-                slices={feedSlices}
-                fillColor={feedColor}
-                separatorColor="rgba(0,0,0,0.1)"
-                onSlicePress={!isEditingSchedule ? onSlicePress : undefined}
-                onSliceLongPress={!isEditingSchedule ? onSliceLongPress : undefined}
-                dimFuture={nowFrac}
-                confirmedIds={confirmedIds}
-                aiSuggestedIds={aiSuggestedIds}
-                showGaps={false}
-                showSeparators={false}
-              />
-            </View>
-            <View style={{ position: 'absolute', top: 0, left: 0 }}>
-              <CategoryRing
-                size={RING_SIZE - 2*(RING_THICKNESS+GAP)}
-                strokeWidth={RING_THICKNESS}
-                slices={diaperSlices}
-                fillColor={diaperColor}
-                separatorColor="rgba(0,0,0,0.1)"
-                onSlicePress={!isEditingSchedule ? onSlicePress : undefined}
-                onSliceLongPress={!isEditingSchedule ? onSliceLongPress : undefined}
-                dimFuture={nowFrac}
-                confirmedIds={confirmedIds}
-                aiSuggestedIds={aiSuggestedIds}
-                showGaps={false}
-                showSeparators={false}
-              />
-            </View>
-          </View>
+          {/* middle band → instant feed & diaper icons */}
+          <EventOverlay
+            events={feedEvents}
+            size={RING_SIZE - 2*(RING_THICKNESS+GAP)}
+            radius={(RING_SIZE - 2*(RING_THICKNESS+GAP))/2 - RING_THICKNESS/2}
+            onPress={id => console.log('feed tapped', id)}
+            style={ringStyles.middle}
+          />
+          <EventOverlay
+            events={diaperEvents}
+            size={RING_SIZE - 2*(RING_THICKNESS+GAP)}
+            radius={(RING_SIZE - 2*(RING_THICKNESS+GAP))/2 - RING_THICKNESS/2}
+            onPress={id => console.log('diaper tapped', id)}
+            style={ringStyles.middle}
+          />
 
-          {/* 3) Care + Talk + Other rings (inner band) */}
-          <View style={ringStyles.inner}>
-            <View style={{ position: 'absolute', top: 0, left: 0 }}>
-              <CategoryRing
-                size={RING_SIZE - 4*(RING_THICKNESS+GAP)}
-                strokeWidth={RING_THICKNESS}
-                slices={careSlices}
-                fillColor={essColor}
-                separatorColor="rgba(0,0,0,0.1)"
-                onSlicePress={!isEditingSchedule ? onSlicePress : undefined}
-                onSliceLongPress={!isEditingSchedule ? onSliceLongPress : undefined}
-                dimFuture={nowFrac}
-                confirmedIds={confirmedIds}
-                aiSuggestedIds={aiSuggestedIds}
-                showGaps={false}
-                showSeparators={false}
-              />
-            </View>
-            <View style={{ position: 'absolute', top: 0, left: 0 }}>
-              <CategoryRing
-                size={RING_SIZE - 4*(RING_THICKNESS+GAP)}
-                strokeWidth={RING_THICKNESS}
-                slices={talkSlices}
-                fillColor={talkColor}
-                separatorColor="rgba(0,0,0,0.1)"
-                onSlicePress={!isEditingSchedule ? onSlicePress : undefined}
-                onSliceLongPress={!isEditingSchedule ? onSliceLongPress : undefined}
-                dimFuture={nowFrac}
-                confirmedIds={confirmedIds}
-                aiSuggestedIds={aiSuggestedIds}
-                showGaps={false}
-                showSeparators={false}
-              />
-            </View>
-            <View style={{ position: 'absolute', top: 0, left: 0 }}>
-              <CategoryRing
-                size={RING_SIZE - 4*(RING_THICKNESS+GAP)}
-                strokeWidth={RING_THICKNESS}
-                slices={otherSlices}
-                fillColor={otherColor}
-                separatorColor="rgba(0,0,0,0.1)"
-                onSlicePress={!isEditingSchedule ? onSlicePress : undefined}
-                onSliceLongPress={!isEditingSchedule ? onSliceLongPress : undefined}
-                dimFuture={nowFrac}
-                confirmedIds={confirmedIds}
-                aiSuggestedIds={aiSuggestedIds}
-                showGaps={false}
-                showSeparators={false}
-              />
-            </View>
-          </View>
+          {/* inner band → care, talk, other */}
+          <EventOverlay
+            events={careEvents}
+            size={RING_SIZE - 4*(RING_THICKNESS+GAP)}
+            radius={(RING_SIZE - 4*(RING_THICKNESS+GAP))/2 - RING_THICKNESS/2}
+            onPress={id => console.log('care tapped', id)}
+            style={ringStyles.inner}
+          />
+          <EventOverlay
+            events={talkEvents}
+            size={RING_SIZE - 4*(RING_THICKNESS+GAP)}
+            radius={(RING_SIZE - 4*(RING_THICKNESS+GAP))/2 - RING_THICKNESS/2}
+            onPress={id => console.log('talk tapped', id)}
+            style={ringStyles.inner}
+          />
+          <EventOverlay
+            events={otherEvents}
+            size={RING_SIZE - 4*(RING_THICKNESS+GAP)}
+            radius={(RING_SIZE - 4*(RING_THICKNESS+GAP))/2 - RING_THICKNESS/2}
+            onPress={id => console.log('other tapped', id)}
+            style={ringStyles.inner}
+          />
           
           {/* 4) Clock arc + ticks (innermost) */}
           <View style={ringStyles.arcContainer}>

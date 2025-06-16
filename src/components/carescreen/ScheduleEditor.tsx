@@ -13,7 +13,8 @@ import { listTemplates, getTemplate } from '../../storage/TemplateStorage'
 import { getTodayISO } from '../../utils/date'
 import { BabyProfile } from 'models/BabyProfile'
 import { DefaultDailyEntries } from '../../data/defaultSchedule'
-
+import { validateDailySlices } from '../../utils/scheduleValidation'
+import { LogSliceSchema } from '../../models/LogSlice'
 
 // Props include slices, onSave, onCancel, unconfirmedIds, handleConfirmAll, onEditSlice
 interface Props {
@@ -105,8 +106,7 @@ export default function ScheduleEditor({
                   isAiSuggested: false,
                 }
               })
-  
-              // lift it up for persistence & rerender
+
               onSave(newSlices)
               setLocalSlices(newSlices)
             }
@@ -115,11 +115,36 @@ export default function ScheduleEditor({
         { cancelable: true }
       )
     }
-  
-    // … your existing “select a saved template” flow …
   }  
-    
 
+  async function trySave(slices: LogSlice[]) {
+    // 1) Zod‐validate each slice
+    try {
+      slices.forEach(s => LogSliceSchema.parse(s))
+    } catch (zErr: any) {
+      return Alert.alert(
+        "Slice data invalid",
+        typeof zErr === "object" && "message" in zErr
+        ? (zErr as Error).message
+        : String(zErr)
+      )
+    }
+  
+    // 2) Run overlap/gap check
+    const errs = validateDailySlices(slices)
+    if (errs.length) {
+      return Alert.alert(
+        "Schedule conflicts",
+        errs.join("\n"),
+        [{ text: "OK" }]
+      )
+    }
+  
+    // 3) All good → persist
+    onSave(slices)
+    setLocalSlices(slices)
+  }
+    
   return (
     <View style={styles.container}>
       <TopNav navigation={navigation} />
@@ -131,9 +156,11 @@ export default function ScheduleEditor({
           const isConfirmed = !unconfirmedIds.includes(slice.id)
           const borderColor = isConfirmed ? '#4CAF50' : '#E53935'
           const bgColor = `${borderColor}33`
-          const [ , timePart ] = slice.startTime.split('T')
-          const start = timePart.slice(0,5)
-          const end   = slice.endTime.split('T')[1].slice(0,5)
+          const startDate = new Date(slice.startTime)
+          const endDate   = new Date(slice.endTime)
+          const pad = (n: number) => n.toString().padStart(2, '0')
+          const start = `${pad(startDate.getHours())}:${pad(startDate.getMinutes())}`
+          const end   = `${pad(endDate.getHours())}:${pad(endDate.getMinutes())}`
           const Icon = DiaperIcon
 
           return (
@@ -189,7 +216,7 @@ export default function ScheduleEditor({
         <View style={styles.rowButtons}>
           <TouchableOpacity
             style={[styles.smallButton, styles.expand]}
-            onPress={() => onSave(localSlices)}
+            onPress={() => trySave(localSlices)}
           >
             <Text style={styles.smallButtonText}>Save</Text>
           </TouchableOpacity>
